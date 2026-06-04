@@ -8,25 +8,31 @@ on:
 jobs:
   auto-merge-engine:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: write
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches full history so git can merge properly
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Run Python Smoke Test
         run: |
-          # This guarantees bad code won't merge into main automatically
           python Python/stress_test.py
 
-      - name: Create PR and Force Auto-Merge
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Direct Git Merge to Main
         run: |
-          # 1. Create the Pull Request automatically
-          PR_URL=$(gh pr create --base main --head ${{ github.ref_name }} --title "Auto-Sync: ${{ github.ref_name }}" --body "Automated background merge from developer terminal." || gh pr view --json url --jq .url)
+          # Configure virtual bot identity
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 2. Tell GitHub to merge it instantly using fast-forward strategy
-          gh pr merge "$PR_URL" --auto --merge
+          # Force checkout main and merge the triggering feature branch
+          git checkout main
+          git merge origin/${{ github.ref_name }} --no-edit
+          
+          # Push the final combined code back to GitHub
+          git push origin main
