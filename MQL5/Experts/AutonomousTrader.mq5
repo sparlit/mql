@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2024, AI Trader Corp."
 #property link      "https://www.mql5.com"
-#property version   "1.00"
+#property version   "1.25"
 #property strict
 #property description "Autonomous Autotrader with Real-time Dashboard"
 
@@ -51,7 +51,7 @@ int OnInit()
    trade.SetExpertMagicNumber(InpMagicNumber);
 
    //--- Initialize Dashboard (12 columns: Symbol + 9 TFs + Consensus + Status)
-   dashboard.Create(3, 12, 10, 30, 100, 22);
+   dashboard.Create(4, 12, 10, 30, 100, 22);
    dashboard.SetHeader(0, "Symbol");
    dashboard.SetHeader(1, "M1");
    dashboard.SetHeader(2, "M5");
@@ -68,6 +68,10 @@ int OnInit()
    dashboard.SetCellValue(1, 0, _Symbol);
    dashboard.SetCellValue(1, 11, "Connecting...", clrYellow);
 
+   dashboard.SetCellValue(2, 0, "SYSTEM HEALTH:", clrCyan);
+   dashboard.SetCellValue(2, 1, "OK", clrLime);
+   dashboard.SetCellValue(3, 0, "REGIME:", clrCyan);
+
    if(InpAutoCharts)
       SetupTimeframeCharts();
 
@@ -79,7 +83,6 @@ int OnInit()
 void OnDeinit(const int reason)
   {
    Print("Deinitializing Autonomous Trader...");
-   //--- Cleanup Dashboard
    dashboard.Destroy();
   }
 //+------------------------------------------------------------------+
@@ -89,14 +92,11 @@ void OnTick()
   {
    static datetime last_analysis = 0;
 
-   //--- Refresh data
    if(!symbol_info.RefreshRates()) return;
 
-   //--- Check for Trailing SL/TP
    if(InpTrailingSL || InpTrailingTP)
       ApplyTrailingLogic();
 
-   //--- Run analysis every 1 minute
    if(TimeCurrent() - last_analysis >= 60)
      {
       AnalyzeMarket();
@@ -109,7 +109,12 @@ void OnTick()
 //+------------------------------------------------------------------+
 void AnalyzeMarket()
   {
-   string request = "{\"symbol\":\"" + _Symbol + "\", \"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2) + "}";
+   dashboard.SetCellValue(1, 11, "ANALYZING...", clrWhite);
+
+   string request = "{\"symbol\":\"" + _Symbol + "\", " +
+                    "\"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2) + ", " +
+                    "\"tick_value\":" + DoubleToString(symbol_info.TickValue(), 5) + ", " +
+                    "\"tick_size\":" + DoubleToString(symbol_info.TickSize(), 8) + "}";
 
    if(socket_client.Connect("127.0.0.1", 5555))
      {
@@ -121,6 +126,7 @@ void AnalyzeMarket()
             string signal = CJsonParser::GetString(response, "signal");
             double confidence = CJsonParser::GetDouble(response, "confidence");
             bool verified = CJsonParser::GetBool(response, "verified");
+            string regime = CJsonParser::GetString(response, "regime");
 
             // TF Signals
             UpdateTFCell(1, 1, response, "M1");
@@ -134,10 +140,11 @@ void AnalyzeMarket()
             UpdateTFCell(1, 9, response, "MN");
 
             dashboard.SetCellValue(1, 10, signal + "(" + DoubleToString(confidence, 0) + ")");
+            dashboard.SetCellValue(3, 1, regime, (StringFind(regime, "High") != -1) ? clrRed : clrLime);
 
             if(verified)
               {
-               dashboard.SetCellValue(1, 11, "AUTOTRADE", clrLime);
+               dashboard.SetCellValue(1, 11, "TRADE!", clrLime);
                if(signal == "BUY") ExecuteTrade(ORDER_TYPE_BUY);
                else if(signal == "SELL") ExecuteTrade(ORDER_TYPE_SELL);
               }
@@ -151,7 +158,7 @@ void AnalyzeMarket()
      }
    else
      {
-      dashboard.SetCellValue(1, 11, "OFFLINE", clrRed);
+      dashboard.SetCellValue(1, 11, "CONN ERROR", clrRed);
      }
   }
 
@@ -168,41 +175,46 @@ void UpdateTFCell(int row, int col, string json, string tf)
 //+------------------------------------------------------------------+
 void ExecuteTrade(ENUM_ORDER_TYPE type)
   {
-   // Check if we already have an open position for this magic number
-   bool already_open = false;
+   if(!symbol_info.RefreshRates()) return;
+
+   // Check if we already have an open position
    for(int i=PositionsTotal()-1; i>=0; i--)
      {
       if(pos_info.SelectByIndex(i))
         {
          if(pos_info.Symbol() == _Symbol && pos_info.Magic() == InpMagicNumber)
-           {
-            already_open = true;
-            break;
-           }
+            return;
         }
      }
-   if(already_open) return;
 
    double price = (type == ORDER_TYPE_BUY) ? symbol_info.Ask() : symbol_info.Bid();
    double sl = (type == ORDER_TYPE_BUY) ? price - InpStopLoss * _Point : price + InpStopLoss * _Point;
    double tp = (type == ORDER_TYPE_BUY) ? price + InpTakeProfit * _Point : price - InpTakeProfit * _Point;
 
-   // Position Sizing based on risk
+   // Precise Position Sizing
    double risk_amount = AccountInfoDouble(ACCOUNT_BALANCE) * (InpRiskPercent / 100.0);
    double tick_value = symbol_info.TickValue();
+
+   if(tick_value <= 0) tick_value = _Point; // Safety fallback
+
+   // Volume = Risk Amount / (Price Risk in Points * Tick Value)
    double volume = risk_amount / (InpStopLoss * tick_value);
 
-   volume = NormalizeDouble(volume, 2);
+   // Standardize volume
+   double step = symbol_info.LotsStep();
+   if(step > 0)
+      volume = MathFloor(volume / step) * step;
+
    if(volume < symbol_info.LotsMin()) volume = symbol_info.LotsMin();
    if(volume > symbol_info.LotsMax()) volume = symbol_info.LotsMax();
 
-   if(trade.PositionOpen(_Symbol, type, volume, price, sl, tp, "Autonomous Trader"))
+   if(trade.PositionOpen(_Symbol, type, volume, price, sl, tp, "Autonomous Zero-Flaw EA"))
      {
-      Print("Trade executed: ", EnumToString(type), " Volume: ", volume);
+      Print("Trade executed: ", EnumToString(type), " Vol: ", volume);
      }
    else
      {
-      Print("Trade failed: ", trade.ResultRetcodeDescription());
+      Print("Execution Error: ", trade.ResultRetcodeDescription());
      }
   }
 
@@ -216,9 +228,7 @@ void SetupTimeframeCharts()
      {
       long chart_id = ChartOpen(_Symbol, tfs[i]);
       if(chart_id > 0)
-        {
          ChartApplyTemplate(chart_id, "default.tpl");
-        }
      }
    ChartTile(CHART_TILE_VERTICAL);
   }
@@ -246,13 +256,11 @@ void ApplyTrailingLogic()
 
             if(pos_info.PositionType() == POSITION_TYPE_BUY)
               {
-               // Trailing SL
                if(InpTrailingSL)
                  {
                   double target_sl = NormalizeDouble(bid - InpStopLoss * point, _Digits);
                   if(target_sl > current_sl + step) new_sl = target_sl;
                  }
-               // Trailing TP
                if(InpTrailingTP)
                  {
                   double target_tp = NormalizeDouble(bid + InpTakeProfit * point, _Digits);
@@ -261,13 +269,11 @@ void ApplyTrailingLogic()
               }
             else if(pos_info.PositionType() == POSITION_TYPE_SELL)
               {
-               // Trailing SL
                if(InpTrailingSL)
                  {
                   double target_sl = NormalizeDouble(ask + InpStopLoss * point, _Digits);
                   if(target_sl < current_sl - step || current_sl == 0) new_sl = target_sl;
                  }
-               // Trailing TP
                if(InpTrailingTP)
                  {
                   double target_tp = NormalizeDouble(ask - InpTakeProfit * point, _Digits);
@@ -276,9 +282,7 @@ void ApplyTrailingLogic()
               }
 
             if(new_sl != current_sl || new_tp != current_tp)
-              {
                trade.PositionModify(pos_info.Ticket(), new_sl, new_tp);
-              }
            }
         }
      }

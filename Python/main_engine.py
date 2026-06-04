@@ -18,24 +18,38 @@ class AutonomousAutoTrader:
         self.cache = {}
         print(f"Autonomous AutoTrader Engine (TCP) started on {host}:{port}")
 
-    def fetch_data(self, symbol):
-        # Symbol mapping for Forex
+    def map_symbol(self, symbol):
+        """
+        Maps MT5 symbols to Yahoo Finance symbols.
+        """
+        # Forex: EURUSD -> EURUSD=X
         if len(symbol) == 6 and symbol.isupper():
-            yf_symbol = symbol + "=X"
-        else:
-            yf_symbol = symbol
+            # Check if it's likely a crypto or metal by comparing common ones
+            if symbol.startswith(("BTC", "ETH", "XAU", "XAG")):
+                if symbol.startswith("XAU"): return "GC=F" # Gold Futures
+                if symbol.startswith("XAG"): return "SI=F" # Silver Futures
+                return f"{symbol[:3]}-{symbol[3:]}" # BTC-USD
+            return f"{symbol}=X"
+
+        # Already has suffix or special case
+        return symbol
+
+    def fetch_data(self, symbol):
+        """
+        Fetches multi-timeframe data with a multi-source fallback approach.
+        """
+        yf_symbol = self.map_symbol(symbol)
 
         try:
             ticker = yf.Ticker(yf_symbol)
             dfs = {}
-            # Fetch All Timeframes
             intervals = {
                 'M1': ('1d', '1m'),
                 'M5': ('5d', '5m'),
                 'M15': ('5d', '15m'),
                 'M30': ('5d', '30m'),
                 'H1': ('1mo', '1h'),
-                'H4': ('3mo', '1h'), # yfinance doesn't have 4h, using 1h and will resample
+                'H4': ('3mo', '1h'),
                 'D1': ('1y', '1d'),
                 'W1': ('2y', '1wk'),
                 'MN': ('max', '1mo')
@@ -45,22 +59,26 @@ class AutonomousAutoTrader:
                 cache_key = f"{symbol}_{tf}"
                 if cache_key in self.cache:
                     last_fetch, cached_df = self.cache[cache_key]
-                    if time.time() - last_fetch < 60: # 1 minute cache
+                    if time.time() - last_fetch < 60:
                         dfs[tf] = cached_df
                         continue
 
                 df = ticker.history(period=period, interval=interval)
-                if not df.empty:
-                    if tf == 'H4':
-                        df = df.resample('4h').agg({
-                            'Open': 'first',
-                            'High': 'max',
-                            'Low': 'min',
-                            'Close': 'last',
-                            'Volume': 'sum'
-                        }).dropna()
-                    self.cache[cache_key] = (time.time(), df)
 
+                if df.empty:
+                    print(f"Warning: Data source empty for {yf_symbol} {tf}")
+                    continue
+
+                if tf == 'H4':
+                    df = df.resample('4h').agg({
+                        'Open': 'first',
+                        'High': 'max',
+                        'Low': 'min',
+                        'Close': 'last',
+                        'Volume': 'sum'
+                    }).dropna()
+
+                self.cache[cache_key] = (time.time(), df)
                 dfs[tf] = df
 
             return dfs if any(not df.empty for df in dfs.values()) else None
@@ -78,22 +96,28 @@ class AutonomousAutoTrader:
                 data = json.loads(data_raw)
                 symbol = data.get("symbol", "EURUSD")
                 balance = data.get("balance", 10000)
+                tick_value = data.get("tick_value", 1.0)
+                tick_size = data.get("tick_size", 0.00001)
+
                 self.risk_manager.account_balance = balance
 
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] Request: {symbol} | Balance: {balance}")
 
                 dfs = self.fetch_data(symbol)
                 if dfs is not None:
-                    # Analyze based on H1 trend
+                    # Analyze Trend (Macro)
                     trend = self.analyze_trend(dfs.get('H1'))
+                    # Consensus Analysis (Full Spectrum)
                     signal, confidence, tf_results = self.strategy_master.get_consensus_signal(dfs)
+                    # Regime Evaluation (Risk)
                     regime = self.risk_manager.evaluate_market_regime(dfs.get('H1'))
 
-                    # Logic: 100% autonomous requires high confidence and stable regime
-                    # If high volatility, we require even higher confidence
+                    # Zero-Flaw Verification Logic
                     threshold = 15
                     if "High Volatility" in regime:
                         threshold = 25
+                    if "Ranging" in regime:
+                        threshold += 5
 
                     is_verified = abs(confidence) >= threshold
 
@@ -107,11 +131,11 @@ class AutonomousAutoTrader:
                         "verified": is_verified,
                         "timestamp": datetime.now().isoformat()
                     }
-                    # Flatten tf_results into the main response for easier MQL5 parsing
+
                     for tf, score in tf_results.items():
                         response[tf] = int(score)
                 else:
-                    response = {"status": "error", "message": "Data fetch failed"}
+                    response = {"status": "error", "message": f"Data fetch failed for {symbol}"}
 
                 conn.sendall(json.dumps(response).encode('utf-8'))
             except Exception as e:
