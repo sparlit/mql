@@ -20,23 +20,19 @@ class AutonomousAutoTrader:
 
     def map_symbol(self, symbol):
         """
-        Maps MT5 symbols to Yahoo Finance symbols.
+        Maps MT5 symbols to appropriate data provider tickers.
         """
-        # Forex: EURUSD -> EURUSD=X
         if len(symbol) == 6 and symbol.isupper():
-            # Check if it's likely a crypto or metal by comparing common ones
             if symbol.startswith(("BTC", "ETH", "XAU", "XAG")):
-                if symbol.startswith("XAU"): return "GC=F" # Gold Futures
-                if symbol.startswith("XAG"): return "SI=F" # Silver Futures
-                return f"{symbol[:3]}-{symbol[3:]}" # BTC-USD
+                if symbol.startswith("XAU"): return "GC=F"
+                if symbol.startswith("XAG"): return "SI=F"
+                return f"{symbol[:3]}-{symbol[3:]}"
             return f"{symbol}=X"
-
-        # Already has suffix or special case
         return symbol
 
     def fetch_data(self, symbol):
         """
-        Fetches multi-timeframe data with a multi-source fallback approach.
+        Fetches multi-timeframe data with robust fallback mechanisms.
         """
         yf_symbol = self.map_symbol(symbol)
 
@@ -66,7 +62,7 @@ class AutonomousAutoTrader:
                 df = ticker.history(period=period, interval=interval)
 
                 if df.empty:
-                    print(f"Warning: Data source empty for {yf_symbol} {tf}")
+                    print(f"Warning: Primary source empty for {yf_symbol} {tf}")
                     continue
 
                 if tf == 'H4':
@@ -105,14 +101,11 @@ class AutonomousAutoTrader:
 
                 dfs = self.fetch_data(symbol)
                 if dfs is not None:
-                    # Analyze Trend (Macro)
                     trend = self.analyze_trend(dfs.get('H1'))
-                    # Consensus Analysis (Full Spectrum)
                     signal, confidence, tf_results = self.strategy_master.get_consensus_signal(dfs)
-                    # Regime Evaluation (Risk)
                     regime = self.risk_manager.evaluate_market_regime(dfs.get('H1'))
 
-                    # Zero-Flaw Verification Logic
+                    # Multi-layer verification threshold
                     threshold = 15
                     if "High Volatility" in regime:
                         threshold = 25

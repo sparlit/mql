@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2024, AI Trader Corp."
 #property link      "https://www.mql5.com"
-#property version   "1.25"
+#property version   "1.30"
 #property strict
 #property description "Autonomous Autotrader with Real-time Dashboard"
 
@@ -195,7 +195,11 @@ void ExecuteTrade(ENUM_ORDER_TYPE type)
    double risk_amount = AccountInfoDouble(ACCOUNT_BALANCE) * (InpRiskPercent / 100.0);
    double tick_value = symbol_info.TickValue();
 
-   if(tick_value <= 0) tick_value = _Point; // Safety fallback
+   if(tick_value <= 0)
+     {
+      Print("CRITICAL: TickValue is zero for ", _Symbol, ". Aborting trade for safety.");
+      return;
+     }
 
    // Volume = Risk Amount / (Price Risk in Points * Tick Value)
    double volume = risk_amount / (InpStopLoss * tick_value);

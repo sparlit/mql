@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
 
 class StrategyMaster:
     def __init__(self):
@@ -47,7 +46,6 @@ class StrategyMaster:
         return 0
 
     def scalping_signal(self, df):
-        # High frequency scalping logic based on price action and stochastic
         window = 5
         if len(df) < 20: return 0
         fast_sma = df['Close'].rolling(window=window).mean()
@@ -60,7 +58,6 @@ class StrategyMaster:
         return 0
 
     def get_consensus_signal(self, df_dict):
-        # Full spectrum weights
         tf_weights = {
             'M1': 0.5, 'M5': 1, 'M15': 1.5, 'M30': 2,
             'H1': 3, 'H4': 4, 'D1': 5, 'W1': 3, 'MN': 2
@@ -84,7 +81,6 @@ class StrategyMaster:
             total_consensus += tf_consensus * tf_weights.get(tf, 1)
             tf_results[tf] = tf_consensus
 
-        # Higher threshold for full spectrum
         if total_consensus >= 15:
             return "BUY", total_consensus, tf_results
         elif total_consensus <= -15:
@@ -93,6 +89,5 @@ class StrategyMaster:
             return "NEUTRAL", total_consensus, tf_results
 
 if __name__ == "__main__":
-    # Test logic
     master = StrategyMaster()
     print("Strategy Master initialized")
