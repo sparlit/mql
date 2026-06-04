@@ -7,8 +7,6 @@
 #property link      "https://www.mql5.com"
 #property strict
 
-#include <WinAPI\WinAPI.mqh>
-
 #define INVALID_SOCKET  (uint)-1
 #define SOCKET_ERROR    -1
 #define AF_INET         2
@@ -22,16 +20,15 @@ struct sockaddr_in {
     char           sin_zero[8];
 };
 
-// Import Winsock functions
 #import "ws2_32.dll"
    uint socket(int af, int type, int protocol);
    int connect(uint s, sockaddr_in &name, int namelen);
-   int send(uint s, char &buf[], int len, int flags);
+   int send(uint s, uchar &buf[], int len, int flags);
    int recv(uint s, char &buf[], int len, int flags);
    int closesocket(uint s);
-   int WSAStartup(ushort wVersionRequested, char &lpWSAData[]);
+   int WSAStartup(ushort wVersionRequested, uchar &lpWSAData[]);
    int WSACleanup();
-   uint inet_addr(string cp);
+   uint inet_addr(uchar &cp[]);
    ushort htons(ushort hostshort);
 #import
 
@@ -49,7 +46,7 @@ public:
 
    bool              Init()
      {
-      char data[512];
+      uchar data[512];
       if(WSAStartup(0x0202, data) != 0) return false;
       m_initialized = true;
       return true;
@@ -67,7 +64,10 @@ public:
       sockaddr_in addr;
       addr.sin_family = AF_INET;
       addr.sin_port = htons((ushort)m_port);
-      addr.sin_addr = inet_addr(m_host);
+
+      uchar host_buf[];
+      StringToCharArray(m_host, host_buf);
+      addr.sin_addr = inet_addr(host_buf);
 
       if(connect(m_socket, addr, sizeof(addr)) == SOCKET_ERROR)
         {
@@ -83,15 +83,15 @@ public:
       if(m_socket == INVALID_SOCKET) return false;
       uchar buf[];
       StringToCharArray(message, buf);
-      return (send(m_socket, buf[0], ArraySize(buf), 0) != SOCKET_ERROR);
+      return (send(m_socket, buf, ArraySize(buf)-1, 0) != SOCKET_ERROR);
      }
 
    string            Receive()
      {
       if(m_socket == INVALID_SOCKET) return "";
-      char buf[4096];
+      char buf[8192];
       ArrayInitialize(buf, 0);
-      int res = recv(m_socket, buf, 4096, 0);
+      int res = recv(m_socket, buf, 8192, 0);
       if(res > 0)
         {
          return CharArrayToString(buf);

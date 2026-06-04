@@ -19,11 +19,13 @@
 #include <JsonParser.mqh>
 
 //--- inputs
-input double   InpRiskPercent = 1.0;      // Risk per trade (%)
-input int      InpMagicNumber = 123456;   // Magic Number
-input int      InpStopLoss    = 200;      // Initial Stop Loss (points)
-input int      InpTakeProfit  = 400;      // Initial Take Profit (points)
-input bool     InpTrailing    = true;     // Enable Trailing SL/TP
+input double   InpRiskPercent  = 1.0;      // Risk per trade (%)
+input int      InpMagicNumber  = 123456;   // Magic Number
+input int      InpStopLoss     = 200;      // Initial Stop Loss (points)
+input int      InpTakeProfit   = 400;      // Initial Take Profit (points)
+input bool     InpTrailingSL   = true;     // Enable Trailing SL
+input bool     InpTrailingTP   = true;     // Enable Trailing TP
+input int      InpTrailingStep = 50;       // Trailing Step (points)
 
 //--- global variables
 CTrade         trade;
@@ -48,14 +50,14 @@ int OnInit()
    trade.SetExpertMagicNumber(InpMagicNumber);
 
    //--- Initialize Dashboard
-   dashboard.Create(12, 7, 10, 30, 110, 20);
+   dashboard.Create(12, 7, 10, 30, 120, 22);
    dashboard.SetHeader(0, "Symbol");
-   dashboard.SetHeader(1, "Timeframe");
-   dashboard.SetHeader(2, "Trend");
-   dashboard.SetHeader(3, "Signal (Conf)");
-   dashboard.SetHeader(4, "Risk/Lot");
-   dashboard.SetHeader(5, "Regime");
-   dashboard.SetHeader(6, "Engine Status");
+   dashboard.SetHeader(1, "TF Analysis");
+   dashboard.SetHeader(2, "Trend (H1)");
+   dashboard.SetHeader(3, "Signal (Weighted)");
+   dashboard.SetHeader(4, "Risk %");
+   dashboard.SetHeader(5, "Market Regime");
+   dashboard.SetHeader(6, "Autonomous Status");
 
    dashboard.SetCellValue(1, 0, _Symbol);
    dashboard.SetCellValue(1, 6, "Connecting...", clrYellow);
@@ -82,8 +84,8 @@ void OnTick()
    if(!symbol_info.RefreshRates()) return;
 
    //--- Check for Trailing SL/TP
-   if(InpTrailing)
-      ApplyTrailingStop();
+   if(InpTrailingSL || InpTrailingTP)
+      ApplyTrailingLogic();
 
    //--- Run analysis every 1 minute
    if(TimeCurrent() - last_analysis >= 60)
@@ -114,7 +116,7 @@ void AnalyzeMarket()
 
             string regime = CJsonParser::GetString(response, "regime");
 
-            dashboard.SetCellValue(1, 1, "H1");
+            dashboard.SetCellValue(1, 1, "M15/H1/D1");
             dashboard.SetCellValue(1, 2, trend);
             dashboard.SetCellValue(1, 3, signal + " (" + DoubleToString(confidence, 0) + ")");
             dashboard.SetCellValue(1, 4, DoubleToString(InpRiskPercent, 1) + "%");
@@ -184,9 +186,9 @@ void ExecuteTrade(ENUM_ORDER_TYPE type)
   }
 
 //+------------------------------------------------------------------+
-//| Trailing Stop Logic                                              |
+//| Trailing SL and TP Logic                                         |
 //+------------------------------------------------------------------+
-void ApplyTrailingStop()
+void ApplyTrailingLogic()
   {
    for(int i=PositionsTotal()-1; i>=0; i--)
      {
@@ -197,22 +199,47 @@ void ApplyTrailingStop()
             double bid = symbol_info.Bid();
             double ask = symbol_info.Ask();
             double point = symbol_info.Point();
+            double step = InpTrailingStep * point;
+
+            double current_sl = pos_info.StopLoss();
+            double current_tp = pos_info.TakeProfit();
+            double new_sl = current_sl;
+            double new_tp = current_tp;
 
             if(pos_info.PositionType() == POSITION_TYPE_BUY)
               {
-               double new_sl = NormalizeDouble(bid - InpStopLoss * point, _Digits);
-               if(new_sl > pos_info.StopLoss() + point)
+               // Trailing SL
+               if(InpTrailingSL)
                  {
-                  trade.PositionModify(pos_info.Ticket(), new_sl, pos_info.TakeProfit());
+                  double target_sl = NormalizeDouble(bid - InpStopLoss * point, _Digits);
+                  if(target_sl > current_sl + step) new_sl = target_sl;
+                 }
+               // Trailing TP
+               if(InpTrailingTP)
+                 {
+                  double target_tp = NormalizeDouble(bid + InpTakeProfit * point, _Digits);
+                  if(target_tp > current_tp + step) new_tp = target_tp;
                  }
               }
             else if(pos_info.PositionType() == POSITION_TYPE_SELL)
               {
-               double new_sl = NormalizeDouble(ask + InpStopLoss * point, _Digits);
-               if(new_sl < pos_info.StopLoss() - point || pos_info.StopLoss() == 0)
+               // Trailing SL
+               if(InpTrailingSL)
                  {
-                  trade.PositionModify(pos_info.Ticket(), new_sl, pos_info.TakeProfit());
+                  double target_sl = NormalizeDouble(ask + InpStopLoss * point, _Digits);
+                  if(target_sl < current_sl - step || current_sl == 0) new_sl = target_sl;
                  }
+               // Trailing TP
+               if(InpTrailingTP)
+                 {
+                  double target_tp = NormalizeDouble(ask - InpTakeProfit * point, _Digits);
+                  if(target_tp < current_tp - step || current_tp == 0) new_tp = target_tp;
+                 }
+              }
+
+            if(new_sl != current_sl || new_tp != current_tp)
+              {
+               trade.PositionModify(pos_info.Ticket(), new_sl, new_tp);
               }
            }
         }
