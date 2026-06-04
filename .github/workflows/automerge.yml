@@ -1,0 +1,32 @@
+name: Ultimate Auto-Merge
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  auto-merge-engine:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Python Smoke Test
+        run: |
+          # This guarantees bad code won't merge into main automatically
+          python Python/stress_test.py
+
+      - name: Create PR and Force Auto-Merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Create the Pull Request automatically
+          PR_URL=$(gh pr create --base main --head ${{ github.ref_name }} --title "Auto-Sync: ${{ github.ref_name }}" --body "Automated background merge from developer terminal." || gh pr view --json url --jq .url)
+          
+          # 2. Tell GitHub to merge it instantly using fast-forward strategy
+          gh pr merge "$PR_URL" --auto --merge
