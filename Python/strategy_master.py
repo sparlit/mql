@@ -58,6 +58,13 @@ class StrategyMaster:
         return 0
 
     def get_consensus_signal(self, df_dict):
+        # Full spectrum weights
+        tf_weights = {
+            'M1': 0.5, 'M5': 1, 'M15': 1.5, 'M30': 2,
+            'H1': 3, 'H4': 4, 'D1': 5, 'W1': 3, 'MN': 2
+        }
+        total_consensus = 0
+        tf_results = {}
         # df_dict: {'H1': df1, 'M15': df2, 'D1': df3}
         tf_weights = {'M15': 1, 'H1': 2, 'D1': 3}
         total_consensus = 0
@@ -73,6 +80,15 @@ class StrategyMaster:
             ]
             tf_consensus = sum(signals)
             total_consensus += tf_consensus * tf_weights.get(tf, 1)
+            tf_results[tf] = tf_consensus
+
+        # Higher threshold for full spectrum
+        if total_consensus >= 15:
+            return "BUY", total_consensus, tf_results
+        elif total_consensus <= -15:
+            return "SELL", total_consensus, tf_results
+        else:
+            return "NEUTRAL", total_consensus, tf_results
 
         if total_consensus >= 5:
             return "BUY", total_consensus

@@ -19,6 +19,14 @@
 #include <JsonParser.mqh>
 
 //--- inputs
+input double   InpRiskPercent  = 1.0;      // Risk per trade (%) | Percentage of equity to risk per trade
+input int      InpMagicNumber  = 123456;   // Magic Number | Unique identifier for trades
+input int      InpStopLoss     = 200;      // Initial Stop Loss (points) | Initial protective stop in points
+input int      InpTakeProfit   = 400;      // Initial Take Profit (points) | Initial target profit in points
+input bool     InpTrailingSL   = true;     // Enable Trailing SL | Enable autonomous trailing stop loss
+input bool     InpTrailingTP   = true;     // Enable Trailing TP | Enable autonomous trailing take profit
+input int      InpTrailingStep = 50;       // Trailing Step (points) | Minimum profit movement before trailing
+input bool     InpAutoCharts   = true;     // Auto-open TF Charts | Automatically open and arrange 7 timeframe charts
 input double   InpRiskPercent  = 1.0;      // Risk per trade (%)
 input int      InpMagicNumber  = 123456;   // Magic Number
 input int      InpStopLoss     = 200;      // Initial Stop Loss (points)
@@ -50,6 +58,25 @@ int OnInit()
    trade.SetExpertMagicNumber(InpMagicNumber);
 
    //--- Initialize Dashboard
+   dashboard.Create(15, 12, 10, 30, 100, 22);
+   dashboard.SetHeader(0, "Symbol");
+   dashboard.SetHeader(1, "M1");
+   dashboard.SetHeader(2, "M5");
+   dashboard.SetHeader(3, "M15");
+   dashboard.SetHeader(4, "M30");
+   dashboard.SetHeader(5, "H1");
+   dashboard.SetHeader(6, "H4");
+   dashboard.SetHeader(7, "D1");
+   dashboard.SetHeader(8, "W1");
+   dashboard.SetHeader(9, "MN");
+   dashboard.SetHeader(10, "CONSENSUS");
+   dashboard.SetHeader(11, "STATUS");
+
+   dashboard.SetCellValue(1, 0, _Symbol);
+   dashboard.SetCellValue(1, 11, "Connecting...", clrYellow);
+
+   if(InpAutoCharts)
+      SetupTimeframeCharts();
    dashboard.Create(12, 7, 10, 30, 120, 22);
    dashboard.SetHeader(0, "Symbol");
    dashboard.SetHeader(1, "TF Analysis");
@@ -110,6 +137,25 @@ void AnalyzeMarket()
          if(response != "")
            {
             string signal = CJsonParser::GetString(response, "signal");
+            double confidence = CJsonParser::GetDouble(response, "confidence");
+            bool verified = CJsonParser::GetBool(response, "verified");
+
+            // TF Signals
+            UpdateTFCell(1, 1, response, "M1");
+            UpdateTFCell(1, 2, response, "M5");
+            UpdateTFCell(1, 3, response, "M15");
+            UpdateTFCell(1, 4, response, "M30");
+            UpdateTFCell(1, 5, response, "H1");
+            UpdateTFCell(1, 6, response, "H4");
+            UpdateTFCell(1, 7, response, "D1");
+            UpdateTFCell(1, 8, response, "W1");
+            UpdateTFCell(1, 9, response, "MN");
+
+            dashboard.SetCellValue(1, 10, signal + "(" + DoubleToString(confidence, 0) + ")");
+
+            if(verified)
+              {
+               dashboard.SetCellValue(1, 11, "AUTOTRADE", clrLime);
             string trend = CJsonParser::GetString(response, "trend");
             double confidence = CJsonParser::GetDouble(response, "confidence");
             bool verified = CJsonParser::GetBool(response, "verified");
@@ -130,6 +176,7 @@ void AnalyzeMarket()
               }
             else
               {
+               dashboard.SetCellValue(1, 11, "SCANNING", clrYellow);
                dashboard.SetCellValue(1, 6, "WAITING CONFIRMATION", clrYellow);
               }
            }
@@ -138,6 +185,20 @@ void AnalyzeMarket()
      }
    else
      {
+      dashboard.SetCellValue(1, 11, "OFFLINE", clrRed);
+     }
+  }
+
+void UpdateTFCell(int row, int col, string json, string tf)
+  {
+   // In a real scenario, we would parse the tf_results nested object
+   // For now, using GetDouble on the flat structure we expect from engine
+   double score = CJsonParser::GetDouble(json, tf);
+   string text = (score > 0) ? "BUY" : (score < 0 ? "SELL" : "NEUT");
+   color clr = (score > 0) ? clrLime : (score < 0 ? clrRed : clrWhite);
+   dashboard.SetCellValue(row, col, text, clr);
+  }
+
       dashboard.SetCellValue(1, 6, "CONN ERROR", clrRed);
      }
   }
@@ -175,6 +236,7 @@ void ExecuteTrade(ENUM_ORDER_TYPE type)
    if(volume < symbol_info.LotsMin()) volume = symbol_info.LotsMin();
    if(volume > symbol_info.LotsMax()) volume = symbol_info.LotsMax();
 
+   if(trade.PositionOpen(_Symbol, type, volume, price, sl, tp, "Full Spectrum Trader"))
    if(trade.PositionOpen(_Symbol, type, volume, price, sl, tp, "Autonomous Trader"))
      {
       Print("Trade executed: ", EnumToString(type), " Volume: ", volume);
@@ -187,6 +249,23 @@ void ExecuteTrade(ENUM_ORDER_TYPE type)
 
 //+------------------------------------------------------------------+
 //| Trailing SL and TP Logic                                         |
+//+------------------------------------------------------------------+
+//| Setup TF Charts                                                  |
+//+------------------------------------------------------------------+
+void SetupTimeframeCharts()
+  {
+   ENUM_TIMEFRAMES tfs[] = {PERIOD_M1, PERIOD_M5, PERIOD_M15, PERIOD_M30, PERIOD_H1, PERIOD_H4, PERIOD_D1, PERIOD_W1, PERIOD_MN1};
+   for(int i=0; i<ArraySize(tfs); i++)
+     {
+      long chart_id = ChartOpen(_Symbol, tfs[i]);
+      if(chart_id > 0)
+        {
+         ChartApplyTemplate(chart_id, "default.tpl");
+        }
+     }
+   ChartTile(CHART_TILE_VERTICAL);
+  }
+
 //+------------------------------------------------------------------+
 void ApplyTrailingLogic()
   {
