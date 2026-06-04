@@ -16,17 +16,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Run Python Smoke Test
         run: |
-          # This guarantees bad code won't merge into main automatically
           python Python/stress_test.py
 
       - name: Create PR and Force Auto-Merge
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 1. Create the Pull Request automatically
-          PR_URL=$(gh pr create --base main --head ${{ github.ref_name }} --title "Auto-Sync: ${{ github.ref_name }}" --body "Automated background merge from developer terminal." || gh pr view --json url --jq .url)
+          # Create pull request and capture URL
+          PR_URL=$(gh pr create --base main --head ${{ github.ref_name }} --title "Auto-Sync: ${{ github.ref_name }}" --body "Automated sync." || gh pr view --json url --jq .url)
           
-          # 2. Tell GitHub to merge it instantly using fast-forward strategy
+          # Force execute instant bypass merge
           gh pr merge "$PR_URL" --auto --merge
