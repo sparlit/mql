@@ -25,8 +25,7 @@ private:
    color             m_cell_bg;
    color             m_text_color;
 
-   CChartObjectEdit  m_cells[][16]; // Increased to support all TFs + Metadata
-   CChartObjectEdit  m_cells[][10]; // Fixed max columns for simplicity in this version
+   CChartObjectEdit  m_cells[10][16]; // Fixed size with support for up to 16 columns
 
 public:
                      CDashboard(void);
@@ -61,14 +60,12 @@ CDashboard::~CDashboard(void)
 //+------------------------------------------------------------------+
 void CDashboard::Create(int rows, int cols, int x, int y, int width, int height)
   {
-   m_rows = rows;
-   m_cols = cols;
+   m_rows = MathMin(rows, 10);
+   m_cols = MathMin(cols, 16);
    m_x_start = x;
    m_y_start = y;
    m_cell_width = width;
    m_cell_height = height;
-
-   ArrayResize(m_cells, m_rows);
 
    for(int r=0; r<m_rows; r++)
      {

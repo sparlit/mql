@@ -27,6 +27,7 @@ class StrategyMaster:
 
     def mean_reversion_signal(self, df):
         rsi = self.calculate_rsi(df['Close'])
+        if rsi.empty or pd.isna(rsi.iloc[-1]): return 0
         if rsi.iloc[-1] < 30:
             return 1 # Oversold - Buy
         elif rsi.iloc[-1] > 70:
@@ -35,6 +36,7 @@ class StrategyMaster:
 
     def breakout_signal(self, df):
         window = 20
+        if len(df) < window + 1: return 0
         upper_band = df['High'].rolling(window=window).max()
         lower_band = df['Low'].rolling(window=window).min()
 
@@ -46,8 +48,8 @@ class StrategyMaster:
 
     def scalping_signal(self, df):
         # High frequency scalping logic based on price action and stochastic
-        # Using shorter window
         window = 5
+        if len(df) < 20: return 0
         fast_sma = df['Close'].rolling(window=window).mean()
         slow_sma = df['Close'].rolling(window=20).mean()
 
@@ -63,14 +65,14 @@ class StrategyMaster:
             'M1': 0.5, 'M5': 1, 'M15': 1.5, 'M30': 2,
             'H1': 3, 'H4': 4, 'D1': 5, 'W1': 3, 'MN': 2
         }
+
         total_consensus = 0
         tf_results = {}
-        # df_dict: {'H1': df1, 'M15': df2, 'D1': df3}
-        tf_weights = {'M15': 1, 'H1': 2, 'D1': 3}
-        total_consensus = 0
 
         for tf, df in df_dict.items():
-            if df is None or df.empty: continue
+            if df is None or df.empty or len(df) < 30:
+                tf_results[tf] = 0
+                continue
 
             signals = [
                 self.trend_following_signal(df),
@@ -89,13 +91,6 @@ class StrategyMaster:
             return "SELL", total_consensus, tf_results
         else:
             return "NEUTRAL", total_consensus, tf_results
-
-        if total_consensus >= 5:
-            return "BUY", total_consensus
-        elif total_consensus <= -5:
-            return "SELL", total_consensus
-        else:
-            return "NEUTRAL", total_consensus
 
 if __name__ == "__main__":
     # Test logic

@@ -51,20 +51,17 @@ class AutonomousAutoTrader:
 
                 df = ticker.history(period=period, interval=interval)
                 if not df.empty:
+                    if tf == 'H4':
+                        df = df.resample('4h').agg({
+                            'Open': 'first',
+                            'High': 'max',
+                            'Low': 'min',
+                            'Close': 'last',
+                            'Volume': 'sum'
+                        }).dropna()
                     self.cache[cache_key] = (time.time(), df)
-                if tf == 'H4' and not df.empty:
-                    df = df.resample('4h').agg({
-                        'Open': 'first',
-                        'High': 'max',
-                        'Low': 'min',
-                        'Close': 'last',
-                        'Volume': 'sum'
-                    }).dropna()
+
                 dfs[tf] = df
-            # Fetch Multi-timeframe data
-            dfs['M15'] = ticker.history(period="5d", interval="15m")
-            dfs['H1'] = ticker.history(period="1mo", interval="1h")
-            dfs['D1'] = ticker.history(period="1y", interval="1d")
 
             return dfs if any(not df.empty for df in dfs.values()) else None
         except Exception as e:
@@ -73,11 +70,11 @@ class AutonomousAutoTrader:
 
     def handle_client(self, conn, addr):
         with conn:
-            data_raw = conn.recv(1024).decode('utf-8')
-            if not data_raw:
-                return
-
             try:
+                data_raw = conn.recv(1024).decode('utf-8')
+                if not data_raw:
+                    return
+
                 data = json.loads(data_raw)
                 symbol = data.get("symbol", "EURUSD")
                 balance = data.get("balance", 10000)
@@ -92,13 +89,13 @@ class AutonomousAutoTrader:
                     signal, confidence, tf_results = self.strategy_master.get_consensus_signal(dfs)
                     regime = self.risk_manager.evaluate_market_regime(dfs.get('H1'))
 
-                    # Logic: 100% autonomous requires high confidence across multiple timeframes
-                    is_verified = abs(confidence) >= 20
-                    signal, confidence = self.strategy_master.get_consensus_signal(dfs)
-                    regime = self.risk_manager.evaluate_market_regime(dfs.get('H1'))
+                    # Logic: 100% autonomous requires high confidence and stable regime
+                    # If high volatility, we require even higher confidence
+                    threshold = 15
+                    if "High Volatility" in regime:
+                        threshold = 25
 
-                    # Logic: 100% autonomous requires high confidence across multiple timeframes
-                    is_verified = abs(confidence) >= 8
+                    is_verified = abs(confidence) >= threshold
 
                     response = {
                         "status": "success",
@@ -120,7 +117,10 @@ class AutonomousAutoTrader:
             except Exception as e:
                 print(f"Error processing client request: {e}")
                 error_resp = {"status": "error", "message": str(e)}
-                conn.sendall(json.dumps(error_resp).encode('utf-8'))
+                try:
+                    conn.sendall(json.dumps(error_resp).encode('utf-8'))
+                except:
+                    pass
 
     def run(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
