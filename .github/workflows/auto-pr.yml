@@ -1,0 +1,24 @@
+name: Auto PR and Merge
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  auto-pull-request:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create and Enable Auto-Merge PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Creates the PR and tells GitHub to merge it automatically when conditions are met
+          gh pr create --base main --head ${{ github.ref_name }} --title "Auto-merge ${{ github.ref_name }}" --body "Automated sync" || true
+          gh pr merge --auto --merge "${{ github.ref_name }}"
