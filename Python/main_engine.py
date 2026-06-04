@@ -61,6 +61,10 @@ class AutonomousAutoTrader:
                         'Volume': 'sum'
                     }).dropna()
                 dfs[tf] = df
+            # Fetch Multi-timeframe data
+            dfs['M15'] = ticker.history(period="5d", interval="15m")
+            dfs['H1'] = ticker.history(period="1mo", interval="1h")
+            dfs['D1'] = ticker.history(period="1y", interval="1d")
 
             return dfs if any(not df.empty for df in dfs.values()) else None
         except Exception as e:
@@ -90,6 +94,11 @@ class AutonomousAutoTrader:
 
                     # Logic: 100% autonomous requires high confidence across multiple timeframes
                     is_verified = abs(confidence) >= 20
+                    signal, confidence = self.strategy_master.get_consensus_signal(dfs)
+                    regime = self.risk_manager.evaluate_market_regime(dfs.get('H1'))
+
+                    # Logic: 100% autonomous requires high confidence across multiple timeframes
+                    is_verified = abs(confidence) >= 8
 
                     response = {
                         "status": "success",

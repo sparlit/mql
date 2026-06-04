@@ -65,6 +65,9 @@ class StrategyMaster:
         }
         total_consensus = 0
         tf_results = {}
+        # df_dict: {'H1': df1, 'M15': df2, 'D1': df3}
+        tf_weights = {'M15': 1, 'H1': 2, 'D1': 3}
+        total_consensus = 0
 
         for tf, df in df_dict.items():
             if df is None or df.empty: continue
@@ -86,6 +89,13 @@ class StrategyMaster:
             return "SELL", total_consensus, tf_results
         else:
             return "NEUTRAL", total_consensus, tf_results
+
+        if total_consensus >= 5:
+            return "BUY", total_consensus
+        elif total_consensus <= -5:
+            return "SELL", total_consensus
+        else:
+            return "NEUTRAL", total_consensus
 
 if __name__ == "__main__":
     # Test logic

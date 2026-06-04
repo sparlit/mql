@@ -26,6 +26,7 @@ private:
    color             m_text_color;
 
    CChartObjectEdit  m_cells[][16]; // Increased to support all TFs + Metadata
+   CChartObjectEdit  m_cells[][10]; // Fixed max columns for simplicity in this version
 
 public:
                      CDashboard(void);
