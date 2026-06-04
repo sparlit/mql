@@ -18,14 +18,23 @@ class AutonomousAutoTrader:
         print(f"Autonomous AutoTrader Engine (TCP) started on {host}:{port}")
 
     def fetch_data(self, symbol):
+        # Symbol mapping for Forex
+        if len(symbol) == 6 and symbol.isupper():
+            yf_symbol = symbol + "=X"
+        else:
+            yf_symbol = symbol
+
         try:
-            ticker = yf.Ticker(symbol)
-            df = ticker.history(period="1mo", interval="1h")
-            if df.empty:
-                return None
-            return df
+            ticker = yf.Ticker(yf_symbol)
+            dfs = {}
+            # Fetch Multi-timeframe data
+            dfs['M15'] = ticker.history(period="5d", interval="15m")
+            dfs['H1'] = ticker.history(period="1mo", interval="1h")
+            dfs['D1'] = ticker.history(period="1y", interval="1d")
+
+            return dfs if any(not df.empty for df in dfs.values()) else None
         except Exception as e:
-            print(f"Error fetching data for {symbol}: {e}")
+            print(f"Error fetching data for {yf_symbol}: {e}")
             return None
 
     def handle_client(self, conn, addr):
@@ -42,14 +51,15 @@ class AutonomousAutoTrader:
 
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] Request: {symbol} | Balance: {balance}")
 
-                df = self.fetch_data(symbol)
-                if df is not None:
-                    trend = self.analyze_trend(df)
-                    signal, confidence = self.strategy_master.get_consensus_signal(df)
-                    regime = self.risk_manager.evaluate_market_regime(df)
+                dfs = self.fetch_data(symbol)
+                if dfs is not None:
+                    # Analyze based on H1 trend
+                    trend = self.analyze_trend(dfs.get('H1'))
+                    signal, confidence = self.strategy_master.get_consensus_signal(dfs)
+                    regime = self.risk_manager.evaluate_market_regime(dfs.get('H1'))
 
-                    # Logic: 100% autonomous requires high confidence
-                    is_verified = abs(confidence) >= 2
+                    # Logic: 100% autonomous requires high confidence across multiple timeframes
+                    is_verified = abs(confidence) >= 8
 
                     response = {
                         "status": "success",

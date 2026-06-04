@@ -57,21 +57,29 @@ class StrategyMaster:
             return -1
         return 0
 
-    def get_consensus_signal(self, df):
-        signals = [
-            self.trend_following_signal(df),
-            self.mean_reversion_signal(df),
-            self.breakout_signal(df),
-            self.scalping_signal(df)
-        ]
+    def get_consensus_signal(self, df_dict):
+        # df_dict: {'H1': df1, 'M15': df2, 'D1': df3}
+        tf_weights = {'M15': 1, 'H1': 2, 'D1': 3}
+        total_consensus = 0
 
-        consensus = sum(signals)
-        if consensus >= 2:
-            return "BUY", consensus
-        elif consensus <= -2:
-            return "SELL", consensus
+        for tf, df in df_dict.items():
+            if df is None or df.empty: continue
+
+            signals = [
+                self.trend_following_signal(df),
+                self.mean_reversion_signal(df),
+                self.breakout_signal(df),
+                self.scalping_signal(df)
+            ]
+            tf_consensus = sum(signals)
+            total_consensus += tf_consensus * tf_weights.get(tf, 1)
+
+        if total_consensus >= 5:
+            return "BUY", total_consensus
+        elif total_consensus <= -5:
+            return "SELL", total_consensus
         else:
-            return "NEUTRAL", consensus
+            return "NEUTRAL", total_consensus
 
 if __name__ == "__main__":
     # Test logic

@@ -4,4 +4,3 @@ yfinance
 scipy
 statsmodels
 scikit-learn
-pyzmq
