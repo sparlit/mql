@@ -1,0 +1,24 @@
+# TODO List - Autonomous Autotrader (MT5)
+
+- [x] Project Initialization
+    - [x] Directory structure creation
+    - [x] Environment configuration (Python/MT5 Bridge)
+- [ ] MQL5 Core Components
+    - [x] Dashboard UI (Multi-column/row grid)
+    - [ ] Manual Configuration Window
+    - [ ] Multi-timeframe analysis module
+    - [x] Trade Execution Module (with Trailing SL/TP)
+- [x] Python Analysis Engine
+    - [x] MT5 Connection Bridge (ZMQ/Socket)
+    - [x] Data Ingestion from multiple sources (Yahoo, etc.)
+    - [x] Multi-timeframe strategy logic (Trend, Mean Reversion, etc.)
+    - [x] Master Decision Module (Confirmation Logic)
+    - [x] Risk Analysis & Position Sizing
+- [ ] Integration & Automation
+    - [x] Autonomous loop (Real-time updates)
+    - [x] Auto-calculation & Auto-trading logic
+    - [x] Live status update dashboard integration
+- [x] Verification & Testing
+    - [x] Stress testing
+    - [x] Backtesting
+    - [x] Zero-error verification
