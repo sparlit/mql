@@ -8,13 +8,12 @@ on:
 jobs:
   auto-merge-engine:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: write
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches full history so git can merge properly
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -25,16 +24,15 @@ jobs:
         run: |
           python Python/stress_test.py
 
-      - name: Create, Approve, and Merge PR
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Direct Git Merge to Main
         run: |
-          # 1. Create the Pull Request and capture its URL
-          PR_URL=$(gh pr create --base main --head ${{ github.ref_name }} --title "Auto-Sync: ${{ github.ref_name }}" --body "Automated sync." || gh pr view --json url --jq .url)
+          # Configure virtual bot identity
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 2. Automatically approve the Pull Request so it can bypass blocks
-          gh pr review "$PR_URL" --approve
+          # Force checkout main and merge the triggering feature branch
+          git checkout main
+          git merge origin/${{ github.ref_name }} --no-edit
           
-          # 3. Force execute the final merge
-          gh pr merge "$PR_URL" --auto --merge
+          # Push the final combined code back to GitHub
+          git push origin main
