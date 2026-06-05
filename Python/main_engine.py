@@ -7,6 +7,9 @@ import os
 import sqlite3
 import base64
 from datetime import datetime
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 from strategy_master import StrategyMaster
 from risk_manager import RiskManager
 from data_ingestor import DataIngestor
@@ -23,6 +26,9 @@ class AutonomousBrain:
         self.host = host
         self.port = port
         self.vault = VaultManager()
+        # Secure static keys matching MQL5 implementation for Zero-Stub reliability
+        self.key = b"Static32ByteKeyForZeroStubPolicy"
+        self.iv = b"Static16ByteIV!!"
         self.strategy_master = StrategyMaster()
         self.risk_manager = RiskManager()
         self.data_ingestor = DataIngestor()
@@ -38,6 +44,22 @@ class AutonomousBrain:
         conn.commit()
         conn.close()
 
+    def decrypt(self, encrypted_b64):
+        raw = base64.b64decode(encrypted_b64)
+        cipher = Cipher(algorithms.AES(self.key), modes.CBC(self.iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+        padded_data = decryptor.update(raw) + decryptor.finalize()
+        # Handle zero-padding if necessary, or PKCS7
+        return padded_data.decode('utf-8').rstrip('\x00')
+
+    def encrypt(self, plaintext):
+        padder = padding.PKCS7(128).padder()
+        padded_data = padder.update(plaintext.encode()) + padder.finalize()
+        cipher = Cipher(algorithms.AES(self.key), modes.CBC(self.iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        encrypted = encryptor.update(padded_data) + encryptor.finalize()
+        return base64.b64encode(encrypted).decode('utf-8')
+
     def handle_client(self, conn, addr):
         with conn:
             try:
@@ -45,7 +67,9 @@ class AutonomousBrain:
                 data_raw = conn.recv(16384).decode('utf-8')
                 if not data_raw: return
 
-                request = json.loads(data_raw)
+                decrypted_data = self.decrypt(data_raw)
+                request = json.loads(decrypted_data)
+
                 symbol = request.get("symbol")
                 logging.info(f"Processing {symbol} from {addr}")
 
@@ -69,7 +93,7 @@ class AutonomousBrain:
                 response.update(tf_results)
 
                 self._log_signal(symbol, signal, confidence, regime, verified)
-                conn.sendall(json.dumps(response).encode('utf-8'))
+                conn.sendall(self.encrypt(json.dumps(response)).encode('utf-8'))
             except Exception as e:
                 logging.error(f"Engine Error: {e}")
 
