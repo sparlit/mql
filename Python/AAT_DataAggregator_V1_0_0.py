@@ -29,14 +29,19 @@ class DataAggregator:
             for row in rows:
                 impact = row.find('td', class_='calendar__impact')
                 if impact and (impact.find('span', class_='high') or impact.find('span', class_='red')):
-                    currency = row.find('td', class_='calendar__currency').text.strip()
-                    event = row.find('td', class_='calendar__event').text.strip()
-                    time_str = row.find('td', class_='calendar__time').text.strip()
+                    currency_td = row.find('td', class_='calendar__currency')
+                    event_td = row.find('td', class_='calendar__event')
+                    time_td = row.find('td', class_='calendar__time')
+
+                    if not currency_td or not event_td or not time_td: continue
+
+                    currency = currency_td.text.strip()
+                    event = event_td.text.strip()
+                    time_str = time_td.text.strip()
 
                     if not time_str or ":" not in time_str: continue
 
                     try:
-                        # Parsing FF time format like "4:30am"
                         event_dt = datetime.strptime(f"{current_date} {time_str}", "%b %d, %Y %I:%M%p")
                         news_events.append({
                             'currency': currency,
@@ -58,6 +63,7 @@ class DataAggregator:
         url = "https://www.fxstreet.com/news?q=sentiment"
         try:
             response = requests.get(url, headers=self.headers, timeout=10)
+            if response.status_code != 200: return "Neutral"
             soup = BeautifulSoup(response.content, 'html.parser')
             text = soup.get_text().lower()
             bullish_count = text.count('bullish') + text.count('positive') + text.count('recovery')
@@ -79,6 +85,7 @@ class DataAggregator:
         try:
             url = "https://polymarket.com/"
             response = requests.get(url, headers=self.headers, timeout=10)
+            if response.status_code != 200: return "Neutral"
             text = response.text.lower()
 
             if 'fed hike' in text or 'interest rates rise' in text: return "Hawkish"
