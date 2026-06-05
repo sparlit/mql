@@ -26,12 +26,22 @@ jobs:
 
       - name: Run Python Smoke Test
         run: |
-          # Use a smaller model for CI to save time/memory if possible,
-          # but here we follow the zero-stub policy with full setup.
+          # Ensure essential directories exist
+          mkdir -p Python/logs Python/db Python/models Python/data
+
+          # Start engine
           python Python/main_engine.py > engine.log 2>&1 &
 
-          # Wait longer for torch/transformers models to load
-          timeout 120s bash -c 'until grep -q "Brain listening" engine.log; do sleep 5; done' || true
+          # Wait for engine to start or timeout (NLP models can take 2-3 mins)
+          echo "Waiting for Brain to start..."
+          for i in {1..40}; do
+            if grep -q "Brain listening" engine.log; then
+              echo "Brain is ready!"
+              break
+            fi
+            echo "Still waiting... ($((i*5))s)"
+            sleep 5
+          done
 
           python Python/stress_test.py || echo "Warning: Test skipped due to environment limitations, proceeding with secure merge."
           kill $(pgrep -f main_engine.py) || true

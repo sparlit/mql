@@ -15,6 +15,9 @@ from risk_manager import RiskManager
 from data_ingestor import DataIngestor
 from vault_manager import VaultManager
 
+# Ensure log directory exists before basicConfig
+os.makedirs("Python/logs", exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
