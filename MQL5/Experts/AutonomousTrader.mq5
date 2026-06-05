@@ -114,7 +114,8 @@ void AnalyzeMarket()
    string request = "{\"symbol\":\"" + _Symbol + "\", " +
                     "\"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2) + ", " +
                     "\"tick_value\":" + DoubleToString(symbol_info.TickValue(), 5) + ", " +
-                    "\"tick_size\":" + DoubleToString(symbol_info.TickSize(), 8) + "}";
+                    "\"tick_size\":" + DoubleToString(symbol_info.TickSize(), 8) + ", " +
+                    "\"sl_points\":" + IntegerToString(InpStopLoss) + "}";
 
    if(socket_client.Connect("127.0.0.1", 5555))
      {
@@ -127,6 +128,7 @@ void AnalyzeMarket()
             double confidence = CJsonParser::GetDouble(response, "confidence");
             bool verified = CJsonParser::GetBool(response, "verified");
             string regime = CJsonParser::GetString(response, "regime");
+            double recommended_lot = CJsonParser::GetDouble(response, "recommended_lot");
 
             // TF Signals
             UpdateTFCell(1, 1, response, "M1");
@@ -145,8 +147,8 @@ void AnalyzeMarket()
             if(verified)
               {
                dashboard.SetCellValue(1, 11, "TRADE!", clrLime);
-               if(signal == "BUY") ExecuteTrade(ORDER_TYPE_BUY);
-               else if(signal == "SELL") ExecuteTrade(ORDER_TYPE_SELL);
+               if(signal == "BUY") ExecuteTrade(ORDER_TYPE_BUY, recommended_lot);
+               else if(signal == "SELL") ExecuteTrade(ORDER_TYPE_SELL, recommended_lot);
               }
             else
               {
@@ -173,7 +175,7 @@ void UpdateTFCell(int row, int col, string json, string tf)
 //+------------------------------------------------------------------+
 //| Trade Execution Logic                                            |
 //+------------------------------------------------------------------+
-void ExecuteTrade(ENUM_ORDER_TYPE type)
+void ExecuteTrade(ENUM_ORDER_TYPE type, double python_lot = 0)
   {
    if(!symbol_info.RefreshRates()) return;
 
@@ -203,6 +205,12 @@ void ExecuteTrade(ENUM_ORDER_TYPE type)
 
    // Volume = Risk Amount / (Price Risk in Points * Tick Value)
    double volume = risk_amount / (InpStopLoss * tick_value);
+
+   // Use Python's calculation if it matches our constraints, otherwise use ours as fallback
+   if(python_lot > 0 && volume > 0 && MathAbs(volume - python_lot) / volume < 0.1)
+     {
+      volume = python_lot;
+     }
 
    // Standardize volume
    double step = symbol_info.LotsStep();

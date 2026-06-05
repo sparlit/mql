@@ -1,39 +1,38 @@
 import numpy as np
+import logging
 
 class RiskManager:
     def __init__(self, account_balance=10000, risk_per_trade=0.01):
         self.account_balance = account_balance
         self.risk_per_trade = risk_per_trade
 
-    def calculate_position_size(self, entry_price, stop_loss, tick_value=1.0, tick_size=0.00001, contract_size=100000):
+    def calculate_position_size(self, entry_price, stop_loss_points, tick_value=1.0):
         """
         Calculates the exact lot size based on account risk and symbol-specific parameters.
+        Matches MQL5 logic for perfect synchronization.
         """
+        if stop_loss_points <= 0 or tick_value <= 0:
+            return 0.01
+
         risk_amount = self.account_balance * self.risk_per_trade
-        price_risk_points = abs(entry_price - stop_loss) / tick_size
 
-        if price_risk_points == 0:
-            return 0
-
-        # Risk per lot in account currency
-        # risk_per_lot = (price_risk_points * tick_value)
-        # lot_size = risk_amount / risk_per_lot
-
-        # Standard Forex Calculation:
-        # Lot Size = Risk Amount / (Stop Loss in Pips * Value per Pip)
-        # Here we use points for maximum precision across all asset classes
-        lot_size = risk_amount / (price_risk_points * tick_value)
-
-        return round(lot_size, 2)
+        # Volume = Risk Amount / (Stop Loss in Points * Tick Value)
+        # This matches the MQL5 formula: volume = risk_amount / (InpStopLoss * tick_value)
+        try:
+            lot_size = risk_amount / (stop_loss_points * tick_value)
+            return round(lot_size, 2)
+        except ZeroDivisionError:
+            return 0.01
 
     def evaluate_market_regime(self, df):
         """
         Identifies market regime based on volatility and trend persistence.
         """
         if df is None or df.empty or len(df) < 100:
-            return "Normal"
+            return "Stable - Ranging"
 
         # Calculate True Range
+        df = df.copy()
         df['High-Low'] = df['High'] - df['Low']
         df['High-PrevClose'] = abs(df['High'] - df['Close'].shift(1))
         df['Low-PrevClose'] = abs(df['Low'] - df['Close'].shift(1))
@@ -65,4 +64,4 @@ class RiskManager:
 
 if __name__ == "__main__":
     rm = RiskManager()
-    print("Risk Manager fully operational.")
+    print("Risk Manager fully operational and synchronized.")

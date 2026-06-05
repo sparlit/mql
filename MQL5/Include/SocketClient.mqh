@@ -12,6 +12,9 @@
 #define AF_INET         2
 #define SOCK_STREAM     1
 #define IPPROTO_TCP     6
+#define SOL_SOCKET      0xFFFF
+#define SO_RCVTIMEO     0x1006
+#define SO_SNDTIMEO     0x1005
 
 struct sockaddr_in {
     short          sin_family;
@@ -30,6 +33,7 @@ struct sockaddr_in {
    int WSACleanup();
    uint inet_addr(uchar &cp[]);
    ushort htons(ushort hostshort);
+   int setsockopt(uint s, int level, int optname, int &optval, int optlen);
 #import
 
 class CSocketClient
@@ -39,15 +43,20 @@ private:
    string            m_host;
    int               m_port;
    bool              m_initialized;
+   int               m_timeout;
 
 public:
-                     CSocketClient(void) : m_socket(INVALID_SOCKET), m_host("127.0.0.1"), m_port(5555), m_initialized(false) {}
+                     CSocketClient(void) : m_socket(INVALID_SOCKET), m_host("127.0.0.1"), m_port(5555), m_initialized(false), m_timeout(5000) {}
                     ~CSocketClient(void) { Disconnect(); if(m_initialized) WSACleanup(); }
 
    bool              Init()
      {
       uchar data[512];
-      if(WSAStartup(0x0202, data) != 0) return false;
+      if(WSAStartup(0x0202, data) != 0)
+        {
+         Print("SocketClient: WSAStartup failed");
+         return false;
+        }
       m_initialized = true;
       return true;
      }
@@ -60,6 +69,10 @@ public:
 
       m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
       if(m_socket == INVALID_SOCKET) return false;
+
+      // Set Timeouts
+      setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, m_timeout, 4);
+      setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, m_timeout, 4);
 
       sockaddr_in addr;
       addr.sin_family = AF_INET;
@@ -82,21 +95,47 @@ public:
      {
       if(m_socket == INVALID_SOCKET) return false;
       uchar buf[];
-      StringToCharArray(message, buf);
-      return (send(m_socket, buf, ArraySize(buf)-1, 0) != SOCKET_ERROR);
+      int len = StringToCharArray(message, buf);
+      if(len <= 1) return false;
+
+      int total_sent = 0;
+      int to_send = len - 1;
+      while(total_sent < to_send)
+        {
+         uchar chunk[];
+         ArrayCopy(chunk, buf, 0, total_sent, to_send - total_sent);
+         int res = send(m_socket, chunk, ArraySize(chunk), 0);
+         if(res == SOCKET_ERROR) return false;
+         total_sent += res;
+        }
+      return true;
      }
 
    string            Receive()
      {
       if(m_socket == INVALID_SOCKET) return "";
-      char buf[8192];
-      ArrayInitialize(buf, 0);
-      int res = recv(m_socket, buf, 8192, 0);
-      if(res > 0)
+      string result = "";
+      char buf[4096];
+      int res;
+
+      while(true)
         {
-         return CharArrayToString(buf);
+         ArrayInitialize(buf, 0);
+         res = recv(m_socket, buf, 4096, 0);
+         if(res > 0)
+           {
+            result += CharArrayToString(buf, 0, res);
+           }
+         else if(res == 0) // Graceful shutdown
+           {
+            break;
+           }
+         else // Error or timeout
+           {
+            break;
+           }
         }
-      return "";
+      return result;
      }
 
    void              Disconnect()
