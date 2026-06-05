@@ -25,7 +25,7 @@ private:
    color             m_cell_bg;
    color             m_text_color;
 
-   CChartObjectEdit  m_cells[10][16]; // Fixed size with support for up to 16 columns
+   CChartObjectEdit  m_cells[12][16]; // Increased rows for extra info
 
 public:
                      CDashboard(void);
@@ -34,6 +34,8 @@ public:
    void              Create(int rows, int cols, int x, int y, int width, int height);
    void              SetHeader(int col, string text);
    void              SetCellValue(int row, int col, string value, color clr = clrWhite);
+   void              SetCellReadOnly(int row, int col, bool read_only);
+   string            GetCellValue(int row, int col);
    void              Destroy(void);
   };
 
@@ -60,7 +62,7 @@ CDashboard::~CDashboard(void)
 //+------------------------------------------------------------------+
 void CDashboard::Create(int rows, int cols, int x, int y, int width, int height)
   {
-   m_rows = MathMin(rows, 10);
+   m_rows = MathMin(rows, 12);
    m_cols = MathMin(cols, 16);
    m_x_start = x;
    m_y_start = y;
@@ -101,6 +103,25 @@ void CDashboard::SetCellValue(int row, int col, string value, color clr = clrWhi
       m_cells[row][col].Description(value);
       m_cells[row][col].Color(clr);
      }
+  }
+
+//+------------------------------------------------------------------+
+//| Set Cell Read Only                                               |
+//+------------------------------------------------------------------+
+void CDashboard::SetCellReadOnly(int row, int col, bool read_only)
+  {
+   if(row >= 0 && row < m_rows && col >= 0 && col < m_cols)
+      m_cells[row][col].ReadOnly(read_only);
+  }
+
+//+------------------------------------------------------------------+
+//| Get Cell Value                                                   |
+//+------------------------------------------------------------------+
+string CDashboard::GetCellValue(int row, int col)
+  {
+   if(row >= 0 && row < m_rows && col >= 0 && col < m_cols)
+      return m_cells[row][col].Description();
+   return "";
   }
 
 //+------------------------------------------------------------------+

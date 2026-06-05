@@ -62,18 +62,40 @@ class StrategyMaster:
         return 0
 
     def scalping_signal(self, df):
-        window = 5
+        """
+        Advanced scalping based on EMA Cross + RSI + Candle Momentum.
+        """
         if len(df) < 20: return 0
         try:
-            fast_sma = df['Close'].rolling(window=window).mean()
-            slow_sma = df['Close'].rolling(window=20).mean()
+            ema5 = df['Close'].ewm(span=5, adjust=False).mean()
+            ema20 = df['Close'].ewm(span=20, adjust=False).mean()
+            rsi = self.calculate_rsi(df['Close'], period=7)
 
-            if fast_sma.iloc[-1] > slow_sma.iloc[-1] and fast_sma.iloc[-2] <= slow_sma.iloc[-2]:
+            candle_body = abs(df['Close'].iloc[-1] - df['Open'].iloc[-1])
+            avg_body = abs(df['Close'] - df['Open']).rolling(window=10).mean().iloc[-1]
+
+            if ema5.iloc[-1] > ema20.iloc[-1] and rsi.iloc[-1] > 50 and candle_body > avg_body:
                 return 1
-            elif fast_sma.iloc[-1] < slow_sma.iloc[-1] and fast_sma.iloc[-2] >= slow_sma.iloc[-2]:
+            elif ema5.iloc[-1] < ema20.iloc[-1] and rsi.iloc[-1] < 50 and candle_body > avg_body:
                 return -1
         except Exception as e:
             logging.error(f"StrategyMaster (Scalping): {e}")
+        return 0
+
+    def harmonic_pattern_signal(self, df):
+        """
+        Pivot-based support/resistance detection.
+        """
+        if len(df) < 50: return 0
+        try:
+            # If current price is at a 50-period support and RSI is oversold
+            support = df['Low'].rolling(window=50).min().iloc[-1]
+            resistance = df['High'].rolling(window=50).max().iloc[-1]
+
+            if df['Close'].iloc[-1] <= support * 1.001: return 1
+            if df['Close'].iloc[-1] >= resistance * 0.999: return -1
+        except Exception as e:
+            logging.error(f"StrategyMaster (Harmonic): {e}")
         return 0
 
     def get_consensus_signal(self, df_dict):
@@ -94,7 +116,8 @@ class StrategyMaster:
                 self.trend_following_signal(df),
                 self.mean_reversion_signal(df),
                 self.breakout_signal(df),
-                self.scalping_signal(df)
+                self.scalping_signal(df),
+                self.harmonic_pattern_signal(df)
             ]
             tf_consensus = sum(signals)
             total_consensus += tf_consensus * tf_weights.get(tf, 1)
