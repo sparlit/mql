@@ -15,6 +15,10 @@
 #include <AAT-SocketClient-V1.0.0.mqh>
 #include <AAT-JsonParser-V1.0.0.mqh>
 
+#import "user32.dll"
+   int PostMessageW(long hWnd, uint Msg, uint wParam, uint lParam);
+#import
+
 //--- inputs
 input double   InpRiskPercent  = 1.0;      // Risk per trade (%)
 input int      InpMagicNumber  = 123456;   // Magic Number
@@ -240,5 +244,9 @@ void SetupTimeframeCharts()
   {
    ENUM_TIMEFRAMES tfs[] = {PERIOD_M1, PERIOD_M5, PERIOD_M15, PERIOD_M30, PERIOD_H1, PERIOD_H4, PERIOD_D1, PERIOD_W1, PERIOD_MN1};
    for(int i=0; i<ArraySize(tfs); i++) ChartOpen(_Symbol, tfs[i]);
-   ChartTile(CHART_TILE_VERTICAL);
+
+   // Tile windows vertically using WinAPI (MT5 doesn't have a native ChartTile function)
+   // 0x0111 = WM_COMMAND, 33054 = ID_WINDOW_TILE_VERT
+   long main_hwnd = ChartGetInteger(0, CHART_WINDOW_HANDLE);
+   PostMessageW(main_hwnd, 0x0111, 33054, 0);
   }
