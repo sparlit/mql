@@ -32,27 +32,23 @@ class AutonomousAutoTrader:
         self.cache = {}
         self.all_dfs = {}
 
-        # Background Data Cache
         self.news_cache = []
         self.sentiment_cache = "Neutral"
         self.poly_cache = "Neutral"
-        self.last_agg_update = 0
 
         logging.info(f"Autonomous AutoTrader Engine (TCP) started on {host}:{port}")
         threading.Thread(target=self.background_aggregator, daemon=True).start()
 
     def background_aggregator(self):
-        """Updates news and sentiment in the background to avoid bottlenecks."""
         while self.active:
             try:
                 self.news_cache = self.aggregator.fetch_forexfactory_news()
                 self.sentiment_cache = self.aggregator.fetch_fxstreet_sentiment()
                 self.poly_cache = self.aggregator.fetch_polymarket_sentiment()
-                self.last_agg_update = time.time()
-                logging.info("Background aggregator updated successfully.")
+                logging.info("Background aggregator updated.")
             except Exception as e:
                 logging.error(f"Background aggregator error: {e}")
-            time.sleep(300) # Update every 5 minutes
+            time.sleep(300)
 
     def map_symbol(self, symbol):
         symbol = re.sub(r'\.[a-zA-Z0-9]+$', '', symbol)
@@ -99,15 +95,25 @@ class AutonomousAutoTrader:
     def handle_client(self, conn, addr):
         with conn:
             try:
-                conn.settimeout(15.0)
+                conn.settimeout(5.0)
+                # Security: Payload Size Limit (10KB)
                 data_raw = ""
-                while True:
-                    chunk = conn.recv(4096).decode('utf-8')
+                while len(data_raw) < 10240:
+                    chunk = conn.recv(1024).decode('utf-8')
                     if not chunk: break
                     data_raw += chunk
                     if data_raw.endswith('}'): break
-                if not data_raw: return
-                data = json.loads(data_raw)
+
+                if not data_raw or not data_raw.strip().startswith('{'): return
+
+                # Security: Strict Schema Validation
+                try:
+                    data = json.loads(data_raw)
+                    if "symbol" not in data: raise ValueError("Missing symbol")
+                except Exception as e:
+                    logging.warning(f"Invalid payload from {addr}: {e}")
+                    return
+
                 symbol = data.get("symbol", "EURUSD")
                 balance = data.get("balance", 10000)
                 tick_value = data.get("tick_value", 1.0)
@@ -160,8 +166,9 @@ class AutonomousAutoTrader:
     def run(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Security: Bind only to localhost
             s.bind((self.host, self.port))
-            s.listen(50) # Higher backlog for stress testing
+            s.listen(50)
             logging.info(f"Listening on {self.host}:{self.port}...")
             while self.active:
                 conn, addr = s.accept()
