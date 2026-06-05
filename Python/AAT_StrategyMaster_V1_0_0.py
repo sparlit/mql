@@ -89,11 +89,12 @@ class StrategyMaster:
         if len(df) < 50: return 0
         try:
             # If current price is at a 50-period support and RSI is oversold
+            rsi = self.calculate_rsi(df['Close'])
             support = df['Low'].rolling(window=50).min().iloc[-1]
             resistance = df['High'].rolling(window=50).max().iloc[-1]
 
-            if df['Close'].iloc[-1] <= support * 1.001: return 1
-            if df['Close'].iloc[-1] >= resistance * 0.999: return -1
+            if df['Close'].iloc[-1] <= support * 1.001 and rsi.iloc[-1] < 40: return 1
+            if df['Close'].iloc[-1] >= resistance * 0.999 and rsi.iloc[-1] > 60: return -1
         except Exception as e:
             logging.error(f"StrategyMaster (Harmonic): {e}")
         return 0
