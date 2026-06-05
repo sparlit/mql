@@ -29,16 +29,17 @@ The system consists of two main pillars connected by a low-latency bridge:
 ### 1. MetaTrader 5 (The Executor)
 - **Dashboard UI:** A custom-built grid system that renders directly on the chart using CCanvas/CChartObject. It provides real-time status updates on trend, signal, and connection health.
 - **Bridge Client:** A custom MQL5 class (`SocketClient.mqh`) using direct Windows WinAPI (`ws2_32.dll`) calls to communicate with the Python engine via TCP.
-- **Trade Execution:** Handles order placement, stop-loss/take-profit management, and autonomous trailing logic.
+- **Trade Execution:** Handles order placement, pyramid scaling (0.01 start), news straddling, and autonomous trailing logic.
 
 ### 2. Python Engine (The Brain)
-- **Data Ingestion:** Fetches real-time and historical data from multiple sources (Yahoo Finance, etc.) across multiple timeframes.
-- **Strategy Master:** Processes data through four distinct strategies:
+- **Data Ingestion:** Aggregates data from Yahoo Finance, Forex Factory (News), FXStreet (Sentiment), and Polymarket (Prediction Markets).
+- **Strategy Master:** Processes data through five distinct high-probability strategies:
     - **Trend Following:** MACD/EMA crossover.
     - **Mean Reversion:** RSI overbought/oversold logic.
-    - **Breakout:** Price action analysis relative to Bollinger/Donchian bands.
-    - **Scalping:** High-frequency SMA/Price action logic.
-- **Risk Manager:** Analyzes market regime (Volatility vs. Range) and calculates optimal lot sizes.
+    - **Breakout:** Price action analysis relative to bands.
+    - **Scalping:** EMA Cross + RSI Momentum.
+    - **Pivot-Harmonic:** Pivot-point based support/resistance detection.
+- **Risk Manager:** Calculates VaR, Correlation, and Market Regime to ensure zero-blind-spot trading.
 
 ---
 
