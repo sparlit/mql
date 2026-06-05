@@ -3,116 +3,55 @@
 //|                                  Copyright 2024, AI Trader Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2024, AI Trader Corp."
-#property link      "https://www.mql5.com"
-#property strict
+#include <Canvas\Canvas.mqh>
 
-#include <ChartObjects\ChartObjectsTxtControls.mqh>
-
-//+------------------------------------------------------------------+
-//| CDashboard Class                                                 |
-//+------------------------------------------------------------------+
 class CDashboard
   {
 private:
-   int               m_rows;
-   int               m_cols;
-   int               m_x_start;
-   int               m_y_start;
-   int               m_cell_width;
-   int               m_cell_height;
-   color             m_header_bg;
-   color             m_cell_bg;
-   color             m_text_color;
+   CCanvas           m_canvas;
+   int               m_width;
+   int               m_height;
+   int               m_x;
+   int               m_y;
 
-   CChartObjectEdit  m_cells[10][16]; // Fixed size with support for up to 16 columns
+   color             m_bg_color;
+   color             m_text_color;
+   color             m_neon_green;
+   color             m_neon_red;
 
 public:
-                     CDashboard(void);
-                    ~CDashboard(void);
+                     CDashboard() : m_bg_color(C'20,20,20'), m_text_color(clrWhite), m_neon_green(C'57,255,20'), m_neon_red(C'FF,49,49') {}
+                    ~CDashboard() { m_canvas.Destroy(); }
 
-   void              Create(int rows, int cols, int x, int y, int width, int height);
-   void              SetHeader(int col, string text);
-   void              SetCellValue(int row, int col, string value, color clr = clrWhite);
-   void              Destroy(void);
+   bool              Create(string name, int x, int y, int width, int height)
+     {
+      m_x = x; m_y = y; m_width = width; m_height = height;
+      if(!m_canvas.CreateBitmapLabel(name, x, y, width, height, COLOR_FORMAT_ARGB_NORMALIZE)) return false;
+      Render();
+      return true;
+     }
+
+   void              Update(string symbol, string status, string signal, double confidence, string regime)
+     {
+      m_canvas.Erase(0xCC141414); // Semi-transparent charcoal
+
+      m_canvas.FontSet("Courier New", 14, FW_BOLD);
+      m_canvas.TextOut(10, 10, "AUTONOMOUS TRADER - v2.0", ColorToARGB(m_text_color));
+
+      m_canvas.FontSet("Arial", 11);
+      m_canvas.TextOut(10, 40, "SYMBOL: " + symbol, ColorToARGB(m_text_color));
+      m_canvas.TextOut(10, 60, "STATUS: " + status, ColorToARGB(status == "TRADE!" ? m_neon_green : clrYellow));
+
+      color signal_clr = (signal == "BUY") ? m_neon_green : (signal == "SELL" ? m_neon_red : clrWhite);
+      m_canvas.TextOut(10, 80, "SIGNAL: " + signal + " (" + DoubleToString(confidence, 0) + ")", ColorToARGB(signal_clr));
+      m_canvas.TextOut(10, 100, "REGIME: " + regime, ColorToARGB(clrCyan));
+
+      m_canvas.Update();
+     }
+
+   void              Render()
+     {
+      m_canvas.Erase(0xCC141414);
+      m_canvas.Update();
+     }
   };
-
-//+------------------------------------------------------------------+
-//| Constructor                                                      |
-//+------------------------------------------------------------------+
-CDashboard::CDashboard(void) : m_rows(0), m_cols(0), m_x_start(10), m_y_start(30), m_cell_width(100), m_cell_height(20)
-  {
-   m_header_bg = C'50,50,50';
-   m_cell_bg = C'30,30,30';
-   m_text_color = clrWhite;
-  }
-
-//+------------------------------------------------------------------+
-//| Destructor                                                       |
-//+------------------------------------------------------------------+
-CDashboard::~CDashboard(void)
-  {
-   Destroy();
-  }
-
-//+------------------------------------------------------------------+
-//| Create the grid                                                  |
-//+------------------------------------------------------------------+
-void CDashboard::Create(int rows, int cols, int x, int y, int width, int height)
-  {
-   m_rows = MathMin(rows, 10);
-   m_cols = MathMin(cols, 16);
-   m_x_start = x;
-   m_y_start = y;
-   m_cell_width = width;
-   m_cell_height = height;
-
-   for(int r=0; r<m_rows; r++)
-     {
-      for(int c=0; c<m_cols; c++)
-        {
-         string name = "DB_Cell_" + IntegerToString(r) + "_" + IntegerToString(c);
-         m_cells[r][c].Create(0, name, 0, m_x_start + c*m_cell_width, m_y_start + r*m_cell_height, m_cell_width, m_cell_height);
-         m_cells[r][c].BackColor(r == 0 ? m_header_bg : m_cell_bg);
-         m_cells[r][c].Color(m_text_color);
-         m_cells[r][c].FontSize(8);
-         m_cells[r][c].TextAlign(ALIGN_CENTER);
-         m_cells[r][c].ReadOnly(true);
-        }
-     }
-  }
-
-//+------------------------------------------------------------------+
-//| Set Header Text                                                  |
-//+------------------------------------------------------------------+
-void CDashboard::SetHeader(int col, string text)
-  {
-   if(col >= 0 && col < m_cols)
-      m_cells[0][col].Description(text);
-  }
-
-//+------------------------------------------------------------------+
-//| Set Cell Value                                                   |
-//+------------------------------------------------------------------+
-void CDashboard::SetCellValue(int row, int col, string value, color clr = clrWhite)
-  {
-   if(row >= 0 && row < m_rows && col >= 0 && col < m_cols)
-     {
-      m_cells[row][col].Description(value);
-      m_cells[row][col].Color(clr);
-     }
-  }
-
-//+------------------------------------------------------------------+
-//| Destroy Dashboard                                                |
-//+------------------------------------------------------------------+
-void CDashboard::Destroy(void)
-  {
-   for(int r=0; r<m_rows; r++)
-     {
-      for(int c=0; c<m_cols; c++)
-        {
-         m_cells[r][c].Delete();
-        }
-     }
-  }
