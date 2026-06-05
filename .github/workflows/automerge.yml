@@ -25,7 +25,10 @@ jobs:
 
       - name: Run Python Smoke Test
         run: |
+          python Python/main_engine.py > engine.log 2>&1 &
+          sleep 5
           python Python/stress_test.py || echo "Warning: Test skipped due to environment limitations, proceeding with secure merge."
+          kill $(pgrep -f main_engine.py) || true
 
       - name: Force Admin Merge via PR Bypass
         env:
@@ -33,4 +36,4 @@ jobs:
           GH_TOKEN: ${{ secrets.ADMIN_PAT }}
         run: |
           PR_URL=$(gh pr create --base main --head ${{ github.ref_name }} --title "Auto-Sync: ${{ github.ref_name }}" --body "Automated background sync." || gh pr view --json url --jq .url)
-          gh pr merge "$PR_URL" --merge --admin --disable-auto
+          gh pr merge "$PR_URL" --merge --admin
