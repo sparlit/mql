@@ -1,7 +1,2 @@
-2026-06-05 05:36:11,754 [INFO] Autonomous AutoTrader Engine (TCP) started on 127.0.0.1:5555
-2026-06-05 05:36:11,757 [INFO] Listening on 127.0.0.1:5555...
-2026-06-05 05:36:12,388 [INFO] Background aggregator updated successfully.
-2026-06-05 05:36:31,207 [ERROR] Error processing request from ('127.0.0.1', 58978): Expecting value: line 1 column 56 (char 55)
-2026-06-05 05:36:31,423 [ERROR] Error processing request from ('127.0.0.1', 58988): Expecting value: line 1 column 56 (char 55)
-2026-06-05 05:36:31,692 [ERROR] Error processing request from ('127.0.0.1', 59004): Expecting value: line 1 column 56 (char 55)
-2026-06-05 05:36:36,681 [ERROR] Error processing request from ('127.0.0.1', 59254): Expecting value: line 1 column 56 (char 55)
+2026-06-05 06:14:24,972 [INFO] AAT Engine V1.4.0 started on 127.0.0.1:5555
+2026-06-05 06:14:24,974 [INFO] AAT listening on 127.0.0.1:5555
