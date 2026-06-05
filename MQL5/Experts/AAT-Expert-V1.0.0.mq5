@@ -152,24 +152,38 @@ void AnalyzeMarket()
             bool verified = CJsonParser::GetBool(resp, "verified");
             bool news = CJsonParser::GetBool(resp, "news_impact");
             string signal = CJsonParser::GetString(resp, "signal");
+            double lot = CJsonParser::GetDouble(resp, "recommended_lot");
 
             dashboard.SetCellValue(3, 1, CJsonParser::GetString(resp, "regime"));
             dashboard.SetCellValue(4, 3, DoubleToString(CJsonParser::GetDouble(resp, "var"), 4));
             dashboard.SetCellValue(5, 1, DoubleToString(CJsonParser::GetDouble(resp, "correlation"), 2));
             dashboard.SetCellValue(5, 3, CJsonParser::GetString(resp, "polymarket"));
             dashboard.SetCellValue(1, 10, signal + "(" + DoubleToString(CJsonParser::GetDouble(resp, "confidence"), 0) + ")");
+            dashboard.SetCellValue(2, 1, "OK", clrLime);
+
+            string tfs[] = {"M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1", "MN"};
+            for(int i=0; i<ArraySize(tfs); i++)
+              {
+               double score = CJsonParser::GetDouble(resp, tfs[i]);
+               color c = (score > 0) ? clrLime : (score < 0 ? clrRed : clrWhite);
+               dashboard.SetCellValue(1, i+1, DoubleToString(score, 0), c);
+              }
 
             if(news) { dashboard.SetCellValue(1, 11, "NEWS STRADDLE", clrOrange); ExecuteNewsStraddle(); }
-            else if(verified) { dashboard.SetCellValue(1, 11, "TRADE!", clrLime); ExecuteTrade(signal == "BUY" ? ORDER_TYPE_BUY : ORDER_TYPE_SELL); }
+            else if(verified) { dashboard.SetCellValue(1, 11, "TRADE!", clrLime); ExecuteTrade(signal == "BUY" ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, lot); }
             else dashboard.SetCellValue(1, 11, "SCANNING", clrYellow);
            }
         }
       socket_client.Disconnect();
      }
-   else dashboard.SetCellValue(1, 11, "CONN ERROR", clrRed);
+   else
+     {
+      dashboard.SetCellValue(1, 11, "CONN ERROR", clrRed);
+      dashboard.SetCellValue(2, 1, "OFFLINE", clrRed);
+     }
   }
 
-void ExecuteTrade(ENUM_ORDER_TYPE type)
+void ExecuteTrade(ENUM_ORDER_TYPE type, double lot)
   {
    for(int i=PositionsTotal()-1; i>=0; i--)
       if(pos_info.SelectByIndex(i) && pos_info.Symbol() == _Symbol && pos_info.Magic() == InpMagicNumber) return;
@@ -178,7 +192,8 @@ void ExecuteTrade(ENUM_ORDER_TYPE type)
    double sl = (type == ORDER_TYPE_BUY) ? price - InpStopLoss * _Point : price + InpStopLoss * _Point;
    double tp = (type == ORDER_TYPE_BUY) ? price + InpTakeProfit * _Point : price - InpTakeProfit * _Point;
 
-   trade.PositionOpen(_Symbol, type, 0.01, price, sl, tp, "AAT Initial");
+   if(lot <= 0) lot = 0.01;
+   trade.PositionOpen(_Symbol, type, lot, price, sl, tp, "AAT Initial");
   }
 
 void CheckPyramidScaling()
@@ -201,7 +216,8 @@ void CheckPyramidScaling()
    if(profit >= InpStopLoss) // Add every 1:1 RR distance
      {
       double price = (type == POSITION_TYPE_BUY) ? symbol_info.Ask() : symbol_info.Bid();
-      if(trade.PositionOpen(_Symbol, (type == POSITION_TYPE_BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 0.01, price, last_open, 0, "Pyramid"))
+      double sl = last_open; // Move to BE (last_open)
+      if(trade.PositionOpen(_Symbol, (type == POSITION_TYPE_BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 0.01, price, sl, 0, "Pyramid"))
         {
          for(int i=PositionsTotal()-1; i>=0; i--)
             if(pos_info.SelectByIndex(i) && pos_info.Symbol() == _Symbol && pos_info.Magic() == InpMagicNumber)

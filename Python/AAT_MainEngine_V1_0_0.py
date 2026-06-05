@@ -86,13 +86,16 @@ class AutonomousAutoTrader:
         with conn:
             try:
                 conn.settimeout(5.0)
-                data_raw = ""
-                while len(data_raw) < 10240:
-                    chunk = conn.recv(1024).decode('utf-8')
+                data_raw_bytes = b""
+                while len(data_raw_bytes) < 10240:
+                    chunk = conn.recv(1024)
                     if not chunk: break
-                    data_raw += chunk
-                    if data_raw.endswith('}'): break
-                if not data_raw or not data_raw.strip().startswith('{'): return
+                    data_raw_bytes += chunk
+                    if data_raw_bytes.endswith(b'}'): break
+
+                if not data_raw_bytes: return
+                data_raw = data_raw_bytes.decode('utf-8', errors='ignore')
+                if not data_raw.strip().startswith('{'): return
                 data = json.loads(data_raw)
                 symbol = data.get("symbol", "EURUSD")
                 self.risk_manager.account_balance = data.get("balance", 10000)

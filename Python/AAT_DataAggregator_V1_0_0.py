@@ -24,9 +24,21 @@ class DataAggregator:
             rows = soup.find_all('tr', class_='calendar__row')
             news_events = []
 
-            current_date = datetime.now().strftime("%b %d, %Y")
+            current_date_str = datetime.now().strftime("%b %d, %Y")
 
             for row in rows:
+                # Update current_date if a new date is found in the row
+                date_td = row.find('td', class_='calendar__date')
+                if date_td and date_td.text.strip() != "":
+                    date_text = date_td.text.strip()
+                    try:
+                        parts = date_text.split()
+                        if len(parts) >= 2:
+                            month_day = " ".join(parts[-2:])
+                            current_date_str = f"{month_day}, {datetime.now().year}"
+                    except:
+                        pass
+
                 impact = row.find('td', class_='calendar__impact')
                 if impact and (impact.find('span', class_='high') or impact.find('span', class_='red')):
                     currency_td = row.find('td', class_='calendar__currency')
@@ -42,7 +54,7 @@ class DataAggregator:
                     if not time_str or ":" not in time_str: continue
 
                     try:
-                        event_dt = datetime.strptime(f"{current_date} {time_str}", "%b %d, %Y %I:%M%p")
+                        event_dt = datetime.strptime(f"{current_date_str} {time_str}", "%b %d, %Y %I:%M%p")
                         news_events.append({
                             'currency': currency,
                             'event': event,
