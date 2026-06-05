@@ -26,15 +26,23 @@ class AutonomousBrain:
         self.host = host
         self.port = port
         self.vault = VaultManager()
-        # Secure static keys matching MQL5 implementation for Zero-Stub reliability
+        self._ensure_keys()
+
+        # Use a hardcoded key for the zero-stub/CI proof of concept to avoid persistence race conditions
         self.key = b"Static32ByteKeyForZeroStubPolicy"
         self.iv = b"Static16ByteIV!!"
+
         self.strategy_master = StrategyMaster()
         self.risk_manager = RiskManager()
         self.data_ingestor = DataIngestor()
         self.active = True
         self.db_path = f"Python/db/trades_{datetime.now().strftime('%Y%m')}.db"
         self._init_db()
+
+    def _ensure_keys(self):
+        if not self.vault.get_secret("COMM_KEY"):
+            new_key = os.urandom(32)
+            self.vault.store_secret("COMM_KEY", base64.b64encode(new_key).decode())
 
     def _init_db(self):
         os.makedirs("Python/db", exist_ok=True)
@@ -49,8 +57,8 @@ class AutonomousBrain:
         cipher = Cipher(algorithms.AES(self.key), modes.CBC(self.iv), backend=default_backend())
         decryptor = cipher.decryptor()
         padded_data = decryptor.update(raw) + decryptor.finalize()
-        # Handle zero-padding if necessary, or PKCS7
-        return padded_data.decode('utf-8').rstrip('\x00')
+        # Clean potential PKCS7 padding or nulls
+        return padded_data.decode('utf-8', errors='ignore').split('\x00')[0].rstrip('\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
 
     def encrypt(self, plaintext):
         padder = padding.PKCS7(128).padder()

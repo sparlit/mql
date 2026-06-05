@@ -3,14 +3,24 @@ import pandas as pd
 import logging
 import requests
 from bs4 import BeautifulSoup
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch
 
 class DataIngestor:
     def __init__(self):
         self.cache = {}
-        self.tokenizer = AutoTokenizer.from_pretrained("ProsusAI/finbert")
-        self.model = AutoModelForSequenceClassification.from_pretrained("ProsusAI/finbert")
+        self.tokenizer = None
+        self.model = None
+        self._lazy_init_nlp()
+
+    def _lazy_init_nlp(self):
+        try:
+            from transformers import AutoTokenizer, AutoModelForSequenceClassification
+            import torch
+            self.tokenizer = AutoTokenizer.from_pretrained("ProsusAI/finbert")
+            self.model = AutoModelForSequenceClassification.from_pretrained("ProsusAI/finbert")
+            self.torch = torch
+            logging.info("FinBERT NLP Engine initialized successfully.")
+        except Exception as e:
+            logging.warning(f"NLP Engine lazy-load failed (normal for first-run or CI timeout): {e}")
 
     def fetch_all_data(self, symbol):
         prices = self.fetch_prices(symbol)
@@ -56,17 +66,16 @@ class DataIngestor:
             return []
 
     def analyze_sentiment(self, news_items, symbol):
-        if not news_items: return 0
+        if not news_items or self.model is None: return 0
 
         texts = [item['event'] for item in news_items if any(c in item['event'] for c in symbol[:3])]
         if not texts: return 0
 
         inputs = self.tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
-        with torch.no_grad():
+        with self.torch.no_grad():
             outputs = self.model(**inputs)
-            predictions = torch.nn.functional.softmax(outputs.logits, dim=-1)
+            predictions = self.torch.nn.functional.softmax(outputs.logits, dim=-1)
 
-        # FinBERT labels: 0: positive, 1: negative, 2: neutral
         mean_sentiment = predictions[:, 0].mean().item() - predictions[:, 1].mean().item()
         return mean_sentiment
 

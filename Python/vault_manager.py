@@ -1,5 +1,6 @@
 import json
 from cryptography.fernet import Fernet
+import os
 
 class VaultManager:
     def __init__(self, vault_path="Python/vault.json"):
@@ -24,20 +25,30 @@ class VaultManager:
 
         data = {}
         if os.path.exists(self.vault_path):
-            with open(self.vault_path, "r") as f_in:
-                data = json.load(f_in)
+            try:
+                with open(self.vault_path, "r") as f_in:
+                    content = f_in.read()
+                    if content:
+                        data = json.loads(content)
+            except Exception:
+                data = {}
 
         data[key] = encrypted
         with open(self.vault_path, "w") as f_out:
             json.dump(data, f_out)
+        # Force flush to disk
+        os.sync()
 
     def get_secret(self, key):
         if not os.path.exists(self.vault_path): return None
-        with open(self.vault_path, "r") as f_in:
-            data = json.load(f_in)
+        try:
+            with open(self.vault_path, "r") as f_in:
+                content = f_in.read()
+                if not content: return None
+                data = json.loads(content)
+        except Exception:
+            return None
 
         if key not in data: return None
         f = self._get_fernet()
         return f.decrypt(data[key].encode()).decode()
-
-import os
