@@ -98,6 +98,9 @@ void CheckWatchdog() {
 }
 
 void AnalyzeMarket() {
+   // If stuck in ERROR, force disconnect to reset state back to IDLE
+   if(socket_client.GetState() == STATE_ERROR) socket_client.Disconnect();
+
    if(socket_client.GetState() != STATE_IDLE) return;
 
    string req = "{\"symbol\":\"" + _Symbol + "\", \"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2) + "}";
