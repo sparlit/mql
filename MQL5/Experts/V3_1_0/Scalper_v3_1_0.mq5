@@ -14,9 +14,9 @@
 #include <Trade\Trade.mqh>
 #include <Trade\PositionInfo.mqh>
 #include <Trade\SymbolInfo.mqh>
-#include <V3_1_0\Include\AAT-Dashboard.mqh>
-#include <V3_1_0\Include\AAT-SocketClient.mqh>
-#include <V3_1_0\Include\AAT-JsonParser.mqh>
+#include <V3_1_0\AAT-Dashboard.mqh>
+#include <V3_1_0\AAT-SocketClient.mqh>
+#include <V3_1_0\AAT-JsonParser.mqh>
 
 #import "user32.dll"
    int PostMessageW(long hWnd, uint Msg, uint wParam, uint lParam);

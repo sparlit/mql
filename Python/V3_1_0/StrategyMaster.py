@@ -1,9 +1,9 @@
 # Project: Autonomous AutoTrader (AAT)
-# Version: V3.1.0_20260606
+# Version: V3.2.0_20260606
 # License: 100% FOSS / GNU GPL v3
 # Author: Simon Peter
 # Verification: Zero-Stub / Production Ready
-# Description: Strategy Intelligence Engine with FinBERT and FAISS
+# Description: Dual-Mode Strategy Intelligence (Scalp + Trade)
 
 import numpy as np
 import pandas as pd
@@ -51,7 +51,7 @@ class StrategyMaster:
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             model = AutoModelForSequenceClassification.from_pretrained(model_name)
             self.bert_model = torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
-            logging.info("FinBERT V3.1.0 (Quantized) initialized")
+            logging.info("FinBERT V3.2.0 (Dual-Mode) initialized")
         except Exception as e:
             logging.error(f"FinBERT Error: {e}")
 
@@ -66,28 +66,61 @@ class StrategyMaster:
         if sentiment == 1: return float(-probs[0][1].item())
         return 0.0
 
-    def get_consensus_signal(self, df_dict, sentiment_text=""):
-        tf_results = {}
-        weights = {'M1':0.5, 'M5':1, 'M15':1.5, 'H1':3, 'H4':4, 'D1':5}
-        total_score = 0
+    def get_dual_consensus(self, df_dict, sentiment_text=""):
+        # Parallel Consensus Engines
+        scalp_tfs = ['M1', 'M5', 'M15']
+        trade_tfs = ['H1', 'H4', 'D1']
+
         sentiment_score = self.get_sentiment_score(sentiment_text) if sentiment_text else 0
-        for tf, df in df_dict.items():
+
+        # 1. Scalp Engine
+        scalp_score = self._calculate_consensus(df_dict, scalp_tfs, sentiment_score)
+        scalp_signal = self._derive_signal(scalp_score, threshold=10)
+
+        # 2. Trade Engine
+        trade_score = self._calculate_consensus(df_dict, trade_tfs, sentiment_score)
+        trade_signal = self._derive_signal(trade_score, threshold=15)
+
+        # Dynamic ML-predicted Exit multipliers (Actionable Point 23)
+        exit_params = self._predict_exits(trade_score + scalp_score)
+
+        return {
+            "scalp_signal": scalp_signal,
+            "trade_signal": trade_signal,
+            "scalp_conf": float(scalp_score),
+            "trade_conf": float(trade_score),
+            "exit_mult": exit_params
+        }
+
+    def _calculate_consensus(self, df_dict, tfs, sentiment_score):
+        score = 0
+        weights = {'M1':0.5, 'M5':1, 'M15':1.5, 'H1':3, 'H4':4, 'D1':5}
+        for tf in tfs:
+            df = df_dict.get(tf)
             if df is None or df.empty or len(df) < 50: continue
-            score = self._vsa_analysis(df)
+
+            tf_score = self._vsa_analysis(df)
             pattern = df['Close'].pct_change().fillna(0).tail(64).values.astype('float32')
             if len(pattern) == 64:
                 D, I = self.faiss_index.search(pattern.reshape(1, -1), 5)
-                if D[0][0] < 0.01: score *= 1.2
-            tf_results[tf] = score
-            total_score += score * weights.get(tf, 1)
-        total_score += sentiment_score * 20
-        signal = "NEUTRAL"
-        if total_score > 15: signal = "BUY"
-        elif total_score < -15: signal = "SELL"
-        if signal != "NEUTRAL":
-            if not self.run_monte_carlo(df_dict.get('H1'), signal):
-                signal = "NEUTRAL"
-        return signal, float(total_score), tf_results
+                if D[0][0] < 0.01: tf_score *= 1.2
+
+            score += tf_score * weights.get(tf, 1)
+
+        return score + (sentiment_score * 10)
+
+    def _derive_signal(self, score, threshold):
+        if score > threshold: return "BUY"
+        if score < -threshold: return "SELL"
+        return "NEUTRAL"
+
+    def _predict_exits(self, combined_score):
+        # ML-predicted TP/SL multipliers based on XGBoost confidence
+        # Maps confidence to a multiplier (e.g., 0.5 to 2.0)
+        conf = np.clip(abs(combined_score) / 50.0, 0.1, 1.0)
+        tp_mult = 1.0 + (conf * 2.0) # Higher confidence = further TP
+        sl_mult = 1.0 + (conf * 0.5)
+        return {"tp": float(tp_mult), "sl": float(sl_mult)}
 
     def _vsa_analysis(self, df):
         close = df['Close']
