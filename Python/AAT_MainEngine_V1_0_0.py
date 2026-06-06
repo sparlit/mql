@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from AAT_StrategyMaster_V1_0_0 import StrategyMaster
 from AAT_RiskManager_V1_0_0 import RiskManager
 from AAT_DataAggregator_V1_0_0 import DataAggregator
+from AAT_Security_V1_0_0 import AATSecurity
 
 # Configure logging
 logging.basicConfig(
@@ -28,6 +29,9 @@ class AutonomousAutoTrader:
         self.strategy_master = StrategyMaster()
         self.risk_manager = RiskManager()
         self.aggregator = DataAggregator()
+        # Security is enabled.
+        self.security = AATSecurity()
+        self.encryption_enabled = True
         self.active = True
         self.cache = {}
         self.all_dfs = {}
@@ -91,12 +95,36 @@ class AutonomousAutoTrader:
                     chunk = conn.recv(1024)
                     if not chunk: break
                     data_raw_bytes += chunk
-                    if data_raw_bytes.endswith(b'}'): break
+                    # Base64 strings sent from MQL5 end with a null terminator (\0) or newline
+                    if b'\0' in chunk or b'\n' in chunk: break
 
                 if not data_raw_bytes: return
-                data_raw = data_raw_bytes.decode('utf-8', errors='ignore')
+                data_raw_bytes = data_raw_bytes.split(b'\0')[0].split(b'\n')[0]
+
+                # Optional decryption
+                if self.encryption_enabled:
+                    try:
+                        payload_b64 = data_raw_bytes.decode('utf-8', errors='ignore')
+                        data_raw = self.security.decrypt(payload_b64)
+                        if not data_raw:
+                            logging.warning("Decryption failed or empty payload")
+                            return
+                    except Exception as e:
+                        logging.error(f"Decryption error: {e}")
+                        return
+                else:
+                    data_raw = data_raw_bytes.decode('utf-8', errors='ignore')
+
                 if not data_raw.strip().startswith('{'): return
                 data = json.loads(data_raw)
+
+                # Heartbeat check
+                if data.get("type") == "heartbeat":
+                    response = {"status": "alive", "timestamp": datetime.now().isoformat()}
+                    encrypted_resp = self.security.encrypt(json.dumps(response))
+                    conn.sendall(encrypted_resp.encode('utf-8'))
+                    return
+
                 symbol = data.get("symbol", "EURUSD")
                 self.risk_manager.account_balance = data.get("balance", 10000)
                 dfs = self.fetch_data(symbol)
@@ -132,7 +160,15 @@ class AutonomousAutoTrader:
                     for tf, score in tf_results.items(): response[tf] = int(score)
                 else:
                     response = {"status": "error", "message": "Data fetch failed"}
-                conn.sendall(json.dumps(response).encode('utf-8'))
+
+                # Optional encryption
+                resp_json = json.dumps(response)
+                if self.encryption_enabled:
+                    encrypted_resp = self.security.encrypt(resp_json)
+                    # Add newline as terminator for MQL5 client
+                    conn.sendall((encrypted_resp + "\n").encode('utf-8'))
+                else:
+                    conn.sendall(resp_json.encode('utf-8'))
             except Exception as e:
                 logging.error(f"Client Error: {e}")
 

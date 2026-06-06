@@ -36,6 +36,8 @@ struct sockaddr_in {
    int setsockopt(uint s, int level, int optname, int &optval, int optlen);
 #import
 
+#include <AAT-Security-V1.0.0.mqh>
+
 class CSocketClient
 {
 private:
@@ -44,9 +46,13 @@ private:
    int               m_port;
    bool              m_initialized;
    int               m_timeout;
+   long              m_latency;
+   CAATSecurity      m_security;
 
 public:
-                     CSocketClient(void) : m_socket(INVALID_SOCKET), m_host("127.0.0.1"), m_port(5555), m_initialized(false), m_timeout(5000) {}
+                     CSocketClient(void) : m_socket(INVALID_SOCKET), m_host("127.0.0.1"), m_port(5555), m_initialized(false), m_timeout(5000), m_latency(0) {}
+
+   void              SetMasterKey(string key) { m_security.SetKey(key); }
                     ~CSocketClient(void) { Disconnect(); if(m_initialized) WSACleanup(); }
 
    bool              Init()
@@ -125,6 +131,7 @@ public:
          if(res > 0)
            {
             result += CharArrayToString(buf, 0, res);
+            if(StringFind(result, "\n") != -1) break;
            }
          else if(res == 0) // Graceful shutdown
            {
@@ -145,5 +152,43 @@ public:
          closesocket(m_socket);
          m_socket = INVALID_SOCKET;
         }
+     }
+
+   long              GetLatency() { return m_latency; }
+
+   bool              CheckHeartbeat()
+     {
+      long start = GetTickCount64();
+      if(!Connect(m_host, m_port))
+        {
+         m_latency = -1;
+         return false;
+        }
+
+      string req = "{\"type\":\"heartbeat\"}";
+      string enc_req = m_security.Encrypt(req);
+      if(!Send(enc_req)) { Disconnect(); return false; }
+
+      string resp = Receive();
+      string dec_resp = m_security.Decrypt(resp);
+
+      Disconnect();
+      m_latency = GetTickCount64() - start;
+
+      return (StringFind(dec_resp, "\"status\":\"alive\"") != -1);
+     }
+
+   bool              SendEncrypted(string message)
+     {
+      string enc = m_security.Encrypt(message);
+      return Send(enc + "\n");
+     }
+
+   string            ReceiveDecrypted()
+     {
+      string resp = Receive();
+      if(resp == "") return "";
+      string trimmed = StringSubstr(resp, 0, StringFind(resp, "\n"));
+      return m_security.Decrypt(trimmed);
      }
 };

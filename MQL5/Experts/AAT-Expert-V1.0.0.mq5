@@ -28,6 +28,7 @@ input bool     InpTrailingSL   = true;     // Enable Trailing SL
 input bool     InpTrailingTP   = true;     // Enable Trailing TP
 input int      InpTrailingStep = 50;       // Trailing Step (points)
 input bool     InpAutoCharts   = true;     // Auto-open TF Charts
+input string   InpMasterKey    = "AAT_SECURE_FOSS_KEY_256_BIT_STRIP"; // AES Master Key
 
 //--- global variables
 CTrade         trade;
@@ -41,6 +42,8 @@ int OnInit()
   {
    if(!symbol_info.Name(_Symbol)) return(INIT_FAILED);
    trade.SetExpertMagicNumber(InpMagicNumber);
+
+   socket_client.SetMasterKey(InpMasterKey);
 
    dashboard.Create(10, 12, 10, 30, 100, 22);
    dashboard.SetHeader(0, "Symbol");
@@ -84,7 +87,6 @@ void OnTick()
    if(!symbol_info.RefreshRates()) return;
    if(InpTrailingSL || InpTrailingTP) ApplyTrailingLogic();
    UpdateDynamicDashboard();
-   CheckPyramidScaling();
   }
 
 void OnTimer()
@@ -144,9 +146,9 @@ void AnalyzeMarket()
 
    if(socket_client.Connect("127.0.0.1", 5555))
      {
-      if(socket_client.Send(request))
+      if(socket_client.SendEncrypted(request))
         {
-         string resp = socket_client.Receive();
+         string resp = socket_client.ReceiveDecrypted();
          if(resp != "")
            {
             bool verified = CJsonParser::GetBool(resp, "verified");
@@ -169,9 +171,22 @@ void AnalyzeMarket()
                dashboard.SetCellValue(1, i+1, DoubleToString(score, 0), c);
               }
 
-            if(news) { dashboard.SetCellValue(1, 11, "NEWS STRADDLE", clrOrange); ExecuteNewsStraddle(); }
-            else if(verified) { dashboard.SetCellValue(1, 11, "TRADE!", clrLime); ExecuteTrade(signal == "BUY" ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, lot); }
-            else dashboard.SetCellValue(1, 11, "SCANNING", clrYellow);
+            if(news)
+              {
+               dashboard.SetCellValue(1, 11, "NEWS STRADDLE", clrOrange);
+               ExecuteNewsStraddle(lot);
+              }
+            else if(verified)
+              {
+               dashboard.SetCellValue(1, 11, "TRADE!", clrLime);
+               if(!ExecuteTrade(signal == "BUY" ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, lot))
+                  CheckPyramidScaling(lot);
+              }
+            else
+              {
+               dashboard.SetCellValue(1, 11, "SCANNING", clrYellow);
+               CheckPyramidScaling(lot);
+              }
            }
         }
       socket_client.Disconnect();
@@ -183,55 +198,62 @@ void AnalyzeMarket()
      }
   }
 
-void ExecuteTrade(ENUM_ORDER_TYPE type, double lot)
+bool ExecuteTrade(ENUM_ORDER_TYPE type, double lot)
   {
    for(int i=PositionsTotal()-1; i>=0; i--)
-      if(pos_info.SelectByIndex(i) && pos_info.Symbol() == _Symbol && pos_info.Magic() == InpMagicNumber) return;
+      if(pos_info.SelectByIndex(i) && pos_info.Symbol() == _Symbol && pos_info.Magic() == InpMagicNumber) return false;
 
    double price = (type == ORDER_TYPE_BUY) ? symbol_info.Ask() : symbol_info.Bid();
    double sl = (type == ORDER_TYPE_BUY) ? price - InpStopLoss * _Point : price + InpStopLoss * _Point;
    double tp = (type == ORDER_TYPE_BUY) ? price + InpTakeProfit * _Point : price - InpTakeProfit * _Point;
 
    if(lot <= 0) lot = 0.01;
-   trade.PositionOpen(_Symbol, type, lot, price, sl, tp, "AAT Initial");
+   return trade.PositionOpen(_Symbol, type, lot, price, sl, tp, "AAT Initial");
   }
 
-void CheckPyramidScaling()
+void CheckPyramidScaling(double lot)
   {
    int pos_count = 0;
-   double last_open = 0;
+   double newest_open = 0;
    ENUM_POSITION_TYPE type = POSITION_TYPE_BUY;
 
+   // Correctly find the newest position and count total
    for(int i=PositionsTotal()-1; i>=0; i--)
       if(pos_info.SelectByIndex(i) && pos_info.Symbol() == _Symbol && pos_info.Magic() == InpMagicNumber)
         {
+         if(pos_count == 0) { newest_open = pos_info.PriceOpen(); type = pos_info.PositionType(); }
          pos_count++;
-         if(pos_count == 1) { last_open = pos_info.PriceOpen(); type = pos_info.PositionType(); }
         }
 
    if(pos_count == 0 || pos_count >= 5) return;
 
-   double profit = ((type == POSITION_TYPE_BUY) ? (symbol_info.Bid() - last_open) : (last_open - symbol_info.Ask())) / _Point;
+   double profit = ((type == POSITION_TYPE_BUY) ? (symbol_info.Bid() - newest_open) : (newest_open - symbol_info.Ask())) / _Point;
 
    if(profit >= InpStopLoss) // Add every 1:1 RR distance
      {
       double price = (type == POSITION_TYPE_BUY) ? symbol_info.Ask() : symbol_info.Bid();
-      double sl = last_open; // Move to BE (last_open)
-      if(trade.PositionOpen(_Symbol, (type == POSITION_TYPE_BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), 0.01, price, sl, 0, "Pyramid"))
+      double sl = newest_open; // Move to BE (newest_open)
+
+      if(lot <= 0) lot = 0.01;
+
+      if(trade.PositionOpen(_Symbol, (type == POSITION_TYPE_BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), lot, price, sl, 0, "Pyramid"))
         {
+         // On success, update ALL positions of this symbol to the BE stop loss
          for(int i=PositionsTotal()-1; i>=0; i--)
             if(pos_info.SelectByIndex(i) && pos_info.Symbol() == _Symbol && pos_info.Magic() == InpMagicNumber)
-               trade.PositionModify(pos_info.Ticket(), last_open, pos_info.TakeProfit());
+               trade.PositionModify(pos_info.Ticket(), newest_open, pos_info.TakeProfit());
         }
      }
   }
 
-void ExecuteNewsStraddle()
+void ExecuteNewsStraddle(double lot)
   {
    for(int i=PositionsTotal()-1; i>=0; i--)
       if(pos_info.SelectByIndex(i) && pos_info.Symbol() == _Symbol && pos_info.Magic() == InpMagicNumber) return;
-   trade.PositionOpen(_Symbol, ORDER_TYPE_BUY, 0.01, symbol_info.Ask(), symbol_info.Ask() - InpStopLoss*_Point, 0, "Straddle B");
-   trade.PositionOpen(_Symbol, ORDER_TYPE_SELL, 0.01, symbol_info.Bid(), symbol_info.Bid() + InpStopLoss*_Point, 0, "Straddle S");
+
+   if(lot <= 0) lot = 0.01;
+   trade.PositionOpen(_Symbol, ORDER_TYPE_BUY, lot, symbol_info.Ask(), symbol_info.Ask() - InpStopLoss*_Point, 0, "Straddle B");
+   trade.PositionOpen(_Symbol, ORDER_TYPE_SELL, lot, symbol_info.Bid(), symbol_info.Bid() + InpStopLoss*_Point, 0, "Straddle S");
   }
 
 void ApplyTrailingLogic()

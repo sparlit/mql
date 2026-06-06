@@ -4,11 +4,13 @@ import threading
 import time
 import random
 import logging
+from AAT_Security_V1_0_0 import AATSecurity
 
 # Configure logging for stress test
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
 def simulate_client(client_id, symbol="EURUSD"):
+    security = AATSecurity()
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(5.0)
@@ -30,10 +32,11 @@ def simulate_client(client_id, symbol="EURUSD"):
 
             # 10% chance to send malformed data
             if random.random() < 0.1:
-                logging.info(f"Client {client_id} sending malformed JSON...")
-                s.sendall(b'{"symbol": "EURUSD", "balance": 10000, "invalid_json": ')
+                logging.info(f"Client {client_id} sending malformed encrypted data...")
+                s.sendall(b'ThisIsNotEncrypted!!!')
             else:
-                s.sendall(json.dumps(request).encode('utf-8'))
+                encrypted_req = security.encrypt(json.dumps(request))
+                s.sendall(encrypted_req.encode('utf-8'))
 
             data = b""
             while True:
@@ -47,10 +50,11 @@ def simulate_client(client_id, symbol="EURUSD"):
                 return
 
             try:
-                response = json.loads(data.decode('utf-8'))
+                decrypted_resp = security.decrypt(data.decode('utf-8'))
+                response = json.loads(decrypted_resp)
                 logging.info(f"Client {client_id} [{request.get('symbol')}] - Status: {response.get('status')} | Verified: {response.get('verified')} | Lot: {response.get('recommended_lot')}")
             except Exception as e:
-                logging.error(f"Client {client_id} - JSON Error: {e} | Raw Data: {data}")
+                logging.error(f"Client {client_id} - Response Error: {e} | Raw Data: {data}")
 
     except socket.timeout:
         logging.error(f"Client {client_id} - Connection Timeout")
