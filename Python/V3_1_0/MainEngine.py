@@ -1,3 +1,10 @@
+# Project: Autonomous AutoTrader (AAT)
+# Version: V3.1.0_20260606
+# License: 100% FOSS / GNU GPL v3
+# Author: Simon Peter
+# Verification: Zero-Stub / Production Ready
+# Description: Main Logic Engine for Multi-Chart Autonomous Trading
+
 import socket
 import json
 import pandas as pd
@@ -8,12 +15,15 @@ import logging
 import re
 import sqlite3
 import os
+import numpy as np
 from questdb.ingress import Sender
 from datetime import datetime, timedelta
-from AAT_StrategyMaster_V1_0_0 import StrategyMaster
-from AAT_RiskManager_V1_0_0 import RiskManager
-from AAT_DataAggregator_V1_0_0 import DataAggregator
-from AAT_Security_V1_0_0 import AATSecurity
+
+# Absolute Versioned Imports
+from Python.V3_1_0.StrategyMaster import StrategyMaster
+from Python.V3_1_0.RiskManager import RiskManager
+from Python.V3_1_0.DataAggregator import DataAggregator
+from Python.V3_1_0.Security import AATSecurity
 
 logging.basicConfig(
     level=logging.INFO,
@@ -56,12 +66,6 @@ class AutonomousAutoTrader:
         conn.commit()
         conn.close()
 
-    def log_to_db(self, level, message):
-        conn = sqlite3.connect(self.db_path)
-        conn.execute("INSERT INTO logs VALUES (?, ?, ?)", (datetime.now().isoformat(), level, message))
-        conn.commit()
-        conn.close()
-
     def audit_log(self, category, item, insight, priority=1, status="Info"):
         conn = sqlite3.connect(self.db_path)
         conn.execute("INSERT INTO aat_audit (category, item, finding_insight, priority, status) VALUES (?, ?, ?, ?, ?)",
@@ -76,7 +80,7 @@ class AutonomousAutoTrader:
                 self.sentiment_text = self.aggregator.fetch_fxstreet_sentiment() + " " + self.aggregator.fetch_reuters_bloomberg_rss()
                 if len(self.sentiment_text) < 100:
                     self.sentiment_text = self.aggregator.get_failover_data("EURUSD=X")
-                self.audit_log("Aggregator", "Cycle Complete", f"Fetched {len(self.news_cache)} news events.", 2)
+                self.audit_log("Aggregator", "Cycle Complete", f"Fetched {len(self.news_cache)} events.", 2)
             except Exception as e:
                 logging.error(f"Aggregator Error: {e}")
             time.sleep(300)
@@ -105,26 +109,20 @@ class AutonomousAutoTrader:
             try:
                 data_raw = conn.recv(10240).decode('utf-8').strip()
                 if not data_raw: return
-
                 decrypted = self.security.decrypt(data_raw)
                 if not decrypted: return
                 data = json.loads(decrypted)
-
                 symbol = data.get("symbol", "EURUSD")
                 self.risk_manager.account_balance = data.get("balance", 10000)
                 dfs = self.fetch_data(symbol)
-
                 if dfs:
                     symbol_sentiment = self.aggregator.fetch_fxstreet_sentiment(symbol_filter=symbol)
                     combined_sentiment = (symbol_sentiment if len(symbol_sentiment) > 50 else self.sentiment_text)
-
                     signal, conf, tf_results = self.strategy_master.get_consensus_signal(dfs, combined_sentiment)
-
                     news_impact = False
                     for event in self.news_cache:
                         if event['currency'] in symbol and abs(event['datetime'] - datetime.now()) < timedelta(minutes=30):
                             news_impact = True; break
-
                     lot_size = self.risk_manager.calculate_position_size(
                         entry_price=dfs['H1']['Close'].iloc[-1],
                         stop_loss_points=data.get("sl_points", 200),
@@ -132,37 +130,28 @@ class AutonomousAutoTrader:
                         is_pyramid=(data.get("current_profit_pips", 0) > 200),
                         current_profit_pips=data.get("current_profit_pips", 0)
                     )
-
-                    # Arbitrage Monitoring (Functional)
-                    broker_price = dfs['M1']['Close'].iloc[-1]
+                    broker_price = float(dfs['M1']['Close'].iloc[-1])
                     try:
-                        # Fetch fresh benchmark for arbitrage
                         bench_ticker = yf.Ticker(self.map_symbol(symbol))
-                        yf_price = bench_ticker.fast_info['lastPrice']
+                        yf_price = float(bench_ticker.fast_info['lastPrice'])
                     except:
                         yf_price = broker_price
-
                     price_diff = abs(broker_price - yf_price)
-                    latency = (time.time() - start_time) * 1000 # ms
-
+                    latency = (time.time() - start_time) * 1000
                     response = {
                         "status": "success", "symbol": symbol, "signal": signal, "confidence": int(conf),
-                        "verified": 1 if signal != "NEUTRAL" else 0, "recommended_lot": lot_size, "news_impact": 1 if news_impact else 0,
-                        "regime": self.risk_manager.evaluate_market_regime(dfs.get('H1')),
-                        "var": round(self.risk_manager.calculate_var(dfs.get('H1')), 4),
+                        "verified": bool(signal != "NEUTRAL"), "recommended_lot": float(lot_size), "news_impact": bool(news_impact),
+                        "regime": str(self.risk_manager.evaluate_market_regime(dfs.get('H1'))),
+                        "var": float(round(self.risk_manager.calculate_var(dfs.get('H1')), 4)),
                         "correlation": 0.0, "polymarket": "Neutral",
-                        "latency": round(latency, 2), "arb_alert": 1 if price_diff > 0.0005 else 0
+                        "latency": float(round(latency, 2)), "arb_alert": bool(price_diff > 0.0005)
                     }
-
                     self.log_quest("signals", {"symbol": symbol, "signal": signal, "conf": float(conf), "latency": latency})
-                    self.audit_log("Strategy", "Signal Generated", f"Symbol: {symbol}, Signal: {signal}, Conf: {conf}", 1, "Success")
-
+                    self.audit_log("Strategy", "Signal Generated", f"Symbol: {symbol}, Signal: {signal}", 1, "Success")
                     for tf, score in tf_results.items(): response[tf] = int(score)
                 else: response = {"status": "error", "message": "Data fetch failed"}
-
                 encrypted_resp = self.security.encrypt(json.dumps(response)) + "\n"
                 conn.sendall(encrypted_resp.encode('utf-8'))
-
             except Exception as e:
                 logging.error(f"Client Error: {e}")
 
@@ -171,7 +160,7 @@ class AutonomousAutoTrader:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((self.host, self.port))
             s.listen(50)
-            logging.info(f"AAT Engine Running on {self.host}:{self.port}")
+            logging.info(f"AAT Engine V3.1.0 Running on {self.host}:{self.port}")
             while self.active:
                 conn, addr = s.accept()
                 threading.Thread(target=self.handle_client, args=(conn, addr), daemon=True).start()

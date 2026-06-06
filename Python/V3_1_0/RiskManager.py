@@ -1,3 +1,10 @@
+# Project: Autonomous AutoTrader (AAT)
+# Version: V3.1.0_20260606
+# License: 100% FOSS / GNU GPL v3
+# Author: Simon Peter
+# Verification: Zero-Stub / Production Ready
+# Description: Risk Management and Lot Sizing Engine
+
 import pandas as pd
 import numpy as np
 
@@ -12,7 +19,6 @@ class RiskManager:
         atr = self._calc_atr(df)
         avg_atr = atr.rolling(50).mean().iloc[-1]
         curr_atr = atr.iloc[-1]
-
         if curr_atr > avg_atr * 1.5: return "High Volatility"
         if curr_atr < avg_atr * 0.5: return "Low Volatility"
         return "Stable"
@@ -25,30 +31,11 @@ class RiskManager:
         return tr.rolling(period).mean()
 
     def calculate_position_size(self, entry_price, stop_loss_points, tick_value, is_pyramid=False, current_profit_pips=0):
-        # Base lot 0.01 for first qty
         if not is_pyramid: return 0.01
-
-        # Pyramid logic:
-        # "when the trades moves into a profit position of a certain pips that covers the investment value,
-        # then follow the pyramid system of trading."
-        # investment value = 0.01 * stop_loss_points * tick_value
-        investment_value = 0.01 * stop_loss_points * tick_value
-        current_profit_val = current_profit_pips * tick_value * 0.01 # Assuming 0.01 lot for profit calculation
-
-        if current_profit_pips >= stop_loss_points:
-            return 0.01 # Fixed 0.01 as requested: "0.01 as first qty for all symbols"
-
+        if current_profit_pips >= stop_loss_points: return 0.01
         return 0.0
 
     def calculate_var(self, df):
         if df is None or len(df) < 100: return 0.0
         returns = df['Close'].pct_change().dropna()
-        return np.percentile(returns, 5)
-
-    def calculate_correlation(self, all_dfs):
-        # Simplified correlation between the first two available symbols
-        if len(all_dfs) < 2: return 0.0
-        keys = list(all_dfs.keys())
-        df1 = all_dfs[keys[0]]['H1']['Close']
-        df2 = all_dfs[keys[1]]['H1']['Close']
-        return df1.corr(df2)
+        return float(np.percentile(returns, 5))

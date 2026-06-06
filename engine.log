@@ -1,3 +1,0 @@
-2026-06-06 10:13:46,345 [INFO] Skipping FinBERT initialization (Test Mode)
-2026-06-06 10:13:46,362 [INFO] AAT Engine Running on 127.0.0.1:5555
-2026-06-06 10:13:47,100 [ERROR] Decryption Error: Incorrect padding

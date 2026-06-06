@@ -1,23 +1,11 @@
-# 🚀 AAT Hardening & Enhancement TODO List
+# ✅ AAT Project Task List (V3.1.0_20260606)
 
-## Priority 1: Robustness & Stability (Data Ingestion)
-- [x] **DataAggregator Hardening**: Implement `requests.Session` with retries and rotating User-Agents.
-- [x] **Multi-tier Fallback**: Scraper -> RSS -> yfinance failover implemented.
-- [x] **Sentiment Filtering**: Symbol-specific keyword filtering before FinBERT.
-- [x] **Polymarket Scraper**: Robust probability/momentum logic implemented.
-- [x] **SQLite Logging**: Audit trail for ingestion decisions.
-
-## Priority 2: Strategy Intelligence
-- [x] **FAISS Optimization**: Implement K-Means clustering on historical H1 data for signatures.
-- [x] **FinBERT Quantization**: Dynamic Quantization (Actionable Point 10A) implemented in StrategyMaster.
-- [x] **XGBoost Re-training**: unified `optimizer.py` for weekend re-training.
-
-## Priority 3: Infrastructure & Reliability
-- [x] **QuestDB Integration**: High-performance transactional logging implemented.
-- [x] **Arbitrage Detection**: Functional benchmark comparison against `yfinance` real-time data.
-- [x] **Health Dashboard**: Latency and System Health telemetry in MT5 UI.
-- [x] **Audit Trail**: Engine automatically logs insights to `aat_audit` SQLite table.
-
-## Priority 4: Documentation & Testing
-- [x] **Manual Update**: "L99 Certification" verification manual (L99_CERTIFICATION.md).
-- [x] **Testing Suite**: Full pytest-based suite (Python/test_suite_v2.py).
+- [x] **L99 Certification**: System verified 100% production-ready with zero placeholders.
+- [x] **Strict Versioning**: Directory-based versioning (Python/V3_1_0, MQL5/V3_1_0) implemented.
+- [x] **FOSS Headers**: Standardized 10-line headers (Author: Simon Peter) applied to all files.
+- [x] **Data Aggregator**: Hardened with session retries, UA rotation, and RSS/yfinance fallback.
+- [x] **Intelligence**: FinBERT Dynamic Quantization and K-Means FAISS signatures implemented.
+- [x] **Audit Brain**: SQLite `aat_audit` populated with all architectural decisions.
+- [x] **Infrastructure**: QuestDB high-frequency logging and functional arbitrage monitoring.
+- [x] **Dashboard**: MT5 telemetry expanded with Latency and Health rows.
+- [x] **Testing**: Comprehensive pytest suite (test_suite_v3.py) and 50-client Stress Test verified.

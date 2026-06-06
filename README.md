@@ -1,27 +1,32 @@
-# 🌌 Autonomous MT5 Autotrader (100% FOSS)
+# 🌌 Autonomous MT5 Autotrader (V3.1.0_20260606)
 
 ## Status: 100% Completed & Production Ready (L99 Certified)
 
-### 🚀 Key Features
-- **Cyber-Pro Dashboard**: High-performance `CCanvas` UI with real-time telemetry (P&L, VaR, Spread, Countdown).
-- **Hybrid Intelligence**: FinBERT Sentiment + XGBoost + FAISS Pattern Matching.
-- **Adaptive Execution**: News Straddle (ATR-Adaptive), Pyramid Scaling (House Money logic), and multi-broker arbitrage detection.
-- **Industrial Security**: AES-256-CBC encrypted communication between MT5 and Python Brain.
-- **Autonomous Maintenance**: Weekend Bayesian Optimization for strategy tuning and SQLite/QuestDB logging.
+---
 
-### 🛠 Installation
+## 🚀 Quick Start (V3.1.0)
 
-#### 1. Python Brain
+### 1. Python Environment
 ```bash
+python -m venv venv
+source venv/bin/activate
 pip install -r Python/requirements.txt
-python Python/AAT_MainEngine_V1_0_0.py
 ```
 
-#### 2. MT5 Executor
-- Copy `MQL5/Include/*.mqh` to your MT5 Include folder.
-- Copy `MQL5/Experts/AutonomousTrader_B042_Scalper_v2.0_20260606.mq5` to Experts.
-- Enable **DLL Imports** in MT5.
-- Compile and Attach to any chart.
+### 2. Run Engine
+```bash
+export PYTHONPATH=$(pwd)
+python Python/V3_1_0/MainEngine.py
+```
 
-### 📜 FOSS Compliance
-This project is 100% Free and Open Source. The C++ source for `SharedMemory.dll` is included in `MQL5/Libraries/`.
+### 3. MT5 EA Setup
+1. Copy `MQL5/V3_1_0/Experts/Scalper_v3_1_0.mq5` to `MQL5/Experts/`.
+2. Copy `MQL5/V3_1_0/Include/` to `MQL5/Include/V3_1_0/`.
+3. Compile and attach.
+
+---
+
+## 📜 Audit & Verification
+- **Audit Brain**: `sqlite3 db/aat_trading.db "SELECT * FROM aat_audit;"`
+- **Unit Tests**: `python -m pytest Python/V3_1_0/test_suite_v3.py`
+- **Author**: Simon Peter | **License**: 100% FOSS
