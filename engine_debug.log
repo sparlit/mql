@@ -1,3 +1,23 @@
-2026-06-06 15:22:10,480 [INFO] Skipping FinBERT initialization (Test Mode)
-2026-06-06 15:22:10,492 [INFO] AAT Engine V3.1.0 Running on 127.0.0.1:5555
-2026-06-06 15:23:47,377 [INFO] Skipping FinBERT initialization (Test Mode)
+2026-06-06 16:03:46,902 [INFO] Skipping FinBERT initialization (Test Mode)
+2026-06-06 16:03:46,907 [INFO] AAT Engine V3.2.0 (Dual-Mode) Running on 127.0.0.1:5555
+2026-06-06 16:04:58,831 [INFO] Skipping FinBERT initialization (Test Mode)
+2026-06-06 16:11:55,579 [INFO] HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-06 16:11:55,596 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/config.json "HTTP/1.1 200 OK"
+2026-06-06 16:11:55,642 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/config.json "HTTP/1.1 200 OK"
+2026-06-06 16:11:55,708 [INFO] HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-06 16:11:55,725 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-06 16:11:55,742 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-06 16:11:55,791 [INFO] HTTP Request: GET https://huggingface.co/api/models/ProsusAI/finbert/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-06 16:11:55,840 [INFO] HTTP Request: GET https://huggingface.co/api/models/ProsusAI/finbert/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-06 16:11:55,887 [INFO] HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/vocab.txt "HTTP/1.1 307 Temporary Redirect"
+2026-06-06 16:11:55,888 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-06-06 16:11:55,904 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/vocab.txt "HTTP/1.1 200 OK"
+2026-06-06 16:11:55,922 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/vocab.txt "HTTP/1.1 200 OK"
+2026-06-06 16:11:55,998 [INFO] HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/tokenizer.json "HTTP/1.1 404 Not Found"
+2026-06-06 16:11:56,055 [INFO] HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
+2026-06-06 16:11:56,103 [INFO] HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/special_tokens_map.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-06 16:11:56,119 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/special_tokens_map.json "HTTP/1.1 200 OK"
+2026-06-06 16:11:56,136 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/special_tokens_map.json "HTTP/1.1 200 OK"
+2026-06-06 16:11:56,184 [INFO] HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+2026-06-06 16:11:56,309 [INFO] HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-06 16:11:56,325 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/config.json "HTTP/1.1 200 OK"

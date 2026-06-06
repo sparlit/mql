@@ -1,9 +1,9 @@
 # Project: Autonomous AutoTrader (AAT)
-# Version: V3.1.0_20260606
+# Version: V3.2.0_20260606
 # License: 100% FOSS / GNU GPL v3
 # Author: Simon Peter
 # Verification: Zero-Stub / Production Ready
-# Description: Main Logic Engine for Multi-Chart Autonomous Trading
+# Description: Main Logic Engine for Dual-Mode (Scalp + Trade) Execution
 
 import socket
 import json
@@ -40,7 +40,6 @@ class AutonomousAutoTrader:
         self.aggregator = DataAggregator()
         self.security = AATSecurity()
         self.active = True
-        self.cache = {}
         self.news_cache = []
         self.sentiment_text = ""
         self.db_path = "db/aat_trading.db"
@@ -60,18 +59,14 @@ class AutonomousAutoTrader:
     def _init_db(self):
         if not os.path.exists('db'): os.makedirs('db')
         conn = sqlite3.connect(self.db_path)
-        conn.execute("CREATE TABLE IF NOT EXISTS logs (timestamp TEXT, level TEXT, message TEXT)")
-        conn.execute("CREATE TABLE IF NOT EXISTS trades (timestamp TEXT, symbol TEXT, signal TEXT, confidence REAL, status TEXT)")
         conn.execute("CREATE TABLE IF NOT EXISTS aat_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, item TEXT, finding_insight TEXT, priority INTEGER, status TEXT, recommendations TEXT, diff_log TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)")
-        conn.commit()
-        conn.close()
+        conn.commit(); conn.close()
 
     def audit_log(self, category, item, insight, priority=1, status="Info"):
         conn = sqlite3.connect(self.db_path)
         conn.execute("INSERT INTO aat_audit (category, item, finding_insight, priority, status) VALUES (?, ?, ?, ?, ?)",
                      (category, item, insight, priority, status))
-        conn.commit()
-        conn.close()
+        conn.commit(); conn.close()
 
     def background_aggregator(self):
         while self.active:
@@ -80,7 +75,6 @@ class AutonomousAutoTrader:
                 self.sentiment_text = self.aggregator.fetch_fxstreet_sentiment() + " " + self.aggregator.fetch_reuters_bloomberg_rss()
                 if len(self.sentiment_text) < 100:
                     self.sentiment_text = self.aggregator.get_failover_data("EURUSD=X")
-                self.audit_log("Aggregator", "Cycle Complete", f"Fetched {len(self.news_cache)} events.", 2)
             except Exception as e:
                 logging.error(f"Aggregator Error: {e}")
             time.sleep(300)
@@ -95,13 +89,12 @@ class AutonomousAutoTrader:
         try:
             ticker = yf.Ticker(yf_symbol)
             dfs = {}
-            for tf, (per, inv) in {'M1':('1d','1m'),'M5':('5d','5m'),'H1':('1mo','1h'),'D1':('1y','1d')}.items():
+            for tf, (per, inv) in {'M1':('1d','1m'),'M5':('5d','5m'),'M15':('5d','15m'),'H1':('1mo','1h'),'H4':('1mo','4h'),'D1':('1y','1d')}.items():
                 df = ticker.history(period=per, interval=inv)
                 if not df.empty: dfs[tf] = df
             return dfs
         except Exception as e:
-            logging.error(f"Fetch Error: {e}")
-            return None
+            logging.error(f"Fetch Error: {e}"); return None
 
     def handle_client(self, conn, addr):
         start_time = time.time()
@@ -118,37 +111,45 @@ class AutonomousAutoTrader:
                 if dfs:
                     symbol_sentiment = self.aggregator.fetch_fxstreet_sentiment(symbol_filter=symbol)
                     combined_sentiment = (symbol_sentiment if len(symbol_sentiment) > 50 else self.sentiment_text)
-                    signal, conf, tf_results = self.strategy_master.get_consensus_signal(dfs, combined_sentiment)
+
+                    # Dual-Mode Consensus
+                    res = self.strategy_master.get_dual_consensus(dfs, combined_sentiment)
+
+                    mode = "NEUTRAL"
+                    if res["scalp_signal"] != "NEUTRAL" and res["trade_signal"] != "NEUTRAL": mode = "BOTH"
+                    elif res["scalp_signal"] != "NEUTRAL": mode = "SCALP"
+                    elif res["trade_signal"] != "NEUTRAL": mode = "TRADE"
+
                     news_impact = False
                     for event in self.news_cache:
                         if event['currency'] in symbol and abs(event['datetime'] - datetime.now()) < timedelta(minutes=30):
                             news_impact = True; break
+
                     lot_size = self.risk_manager.calculate_position_size(
                         entry_price=dfs['H1']['Close'].iloc[-1],
                         stop_loss_points=data.get("sl_points", 200),
-                        tick_value=data.get("tick_value", 1.0),
-                        is_pyramid=(data.get("current_profit_pips", 0) > 200),
-                        current_profit_pips=data.get("current_profit_pips", 0)
+                        tick_value=data.get("tick_value", 1.0)
                     )
+
                     broker_price = float(dfs['M1']['Close'].iloc[-1])
                     try:
                         bench_ticker = yf.Ticker(self.map_symbol(symbol))
                         yf_price = float(bench_ticker.fast_info['lastPrice'])
-                    except:
-                        yf_price = broker_price
-                    price_diff = abs(broker_price - yf_price)
+                    except: yf_price = broker_price
+
                     latency = (time.time() - start_time) * 1000
                     response = {
-                        "status": "success", "symbol": symbol, "signal": signal, "confidence": int(conf),
-                        "verified": bool(signal != "NEUTRAL"), "recommended_lot": float(lot_size), "news_impact": bool(news_impact),
-                        "regime": str(self.risk_manager.evaluate_market_regime(dfs.get('H1'))),
-                        "var": float(round(self.risk_manager.calculate_var(dfs.get('H1')), 4)),
-                        "correlation": 0.0, "polymarket": "Neutral",
-                        "latency": float(round(latency, 2)), "arb_alert": bool(price_diff > 0.0005)
+                        "status": "success", "symbol": symbol, "mode": mode,
+                        "scalp_signal": res["scalp_signal"], "trade_signal": res["trade_signal"],
+                        "scalp_conf": int(res["scalp_conf"]), "trade_conf": int(res["trade_conf"]),
+                        "recommended_lot": float(lot_size), "news_impact": bool(news_impact),
+                        "latency": float(round(latency, 2)), "arb_alert": bool(abs(broker_price - yf_price) > 0.0005),
+                        "tp_mult": res["exit_mult"]["tp"], "sl_mult": res["exit_mult"]["sl"]
                     }
-                    self.log_quest("signals", {"symbol": symbol, "signal": signal, "conf": float(conf), "latency": latency})
-                    self.audit_log("Strategy", "Signal Generated", f"Symbol: {symbol}, Signal: {signal}", 1, "Success")
-                    for tf, score in tf_results.items(): response[tf] = int(score)
+
+                    self.log_quest("signals", {"symbol": symbol, "mode": mode, "latency": latency})
+                    self.audit_log("Strategy", "Dual Signal", f"Mode: {mode}, Scalp: {res['scalp_signal']}, Trade: {res['trade_signal']}", 1, "Success")
+
                 else: response = {"status": "error", "message": "Data fetch failed"}
                 encrypted_resp = self.security.encrypt(json.dumps(response)) + "\n"
                 conn.sendall(encrypted_resp.encode('utf-8'))
@@ -160,7 +161,7 @@ class AutonomousAutoTrader:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((self.host, self.port))
             s.listen(50)
-            logging.info(f"AAT Engine V3.1.0 Running on {self.host}:{self.port}")
+            logging.info(f"AAT Engine V3.2.0 (Dual-Mode) Running on {self.host}:{self.port}")
             while self.active:
                 conn, addr = s.accept()
                 threading.Thread(target=self.handle_client, args=(conn, addr), daemon=True).start()
