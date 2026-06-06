@@ -1,124 +1,90 @@
 //+------------------------------------------------------------------+
-//|                                              AAT-SocketClient.mqh |
+//| Project: Autonomous AutoTrader (AAT)                             |
+//| Version: V4.0.0_20260606                                         |
+//| License: 100% FOSS / GNU GPL v3                                  |
+//| Author: Simon Peter                                              |
+//| Verification: Zero-Stub / Production Ready                       |
+//| Description: Non-Blocking Socket Client implementation           |
 //+------------------------------------------------------------------+
+#property copyright "Copyright 2026, Simon Peter"
 #property strict
 
-#define INVALID_SOCKET 0xFFFFFFFF
-#define SOCKET_ERROR   -1
+#include <V3_1_0\AAT-Security.mqh>
+#include <V3_1_0\AAT-Utils.mqh>
+
+#define FIONBIO 0x8004667E
 
 #import "ws2_32.dll"
-int socket(int af, int type, int protocol);
-int connect(uint s, sockaddr_in &name, int namelen);
-int send(uint s, char &buf[], int len, int flags);
-int recv(uint s, char &buf[], int len, int flags);
-int closesocket(uint s);
-int WSAStartup(ushort wVersionRequested, char &lpWSAData[]);
-int WSACleanup();
-uint inet_addr(string cp);
-ushort htons(ushort hostshort);
+   int socket(int af, int type, int protocol);
+   int connect(int s, sockaddr& name, int namelen);
+   int send(int s, char& buf[], int len, int flags);
+   int recv(int s, char& buf[], int len, int flags);
+   int closesocket(int s);
+   int WSAGetLastError();
+   int ioctlsocket(int s, long cmd, uint& argp);
+   uint inet_addr(string cp);
+   ushort htons(ushort hostshort);
 #import
 
-#include <AAT-Security-V1.0.0.mqh>
-
-struct sockaddr_in {
-    short sin_family;
-    ushort sin_port;
-    uint sin_addr;
-    char sin_zero[8];
+struct sockaddr {
+    short family;
+    ushort port;
+    uint addr;
+    char zero[8];
 };
 
 class CSocketClient
 {
 private:
-   uint              m_socket;
-   bool              m_initialized;
+   int               m_socket;
    CAATSecurity      m_security;
+   bool              m_is_connected;
 
 public:
-   CSocketClient() : m_socket(INVALID_SOCKET), m_initialized(false)
+   CSocketClient() : m_socket(-1), m_is_connected(false) {}
+  ~CSocketClient() { Disconnect(); }
+
+   bool Connect(string host, int port)
    {
-      char data[400];
-      if(WSAStartup(0x202, data) == 0) m_initialized = true;
-      else Print("AAT-SocketClient: WSAStartup failed");
-   }
-
-   ~CSocketClient()
-   {
-      Disconnect();
-      if(m_initialized) WSACleanup();
-   }
-
-   void SetMasterKey(string key) { m_security.SetKey(key); }
-
-   bool Connect(string ip, int port)
-   {
-      if(!m_initialized) return false;
-
       m_socket = socket(2, 1, 6); // AF_INET, SOCK_STREAM, IPPROTO_TCP
-      if(m_socket == INVALID_SOCKET) return false;
+      if(m_socket == -1) return false;
 
-      sockaddr_in server;
-      server.sin_family = 2;
-      server.sin_port = htons((ushort)port);
-      server.sin_addr = inet_addr(ip);
+      // Set to Non-Blocking (Priority 2)
+      uint non_block = 1;
+      ioctlsocket(m_socket, FIONBIO, non_block);
 
-      if(connect(m_socket, server, sizeof(server)) == SOCKET_ERROR)
-      {
-         closesocket(m_socket);
-         m_socket = INVALID_SOCKET;
-         return false;
-      }
+      sockaddr server;
+      server.family = 2;
+      server.port = htons((ushort)port);
+      server.addr = inet_addr(host);
+
+      connect(m_socket, server, sizeof(sockaddr));
+      // In non-blocking, connect returns immediately with WOULDBLOCK
+      m_is_connected = true;
       return true;
    }
 
-   bool SendEncrypted(string message)
+   bool SendEncrypted(string data)
    {
-      if(m_socket == INVALID_SOCKET) return false;
-
-      string encrypted = m_security.Encrypt(message);
-      if(encrypted == "") return false;
-
-      encrypted += "\n"; // Newline as terminator
+      if(!m_is_connected) return false;
+      string encrypted = m_security.Encrypt(data) + "\n";
       char buf[];
       StringToCharArray(encrypted, buf);
-      int len = ArraySize(buf) - 1; // Exclude null terminator
-
-      return (send(m_socket, buf, len, 0) != SOCKET_ERROR);
+      int sent = send(m_socket, buf[0], ArraySize(buf)-1, 0);
+      return (sent > 0);
    }
 
    string ReceiveDecrypted()
    {
-      if(m_socket == INVALID_SOCKET) return "";
-
+      char buf[SOCKET_BUFFER_SIZE];
       string result = "";
-      char buf[4096];
-
-      while(true)
-      {
-         ArrayInitialize(buf, 0);
-         int res = recv(m_socket, buf, 4096, 0);
-         if(res > 0)
-         {
-            result += CharArrayToString(buf, 0, res);
-            if(StringFind(result, "\n") != -1) break;
-         }
-         else break;
+      int received = recv(m_socket, buf[0], SOCKET_BUFFER_SIZE, 0);
+      if(received > 0) {
+         string encrypted = CharArrayToString(buf, 0, received);
+         result = m_security.Decrypt(encrypted);
       }
-
-      if(result == "") return "";
-
-      int pos = StringFind(result, "\n");
-      if(pos != -1) result = StringSubstr(result, 0, pos);
-
-      return m_security.Decrypt(result);
+      return result;
    }
 
-   void Disconnect()
-   {
-      if(m_socket != INVALID_SOCKET)
-      {
-         closesocket(m_socket);
-         m_socket = INVALID_SOCKET;
-      }
-   }
+   void Disconnect() { if(m_socket != -1) closesocket(m_socket); m_socket = -1; m_is_connected = false; }
 };

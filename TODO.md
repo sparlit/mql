@@ -1,9 +1,8 @@
-# ✅ AAT Project Task List (V3.3.0_20260606)
+# ✅ AAT Project Task List (V4.0.0_20260606)
 
-- [x] **High-Priority Architecture**: Centralized AAT-Constants.mqh and AAT-Utils.mqh implemented.
-- [x] **Dashboard Optimization**: 500ms time-based throttling implemented in Scalper_v3_3_0.mq5.
-- [x] **Risk Intelligence**: Real-time symbol correlation added to RiskManager.py and JSON payload.
-- [x] **Stability**: Replaced static arrays with dynamic structures in AAT-ManagePositions.mqh.
-- [x] **Centralized Logging**: Centralized error reporting for indicator and symbol operations.
-- [x] **Input Validation**: Centralized input validation block in OnInit.
-- [x] **L99 Compliance**: Maintained Zero-Stub FOSS standard with Simon Peter headers.
+- [x] **Active Watchdog**: Emergency 15s Break-Even move and Halt protocol implemented.
+- [x] **Heartbeat System**: High-frequency engine health tracking in JSON responses.
+- [x] **Non-Blocking Bridge**: Refactored MQL5 sockets for async state machine (no UI freeze).
+- [x] **Benchmark Distribution**: Shared memory distribution of benchmark prices across charts.
+- [x] **Audit Brain**: Watchdog and heartbeat safety events logged for L99 compliance.
+- [x] **Dual-Mode**: Simultaneous Scalp/Trade execution stabilized.

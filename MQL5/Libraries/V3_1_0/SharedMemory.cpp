@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <map>
 #include <string>
 
 #define SHARED_MEM_SIZE 65536
@@ -13,10 +12,11 @@ static SharedData* pBuf = NULL;
 
 extern "C" __declspec(dllexport) bool WriteSharedData(const char* name, const char* value) {
     if (hMapFile == NULL) {
-        hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(SharedData), "AAT_SharedMem");
+        hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(SharedData), "AAT_Benchmark_Mem");
         pBuf = (SharedData*)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(SharedData));
     }
     if (pBuf) {
+        // Optimized benchmark distribution (Priority 3)
         strncpy(pBuf->data, value, SHARED_MEM_SIZE);
         return true;
     }
