@@ -43,7 +43,9 @@ class AutonomousAutoTrader:
         self.market_cache = {}
         self.db_path = "db/aat_trading.db"
         self._init_db()
-        threading.Thread(target=self.background_aggregator, daemon=True).start()
+        self.aggregator_thread = threading.Thread(target=self.background_aggregator, daemon=True)
+        self.aggregator_thread.start()
+        self.last_aggregator_run = time.time()
 
     def _init_db(self):
         if not os.path.exists('db'): os.makedirs('db')
@@ -62,9 +64,22 @@ class AutonomousAutoTrader:
             try:
                 self.news_cache = self.aggregator.fetch_forexfactory_news()
                 self.sentiment_text = self.aggregator.fetch_fxstreet_sentiment() + " " + self.aggregator.fetch_reuters_bloomberg_rss()
+                self.last_aggregator_run = time.time()
             except Exception as e:
                 logging.error(f"Aggregator Error: {e}")
             time.sleep(300)
+
+    def check_health(self):
+        # Health check: Aggregator must have run in the last 10 minutes
+        agg_ok = (time.time() - self.last_aggregator_run) < 600
+        strat_ok = self.strategy_master is not None
+        status = "OK" if (agg_ok and strat_ok) else "DEGRADED"
+
+        if not hasattr(self, 'last_health_status') or self.last_health_status != status:
+            self.audit_log("System", "HeartbeatHealth", f"System health changed to {status}", priority=1 if status=="OK" else 3, status=status)
+            self.last_health_status = status
+
+        return status
 
     def fetch_data(self, symbol):
         yf_symbol = self.aggregator.get_failover_data(symbol) if "X" not in symbol else symbol
@@ -94,6 +109,7 @@ class AutonomousAutoTrader:
 
                 # Active Heartbeat Implementation (Priority 1)
                 heartbeat = int(time.time())
+                health = self.check_health()
 
                 dfs = self.fetch_data(symbol)
                 if dfs:
@@ -115,9 +131,10 @@ class AutonomousAutoTrader:
                         "status": "success", "symbol": symbol, "mode": mode,
                         "scalp_signal": res["scalp_signal"], "trade_signal": res["trade_signal"],
                         "recommended_lot": float(lot_size), "latency": float(round(latency, 2)),
-                        "heartbeat": heartbeat, "tp_mult": res["exit_mult"]["tp"], "sl_mult": res["exit_mult"]["sl"]
+                        "heartbeat": heartbeat, "health": health,
+                        "tp_mult": res["exit_mult"]["tp"], "sl_mult": res["exit_mult"]["sl"]
                     }
-                else: response = {"status": "error", "message": "Data fetch failed", "heartbeat": heartbeat}
+                else: response = {"status": "error", "message": "Data fetch failed", "heartbeat": heartbeat, "health": health}
 
                 encrypted_resp = self.security.encrypt(json.dumps(response)) + "\n"
                 conn.sendall(encrypted_resp.encode('utf-8'))

@@ -9,6 +9,11 @@
 #property copyright "Copyright 2026, Simon Peter"
 #property strict
 
+#import "V3_1_0\SharedMemory.dll"
+   bool WriteSharedData(string name, string value);
+   string ReadSharedData(string name);
+#import
+
 class CAATUtils
 {
 public:
@@ -34,5 +39,17 @@ public:
       if(risk <= 0 || risk > 10) { LogError("Init", "Invalid Risk %"); return false; }
       if(sl <= 0 || tp <= 0) { LogError("Init", "Invalid SL/TP points"); return false; }
       return true;
+   }
+
+   static void SetSharedBenchmark(string symbol, double price)
+   {
+      WriteSharedData(symbol, DoubleToString(price, 5));
+   }
+
+   static double GetSharedBenchmark(string symbol)
+   {
+      string val = ReadSharedData(symbol);
+      if(val == "") return 0;
+      return StringToDouble(val);
    }
 };

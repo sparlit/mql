@@ -13,6 +13,7 @@
 #include <V3_1_0\AAT-Utils.mqh>
 
 #define FIONBIO 0x8004667E
+#define WSAEWOULDBLOCK 10035
 
 #import "ws2_32.dll"
    int socket(int af, int type, int protocol);
@@ -33,16 +34,30 @@ struct sockaddr {
     char zero[8];
 };
 
+enum ENUM_SOCKET_STATE {
+   STATE_IDLE,
+   STATE_CONNECTING,
+   STATE_SENDING,
+   STATE_RECEIVING,
+   STATE_COMPLETED,
+   STATE_ERROR
+};
+
 class CSocketClient
 {
 private:
    int               m_socket;
    CAATSecurity      m_security;
-   bool              m_is_connected;
+   ENUM_SOCKET_STATE m_state;
+   string            m_send_buffer;
+   string            m_recv_buffer;
+   datetime          m_last_action;
 
 public:
-   CSocketClient() : m_socket(-1), m_is_connected(false) {}
+   CSocketClient() : m_socket(-1), m_state(STATE_IDLE), m_last_action(0) {}
   ~CSocketClient() { Disconnect(); }
+
+   ENUM_SOCKET_STATE GetState() { return m_state; }
 
    bool Connect(string host, int port)
    {
@@ -64,27 +79,84 @@ public:
       return true;
    }
 
-   bool SendEncrypted(string data)
+   bool AsyncRequest(string data)
    {
-      if(!m_is_connected) return false;
-      string encrypted = m_security.Encrypt(data) + "\n";
-      char buf[];
-      StringToCharArray(encrypted, buf);
-      int sent = send(m_socket, buf[0], ArraySize(buf)-1, 0);
-      return (sent > 0);
+      if(m_state != STATE_IDLE) return false;
+      m_send_buffer = m_security.Encrypt(data) + "\n";
+      m_recv_buffer = "";
+      m_state = STATE_CONNECTING;
+      m_last_action = TimeCurrent();
+
+      m_socket = socket(2, 1, 6);
+      if(m_socket == -1) { m_state = STATE_ERROR; return false; }
+
+      uint non_block = 1;
+      ioctlsocket(m_socket, FIONBIO, non_block);
+
+      sockaddr server;
+      server.family = 2;
+      server.port = htons((ushort)ENGINE_PORT);
+      server.addr = inet_addr(ENGINE_HOST);
+
+      connect(m_socket, server, sizeof(sockaddr));
+      return true;
    }
 
-   string ReceiveDecrypted()
+   void Update()
    {
-      char buf[SOCKET_BUFFER_SIZE];
-      string result = "";
-      int received = recv(m_socket, buf[0], SOCKET_BUFFER_SIZE, 0);
-      if(received > 0) {
-         string encrypted = CharArrayToString(buf, 0, received);
-         result = m_security.Decrypt(encrypted);
+      if(m_state == STATE_IDLE || m_state == STATE_COMPLETED || m_state == STATE_ERROR) return;
+
+      if(TimeCurrent() - m_last_action > 5) { // Timeout
+         Disconnect();
+         m_state = STATE_ERROR;
+         return;
       }
-      return result;
+
+      if(m_state == STATE_CONNECTING) {
+         // In non-blocking, we just try to send to check connection
+         m_state = STATE_SENDING;
+      }
+
+      if(m_state == STATE_SENDING) {
+         char buf[];
+         StringToCharArray(m_send_buffer, buf);
+         int sent = send(m_socket, buf[0], ArraySize(buf)-1, 0);
+         if(sent > 0) {
+            m_state = STATE_RECEIVING;
+            m_last_action = TimeCurrent();
+         } else {
+            int err = WSAGetLastError();
+            if(err != WSAEWOULDBLOCK) { m_state = STATE_ERROR; Disconnect(); }
+         }
+      }
+
+      if(m_state == STATE_RECEIVING) {
+         char buf[SOCKET_BUFFER_SIZE];
+         int received = recv(m_socket, buf[0], SOCKET_BUFFER_SIZE, 0);
+         if(received > 0) {
+            m_recv_buffer += CharArrayToString(buf, 0, received);
+            if(StringFind(m_recv_buffer, "\n") != -1) {
+               m_state = STATE_COMPLETED;
+               Disconnect();
+            }
+         } else {
+            int err = WSAGetLastError();
+            if(err != WSAEWOULDBLOCK) { m_state = STATE_ERROR; Disconnect(); }
+         }
+      }
    }
 
-   void Disconnect() { if(m_socket != -1) closesocket(m_socket); m_socket = -1; m_is_connected = false; }
+   string GetResponse()
+   {
+      if(m_state != STATE_COMPLETED) return "";
+      string decrypted = m_security.Decrypt(m_recv_buffer);
+      m_state = STATE_IDLE;
+      return decrypted;
+   }
+
+   void Disconnect() {
+      if(m_socket != -1) closesocket(m_socket);
+      m_socket = -1;
+      if(m_state != STATE_COMPLETED && m_state != STATE_ERROR) m_state = STATE_IDLE;
+   }
 };
