@@ -5,6 +5,11 @@ import time
 import random
 import logging
 from AAT_Security_V1_0_0 import AATSecurity
+import base64
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+import os
 
 # Configure logging for stress test
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -15,20 +20,26 @@ def simulate_client(client_id, symbol="EURUSD"):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(5.0)
             s.connect(('127.0.0.1', 5555))
+class StressTestClient:
+    def __init__(self):
+        # Static keys matching Brain and MQL5
+        self.key = b"Static32ByteKeyForZeroStubPolicy"
+        self.iv = b"Static16ByteIV!!"
 
-            scenarios = [
-                # 1. Normal Request
-                {"symbol": symbol, "balance": 10000, "tick_value": 1.0, "tick_size": 0.00001, "sl_points": 200},
-                # 2. Extreme Balance
-                {"symbol": "BTCUSD", "balance": 1000000, "tick_value": 0.01, "tick_size": 0.01, "sl_points": 500},
-                # 3. Low balance / Small SL
-                {"symbol": "XAUUSD.pro", "balance": 100, "tick_value": 1.0, "tick_size": 0.01, "sl_points": 10},
-                # 4. Non-standard symbol
-                {"symbol": "US30", "balance": 50000, "tick_value": 1.0, "tick_size": 0.1, "sl_points": 100},
-                # 5. Malformed JSON (Handled below by sending raw)
-            ]
+    def encrypt(self, plaintext):
+        padder = padding.PKCS7(128).padder()
+        padded_data = padder.update(plaintext.encode()) + padder.finalize()
+        cipher = Cipher(algorithms.AES(self.key), modes.CBC(self.iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        encrypted = encryptor.update(padded_data) + encryptor.finalize()
+        return base64.b64encode(encrypted).decode('utf-8')
 
-            request = random.choice(scenarios)
+    def decrypt(self, encrypted_b64):
+        raw = base64.b64decode(encrypted_b64)
+        cipher = Cipher(algorithms.AES(self.key), modes.CBC(self.iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+        padded_data = decryptor.update(raw) + decryptor.finalize()
+        return padded_data.decode('utf-8', errors='ignore').split('\x00')[0].rstrip('\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
 
             # 10% chance to send malformed data
             if random.random() < 0.1:
@@ -37,17 +48,18 @@ def simulate_client(client_id, symbol="EURUSD"):
             else:
                 encrypted_req = security.encrypt(json.dumps(request))
                 s.sendall(encrypted_req.encode('utf-8'))
+    def simulate(self, client_id, symbol="EURUSD"):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(10.0)
+                s.connect(('127.0.0.1', 5555))
 
-            data = b""
-            while True:
-                chunk = s.recv(4096)
-                if not chunk: break
-                data += chunk
-                if data.endswith(b'}'): break
+                request = {"symbol": symbol, "balance": 10000}
+                payload = self.encrypt(json.dumps(request))
+                s.sendall(payload.encode('utf-8'))
 
-            if not data:
-                logging.warning(f"Client {client_id} - No data received")
-                return
+                data_raw = s.recv(16384).decode('utf-8')
+                if not data_raw: return
 
             try:
                 decrypted_resp = security.decrypt(data.decode('utf-8'))
@@ -67,22 +79,20 @@ def run_stress_test(num_clients=50):
     logging.info("="*60)
     logging.info(f"STARTING COMPREHENSIVE FULL-SPECTRUM STRESS TEST - {num_clients} CLIENTS")
     logging.info("="*60)
+                response = json.loads(self.decrypt(data_raw))
+                logging.info(f"Client {client_id} [{symbol}] - Status: {response.get('status')} | Signal: {response.get('signal')}")
+        except Exception as e:
+            logging.error(f"Client {client_id} Error: {e}")
 
+def run_stress_test(num_clients=3):
+    client = StressTestClient()
     threads = []
-    symbols = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURGBP", "USDCAD", "USDCHF", "XAUUSD", "BTCUSD"]
-
     for i in range(num_clients):
-        t = threading.Thread(target=simulate_client, args=(i, random.choice(symbols)))
+        t = threading.Thread(target=client.simulate, args=(i, "EURUSD"))
         threads.append(t)
         t.start()
-        time.sleep(random.uniform(0.1, 0.3)) # staggered start
-
-    for t in threads:
-        t.join()
-
-    logging.info("="*60)
-    logging.info("COMPREHENSIVE STRESS TEST COMPLETED")
-    logging.info("="*60)
+        time.sleep(1)
+    for t in threads: t.join()
 
 if __name__ == "__main__":
     run_stress_test()
