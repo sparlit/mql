@@ -1,19 +1,17 @@
 //+------------------------------------------------------------------+
-//|                                                   SocketClient.mqh |
+//|                                              AAT-SocketClient.mqh |
 //+------------------------------------------------------------------+
 #property strict
 
-#include <SharedMemory.mqh>
-
-#define INVALID_SOCKET -1
-#define SOCKET_ERROR -1
+#define INVALID_SOCKET 0xFFFFFFFF
+#define SOCKET_ERROR   -1
 
 #import "ws2_32.dll"
 int socket(int af, int type, int protocol);
-int connect(int s, sockaddr_in &name, int namelen);
-int send(int s, uchar &buf[], int len, int flags);
-int recv(int s, uchar &buf[], int len, int flags);
-int closesocket(int s);
+int connect(uint s, sockaddr_in &name, int namelen);
+int send(uint s, char &buf[], int len, int flags);
+int recv(uint s, char &buf[], int len, int flags);
+int closesocket(uint s);
 int WSAStartup(ushort wVersionRequested, char &lpWSAData[]);
 int WSACleanup();
 uint inet_addr(string cp);
@@ -21,6 +19,7 @@ ushort htons(ushort hostshort);
 #import
 
 #include <AAT-Security-V1.0.0.mqh>
+
 struct sockaddr_in {
     short sin_family;
     ushort sin_port;
@@ -32,231 +31,94 @@ class CSocketClient
 {
 private:
    uint              m_socket;
-   string            m_host;
-   int               m_port;
    bool              m_initialized;
-   int               m_timeout;
-   long              m_latency;
    CAATSecurity      m_security;
 
 public:
-                     CSocketClient(void) : m_socket(INVALID_SOCKET), m_host("127.0.0.1"), m_port(5555), m_initialized(false), m_timeout(5000), m_latency(0) {}
+   CSocketClient() : m_socket(INVALID_SOCKET), m_initialized(false)
+   {
+      char data[400];
+      if(WSAStartup(0x202, data) == 0) m_initialized = true;
+      else Print("AAT-SocketClient: WSAStartup failed");
+   }
 
-   void              SetMasterKey(string key) { m_security.SetKey(key); }
-                    ~CSocketClient(void) { Disconnect(); if(m_initialized) WSACleanup(); }
+   ~CSocketClient()
+   {
+      Disconnect();
+      if(m_initialized) WSACleanup();
+   }
 
-   bool              Init()
-     {
-      uchar data[512];
-      if(WSAStartup(0x0202, data) != 0)
-        {
-         Print("SocketClient: WSAStartup failed");
+   void SetMasterKey(string key) { m_security.SetKey(key); }
+
+   bool Connect(string ip, int port)
+   {
+      if(!m_initialized) return false;
+
+      m_socket = socket(2, 1, 6); // AF_INET, SOCK_STREAM, IPPROTO_TCP
+      if(m_socket == INVALID_SOCKET) return false;
+
+      sockaddr_in server;
+      server.sin_family = 2;
+      server.sin_port = htons((ushort)port);
+      server.sin_addr = inet_addr(ip);
+
+      if(connect(m_socket, server, sizeof(server)) == SOCKET_ERROR)
+      {
+         closesocket(m_socket);
+         m_socket = INVALID_SOCKET;
          return false;
-    int m_socket;
-    bool m_initialized;
-    uchar m_key[32];
-    uchar m_iv[16];
-
-public:
-    CSocketClient() : m_socket(INVALID_SOCKET), m_initialized(false) {
-        char data[400];
-        if (WSAStartup(0x202, data) == 0) m_initialized = true;
-        // In production, these should be securely loaded/negotiated
-        StringToCharArray("Static32ByteKeyForZeroStubPolicy", m_key);
-        StringToCharArray("Static16ByteIV!!", m_iv);
-    }
-
-    ~CSocketClient() {
-        if (m_socket != INVALID_SOCKET) closesocket(m_socket);
-        if (m_initialized) WSACleanup();
-    }
-
-    bool Connect(string ip, int port) {
-        m_socket = socket(2, 1, 6);
-        if (m_socket == INVALID_SOCKET) return false;
-        sockaddr_in server;
-        server.sin_family = 2;
-        server.sin_port = htons((ushort)port);
-        server.sin_addr = inet_addr(ip);
-        if (connect(m_socket, server, sizeof(server)) == SOCKET_ERROR) {
-            closesocket(m_socket);
-            m_socket = INVALID_SOCKET;
-            return false;
-        }
-        return true;
-    }
-
-    bool Send(string data) {
-        uchar plain[];
-        StringToCharArray(data, plain);
-        int plain_len = ArraySize(plain)-1;
-
-        // Ensure padding for AES (16 byte block)
-        int padded_len = ((plain_len / 16) + 1) * 16;
-        uchar plain_padded[];
-        ArrayResize(plain_padded, padded_len);
-        ArrayFill(plain_padded, 0, padded_len, 0);
-        memcpy_uchar(plain_padded, plain, plain_len);
-
-        uchar encrypted[];
-        ArrayResize(encrypted, padded_len);
-        int out_len = padded_len;
-
-        if(!AES256Encrypt(plain_padded, padded_len, m_key, m_iv, encrypted, out_len)) return false;
-
-        string b64 = Base64Encode(encrypted, out_len);
-        uchar send_buf[];
-        StringToCharArray(b64, send_buf);
-        return (send(m_socket, send_buf, ArraySize(send_buf)-1, 0) != SOCKET_ERROR);
-    }
-
-    string Receive() {
-        uchar buf[16384];
-        int bytes = recv(m_socket, buf, 16384, 0);
-        if (bytes > 0) {
-            string b64 = CharArrayToString(buf, 0, bytes);
-            uchar encrypted[];
-            int enc_len = Base64Decode(b64, encrypted);
-
-            uchar decrypted[];
-            ArrayResize(decrypted, enc_len);
-            int out_len = enc_len;
-
-            if(!AES256Decrypt(encrypted, enc_len, m_key, m_iv, decrypted, out_len)) return "";
-            return CharArrayToString(decrypted, 0, out_len);
-        }
-        return "";
-    }
-
-    void Disconnect() {
-        if (m_socket != INVALID_SOCKET) {
-            closesocket(m_socket);
-            m_socket = INVALID_SOCKET;
-        }
-    }
-
-    void memcpy_uchar(uchar &dst[], uchar &src[], int count) {
-        for(int i=0; i<count; i++) dst[i] = src[i];
-    }
-
-    string Base64Encode(uchar &data[], int len) {
-        static const string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        string ret = "";
-        int i = 0;
-        uchar char_array_3[3], char_array_4[4];
-        for (int n=0; n<len; n++) {
-            char_array_3[i++] = data[n];
-            if (i == 3) {
-                char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-                char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-                char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-                char_array_4[3] = char_array_3[2] & 0x3f;
-                for(i = 0; i <4 ; i++) ret += StringSubstr(base64_chars, char_array_4[i], 1);
-                i = 0;
-            }
-        }
-        if (i) {
-            for(int j = i; j < 3; j++) char_array_3[j] = '\0';
-            char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-            for (int j = 0; j < i + 1; j++) ret += StringSubstr(base64_chars, char_array_4[j], 1);
-            while((i++ < 3)) ret += "=";
-        }
+      }
       return true;
-     }
+   }
 
-   string            Receive()
-     {
+   bool SendEncrypted(string message)
+   {
+      if(m_socket == INVALID_SOCKET) return false;
+
+      string encrypted = m_security.Encrypt(message);
+      if(encrypted == "") return false;
+
+      encrypted += "\n"; // Newline as terminator
+      char buf[];
+      StringToCharArray(encrypted, buf);
+      int len = ArraySize(buf) - 1; // Exclude null terminator
+
+      return (send(m_socket, buf, len, 0) != SOCKET_ERROR);
+   }
+
+   string ReceiveDecrypted()
+   {
       if(m_socket == INVALID_SOCKET) return "";
+
       string result = "";
       char buf[4096];
-      int res;
 
       while(true)
-        {
+      {
          ArrayInitialize(buf, 0);
-         res = recv(m_socket, buf, 4096, 0);
+         int res = recv(m_socket, buf, 4096, 0);
          if(res > 0)
-           {
+         {
             result += CharArrayToString(buf, 0, res);
             if(StringFind(result, "\n") != -1) break;
-           }
-         else if(res == 0) // Graceful shutdown
-           {
-            break;
-           }
-         else // Error or timeout
-           {
-            break;
-           }
-        return ret;
-    }
+         }
+         else break;
+      }
 
-    int Base64Decode(string base64, uchar &data[]) {
-        static const string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        int len = StringLen(base64);
-        int i = 0, j = 0, in_ = 0;
-        uchar char_array_4[4], char_array_3[3];
-        ArrayResize(data, len);
-        int out_len = 0;
-        while (len-- && (base64[in_] != '=') && is_base64(base64[in_])) {
-            char_array_4[i++] = (uchar)StringFind(base64_chars, StringSubstr(base64, in_++, 1));
-            if (i == 4) {
-                char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
-                char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
-                char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
-                for (i = 0; i < 3; i++) data[out_len++] = char_array_3[i];
-                i = 0;
-            }
-        }
-        if (i) {
-            for (j = i; j < 4; j++) char_array_4[j] = 0;
-            char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
-            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
-            for (j = 0; j < i - 1; j++) data[out_len++] = char_array_3[j];
-        }
-     }
+      if(result == "") return "";
 
-   long              GetLatency() { return m_latency; }
+      int pos = StringFind(result, "\n");
+      if(pos != -1) result = StringSubstr(result, 0, pos);
 
-   bool              CheckHeartbeat()
-     {
-      long start = GetTickCount64();
-      if(!Connect(m_host, m_port))
-        {
-         m_latency = -1;
-         return false;
-        }
+      return m_security.Decrypt(result);
+   }
 
-      string req = "{\"type\":\"heartbeat\"}";
-      string enc_req = m_security.Encrypt(req);
-      if(!Send(enc_req)) { Disconnect(); return false; }
-
-      string resp = Receive();
-      string dec_resp = m_security.Decrypt(resp);
-
-      Disconnect();
-      m_latency = GetTickCount64() - start;
-
-      return (StringFind(dec_resp, "\"status\":\"alive\"") != -1);
-     }
-
-   bool              SendEncrypted(string message)
-     {
-      string enc = m_security.Encrypt(message);
-      return Send(enc + "\n");
-     }
-
-   string            ReceiveDecrypted()
-     {
-      string resp = Receive();
-      if(resp == "") return "";
-      string trimmed = StringSubstr(resp, 0, StringFind(resp, "\n"));
-      return m_security.Decrypt(trimmed);
-     }
-        ArrayResize(data, out_len);
-        return out_len;
-    }
-    bool is_base64(char c) { return (isalnum(c) || (c == '+') || (c == '/')); }
+   void Disconnect()
+   {
+      if(m_socket != INVALID_SOCKET)
+      {
+         closesocket(m_socket);
+         m_socket = INVALID_SOCKET;
+      }
+   }
 };

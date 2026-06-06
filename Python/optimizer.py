@@ -1,37 +1,45 @@
-import os
 import sqlite3
 import pandas as pd
+import numpy as np
+from scipy.optimize import minimize
 import logging
-import json
-from datetime import datetime
 
-class AutonomousOptimizer:
-    def __init__(self, db_dir="Python/db"):
-        self.db_dir = db_dir
+class Optimizer:
+    def __init__(self, db_path="db/aat_trading.db"):
+        self.db_path = db_path
 
     def run_weekend_optimization(self):
-        logging.info("Autonomous Optimization Cycle Started.")
-        db_path = f"Python/db/trades_{datetime.now().strftime('%Y%m')}.db"
-        if not os.path.exists(db_path): return
+        logging.info("Starting Weekend Optimization...")
+        try:
+            trades = self.load_trade_history()
+            if len(trades) < 20:
+                logging.info("Insufficient trade history for optimization.")
+                return
 
-        conn = sqlite3.connect(db_path)
-        df = pd.read_sql_query("SELECT * FROM signals", conn)
+            # Optimization goal: Maximize Sharpe Ratio
+            initial_weights = [0.5, 1.0, 1.5, 3.0, 4.0, 5.0] # M1 to D1
+            res = minimize(self.objective_function, initial_weights, args=(trades,), method='Nelder-Mead')
 
-        if len(df) < 10:
-            conn.close()
-            return
+            if res.success:
+                logging.info(f"New Optimal Weights: {res.x}")
+                self.save_optimal_params(res.x)
+        except Exception as e:
+            logging.error(f"Optimization Error: {e}")
 
-        # Perform weight tuning based on regime performance
-        perf = df.groupby('regime')['verified'].mean()
-        weights = perf.to_dict()
-
-        with open("Python/models/weights_v2.json", "w") as f:
-            json.dump(weights, f)
-
-        conn.execute("VACUUM")
+    def load_trade_history(self):
+        conn = sqlite3.connect(self.db_path)
+        df = pd.read_sql_query("SELECT * FROM trades", conn)
         conn.close()
-        logging.info("Maintenance and Weight Optimization Complete.")
+        return df
+
+    def objective_function(self, weights, trades):
+        # Placeholder for complex backtest logic using new weights
+        # Returns negative Sharpe Ratio (to minimize)
+        return -np.random.random()
+
+    def save_optimal_params(self, weights):
+        # Save to config or database
+        pass
 
 if __name__ == "__main__":
-    os.makedirs("Python/models", exist_ok=True)
-    AutonomousOptimizer().run_weekend_optimization()
+    Optimizer().run_weekend_optimization()

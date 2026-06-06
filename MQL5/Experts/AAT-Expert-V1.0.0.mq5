@@ -3,14 +3,13 @@
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2024, AI Trader Corp."
 #property link      "https://www.mql5.com"
-#property version   "1.40"
+#property version   "2.00"
 #property strict
-#property description "Autonomous Autotrader with Full-Spectrum Dashboard"
+#property description "Autonomous Autotrader with Cyber-Pro Dashboard"
 
 #include <Trade\Trade.mqh>
 #include <Trade\PositionInfo.mqh>
 #include <Trade\SymbolInfo.mqh>
-#include <ChartObjects\ChartObjectsTxtControls.mqh>
 #include <AAT-Dashboard-V1.0.0.mqh>
 #include <AAT-SocketClient-V1.0.0.mqh>
 #include <AAT-JsonParser-V1.0.0.mqh>
@@ -42,10 +41,10 @@ int OnInit()
   {
    if(!symbol_info.Name(_Symbol)) return(INIT_FAILED);
    trade.SetExpertMagicNumber(InpMagicNumber);
-
    socket_client.SetMasterKey(InpMasterKey);
 
-   dashboard.Create(10, 12, 10, 30, 100, 22);
+   if(!dashboard.Create(10, 10, 100, 30, 1200, 240)) return(INIT_FAILED);
+
    dashboard.SetHeader(0, "Symbol");
    dashboard.SetHeader(1, "M1");
    dashboard.SetHeader(2, "M5");
@@ -59,21 +58,19 @@ int OnInit()
    dashboard.SetHeader(10, "CONSENSUS");
    dashboard.SetHeader(11, "STATUS");
 
-   dashboard.SetCellValue(1, 0, _Symbol);
+   dashboard.SetCellValue(1, 0, _Symbol, clrWhite);
    dashboard.SetCellValue(2, 0, "HEALTH:", clrCyan);
-   dashboard.SetCellValue(2, 1, "OK", clrLime);
    dashboard.SetCellValue(2, 2, "SPREAD:", clrCyan);
    dashboard.SetCellValue(3, 0, "REGIME:", clrCyan);
    dashboard.SetCellValue(3, 2, "P&L:", clrCyan);
-   dashboard.SetCellValue(4, 0, "CANDLE T-:", clrCyan);
+   dashboard.SetCellValue(4, 0, "COUNTDOWN:", clrCyan);
    dashboard.SetCellValue(4, 2, "VaR:", clrCyan);
    dashboard.SetCellValue(5, 0, "CORREL:", clrCyan);
-   dashboard.SetCellValue(5, 2, "POLYMARK:", clrCyan);
+   dashboard.SetCellValue(5, 2, "POLYMARKET:", clrCyan);
 
-   dashboard.SetCellValue(6, 0, "CONFIG:", clrYellow);
-   dashboard.SetCellValue(6, 1, "RISK %", clrWhite);
-   dashboard.SetCellValue(7, 1, DoubleToString(InpRiskPercent, 1), clrWhite);
-   dashboard.SetCellReadOnly(7, 1, false);
+   dashboard.SetCellValue(6, 0, "RISK %:", clrYellow);
+   dashboard.SetCellValue(6, 1, DoubleToString(InpRiskPercent, 1), clrWhite);
+   dashboard.SetCellReadOnly(6, 1, false);
 
    if(InpAutoCharts) SetupTimeframeCharts();
    EventSetTimer(1);
@@ -108,13 +105,11 @@ void UpdateDynamicDashboard()
 
    dashboard.SetCellValue(3, 3, DoubleToString(total_pl, 2), (total_pl >= 0) ? clrLime : clrRed);
 
-   // Sync Risk efficiently
-   string risk_val = dashboard.GetCellValue(7, 1);
+   string risk_val = dashboard.GetCellValue(6, 1);
    double new_risk = StringToDouble(risk_val);
    if(new_risk > 0 && new_risk < 10 && new_risk != g_current_risk)
      {
       g_current_risk = new_risk;
-      GlobalVariableSet("AAT_Risk_" + _Symbol, g_current_risk);
       Print("Dynamic Config: Risk updated to ", g_current_risk);
      }
   }
@@ -140,7 +135,6 @@ void AnalyzeMarket()
 
    string request = "{\"symbol\":\"" + _Symbol + "\", \"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2) +
                     ", \"tick_value\":" + DoubleToString(symbol_info.TickValue(), 5) +
-                    ", \"tick_size\":" + DoubleToString(symbol_info.TickSize(), 8) +
                     ", \"sl_points\":" + IntegerToString(InpStopLoss) +
                     ", \"current_profit_pips\":" + DoubleToString(current_profit_pips, 1) + "}";
 
@@ -217,7 +211,6 @@ void CheckPyramidScaling(double lot)
    double newest_open = 0;
    ENUM_POSITION_TYPE type = POSITION_TYPE_BUY;
 
-   // Correctly find the newest position and count total
    for(int i=PositionsTotal()-1; i>=0; i--)
       if(pos_info.SelectByIndex(i) && pos_info.Symbol() == _Symbol && pos_info.Magic() == InpMagicNumber)
         {
@@ -226,19 +219,14 @@ void CheckPyramidScaling(double lot)
         }
 
    if(pos_count == 0 || pos_count >= 5) return;
-
    double profit = ((type == POSITION_TYPE_BUY) ? (symbol_info.Bid() - newest_open) : (newest_open - symbol_info.Ask())) / _Point;
 
-   if(profit >= InpStopLoss) // Add every 1:1 RR distance
+   if(profit >= InpStopLoss)
      {
       double price = (type == POSITION_TYPE_BUY) ? symbol_info.Ask() : symbol_info.Bid();
-      double sl = newest_open; // Move to BE (newest_open)
-
       if(lot <= 0) lot = 0.01;
-
-      if(trade.PositionOpen(_Symbol, (type == POSITION_TYPE_BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), lot, price, sl, 0, "Pyramid"))
+      if(trade.PositionOpen(_Symbol, (type == POSITION_TYPE_BUY ? ORDER_TYPE_BUY : ORDER_TYPE_SELL), lot, price, newest_open, 0, "Pyramid"))
         {
-         // On success, update ALL positions of this symbol to the BE stop loss
          for(int i=PositionsTotal()-1; i>=0; i--)
             if(pos_info.SelectByIndex(i) && pos_info.Symbol() == _Symbol && pos_info.Magic() == InpMagicNumber)
                trade.PositionModify(pos_info.Ticket(), newest_open, pos_info.TakeProfit());
@@ -282,9 +270,15 @@ void SetupTimeframeCharts()
   {
    ENUM_TIMEFRAMES tfs[] = {PERIOD_M1, PERIOD_M5, PERIOD_M15, PERIOD_M30, PERIOD_H1, PERIOD_H4, PERIOD_D1, PERIOD_W1, PERIOD_MN1};
    for(int i=0; i<ArraySize(tfs); i++) ChartOpen(_Symbol, tfs[i]);
-
-   // Tile windows vertically using WinAPI (MT5 doesn't have a native ChartTile function)
-   // 0x0111 = WM_COMMAND, 33054 = ID_WINDOW_TILE_VERT
    long main_hwnd = ChartGetInteger(0, CHART_WINDOW_HANDLE);
    PostMessageW(main_hwnd, 0x0111, 33054, 0);
   }
+
+void OnChartEvent(const int id, const long &lparam, const double &dparam, const string &sparam)
+{
+   if(id == CHARTEVENT_CLICK)
+   {
+      // Toggle Config Overlay if clicked in a specific area (placeholder)
+      if(lparam > 1100 && dparam < 50) dashboard.ToggleConfig();
+   }
+}
