@@ -23,6 +23,23 @@ python3 -m pytest Python/V3_1_0/test_suite_v3.py
 
 ## 4. MT5 Dashboard
 Verify the dashboard displays:
-- **ENGINE V3.1.0 OK**
+- **ENGINE V4.0.0 OK**
 - **LATENCY** in ms.
 - **STABLE** or **ARB ALERT** status.
+- **WATCHDOG** status (STABLE / RECOVERING / HALT).
+
+## 5. V4.0 Feature Verification
+### Watchdog & Heartbeat (AP 29)
+1. Close the Python Engine.
+2. Observe EA moving all positions to Break-Even (BE) and status changing to **WATCHDOG HALT** after 15s.
+3. Restart Python Engine.
+4. Observe status changing to **RECOVERING 1/3**, **2/3**, then **STABLE**.
+
+### Non-Blocking Communication (AP 30)
+1. Open MT5 Chart and move the window while EA is analyzing.
+2. UI should remain fluid with zero "Not Responding" events.
+
+### Arbitrage & Shared Memory (AP 31)
+1. Open two MT5 terminals.
+2. Verify `SharedMemory.dll` is in `MQL5/Libraries/V3_1_0/`.
+3. Check `engine_debug.log` for shared benchmark updates.
