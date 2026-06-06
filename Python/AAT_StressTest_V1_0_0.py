@@ -4,6 +4,7 @@ import threading
 import time
 import random
 import logging
+from AAT_Security_V1_0_0 import AATSecurity
 import base64
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -13,6 +14,12 @@ import os
 # Configure logging for stress test
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
+def simulate_client(client_id, symbol="EURUSD"):
+    security = AATSecurity()
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(5.0)
+            s.connect(('127.0.0.1', 5555))
 class StressTestClient:
     def __init__(self):
         # Static keys matching Brain and MQL5
@@ -34,6 +41,13 @@ class StressTestClient:
         padded_data = decryptor.update(raw) + decryptor.finalize()
         return padded_data.decode('utf-8', errors='ignore').split('\x00')[0].rstrip('\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
 
+            # 10% chance to send malformed data
+            if random.random() < 0.1:
+                logging.info(f"Client {client_id} sending malformed encrypted data...")
+                s.sendall(b'ThisIsNotEncrypted!!!')
+            else:
+                encrypted_req = security.encrypt(json.dumps(request))
+                s.sendall(encrypted_req.encode('utf-8'))
     def simulate(self, client_id, symbol="EURUSD"):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -47,6 +61,24 @@ class StressTestClient:
                 data_raw = s.recv(16384).decode('utf-8')
                 if not data_raw: return
 
+            try:
+                decrypted_resp = security.decrypt(data.decode('utf-8'))
+                response = json.loads(decrypted_resp)
+                logging.info(f"Client {client_id} [{request.get('symbol')}] - Status: {response.get('status')} | Verified: {response.get('verified')} | Lot: {response.get('recommended_lot')}")
+            except Exception as e:
+                logging.error(f"Client {client_id} - Response Error: {e} | Raw Data: {data}")
+
+    except socket.timeout:
+        logging.error(f"Client {client_id} - Connection Timeout")
+    except ConnectionRefusedError:
+        logging.error(f"Client {client_id} - Connection Refused (Is main_engine.py running?)")
+    except Exception as e:
+        logging.error(f"Client {client_id} - Error: {e}")
+
+def run_stress_test(num_clients=50):
+    logging.info("="*60)
+    logging.info(f"STARTING COMPREHENSIVE FULL-SPECTRUM STRESS TEST - {num_clients} CLIENTS")
+    logging.info("="*60)
                 response = json.loads(self.decrypt(data_raw))
                 logging.info(f"Client {client_id} [{symbol}] - Status: {response.get('status')} | Signal: {response.get('signal')}")
         except Exception as e:

@@ -39,14 +39,17 @@ def test_handle_client_success(engine):
     mock_conn = MagicMock()
     mock_addr = ('127.0.0.1', 12345)
 
-    request_data = json.dumps({
+    request_dict = {
         "symbol": "EURUSD",
         "balance": 10000,
         "sl_points": 200,
         "tick_value": 1.0
-    }).encode('utf-8')
+    }
+    # Mock encryption_enabled for test
+    engine.encryption_enabled = True
+    encrypted_request = engine.security.encrypt(json.dumps(request_dict)).encode('utf-8')
 
-    mock_conn.recv.side_effect = [request_data, b""]
+    mock_conn.recv.side_effect = [encrypted_request, b""]
 
     with patch.object(engine, 'fetch_data') as mock_fetch, \
          patch.object(engine.strategy_master, 'get_consensus_signal') as mock_signal, \
@@ -61,7 +64,9 @@ def test_handle_client_success(engine):
         engine.handle_client(mock_conn, mock_addr)
 
         mock_conn.sendall.assert_called_once()
-        sent_data = json.loads(mock_conn.sendall.call_args[0][0].decode('utf-8'))
+        encrypted_resp = mock_conn.sendall.call_args[0][0].decode('utf-8')
+        decrypted_resp = engine.security.decrypt(encrypted_resp)
+        sent_data = json.loads(decrypted_resp)
         assert sent_data['status'] == 'success'
         assert sent_data['signal'] == 'BUY'
         assert sent_data['recommended_lot'] == 0.01

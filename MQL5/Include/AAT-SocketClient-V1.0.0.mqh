@@ -20,6 +20,7 @@ uint inet_addr(string cp);
 ushort htons(ushort hostshort);
 #import
 
+#include <AAT-Security-V1.0.0.mqh>
 struct sockaddr_in {
     short sin_family;
     ushort sin_port;
@@ -30,6 +31,27 @@ struct sockaddr_in {
 class CSocketClient
 {
 private:
+   uint              m_socket;
+   string            m_host;
+   int               m_port;
+   bool              m_initialized;
+   int               m_timeout;
+   long              m_latency;
+   CAATSecurity      m_security;
+
+public:
+                     CSocketClient(void) : m_socket(INVALID_SOCKET), m_host("127.0.0.1"), m_port(5555), m_initialized(false), m_timeout(5000), m_latency(0) {}
+
+   void              SetMasterKey(string key) { m_security.SetKey(key); }
+                    ~CSocketClient(void) { Disconnect(); if(m_initialized) WSACleanup(); }
+
+   bool              Init()
+     {
+      uchar data[512];
+      if(WSAStartup(0x0202, data) != 0)
+        {
+         Print("SocketClient: WSAStartup failed");
+         return false;
     int m_socket;
     bool m_initialized;
     uchar m_key[32];
@@ -141,6 +163,33 @@ public:
             for (int j = 0; j < i + 1; j++) ret += StringSubstr(base64_chars, char_array_4[j], 1);
             while((i++ < 3)) ret += "=";
         }
+      return true;
+     }
+
+   string            Receive()
+     {
+      if(m_socket == INVALID_SOCKET) return "";
+      string result = "";
+      char buf[4096];
+      int res;
+
+      while(true)
+        {
+         ArrayInitialize(buf, 0);
+         res = recv(m_socket, buf, 4096, 0);
+         if(res > 0)
+           {
+            result += CharArrayToString(buf, 0, res);
+            if(StringFind(result, "\n") != -1) break;
+           }
+         else if(res == 0) // Graceful shutdown
+           {
+            break;
+           }
+         else // Error or timeout
+           {
+            break;
+           }
         return ret;
     }
 
@@ -167,6 +216,45 @@ public:
             char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
             for (j = 0; j < i - 1; j++) data[out_len++] = char_array_3[j];
         }
+     }
+
+   long              GetLatency() { return m_latency; }
+
+   bool              CheckHeartbeat()
+     {
+      long start = GetTickCount64();
+      if(!Connect(m_host, m_port))
+        {
+         m_latency = -1;
+         return false;
+        }
+
+      string req = "{\"type\":\"heartbeat\"}";
+      string enc_req = m_security.Encrypt(req);
+      if(!Send(enc_req)) { Disconnect(); return false; }
+
+      string resp = Receive();
+      string dec_resp = m_security.Decrypt(resp);
+
+      Disconnect();
+      m_latency = GetTickCount64() - start;
+
+      return (StringFind(dec_resp, "\"status\":\"alive\"") != -1);
+     }
+
+   bool              SendEncrypted(string message)
+     {
+      string enc = m_security.Encrypt(message);
+      return Send(enc + "\n");
+     }
+
+   string            ReceiveDecrypted()
+     {
+      string resp = Receive();
+      if(resp == "") return "";
+      string trimmed = StringSubstr(resp, 0, StringFind(resp, "\n"));
+      return m_security.Decrypt(trimmed);
+     }
         ArrayResize(data, out_len);
         return out_len;
     }
