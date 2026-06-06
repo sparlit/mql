@@ -35,3 +35,43 @@
 2026-06-06 10:13:46,345 [INFO] Skipping FinBERT initialization (Test Mode)
 2026-06-06 10:13:46,362 [INFO] AAT Engine Running on 127.0.0.1:5555
 2026-06-06 10:13:47,100 [ERROR] Decryption Error: Incorrect padding
+2026-06-06 13:42:56,600 [INFO] Skipping FinBERT initialization (Test Mode)
+2026-06-06 13:42:56,612 [INFO] AAT Engine Running on 127.0.0.1:5555
+2026-06-06 13:42:57,911 [WARNING] Fetch failed for https://www.forexfactory.com/calendar: Status 403
+2026-06-06 13:42:59,668 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:42:59,821 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:00,195 [WARNING] Fetch failed for https://www.forexfactory.com/calendar: Status 403
+2026-06-06 13:43:00,417 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:01,057 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:01,467 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:01,958 [WARNING] Fetch failed for https://www.forexfactory.com/calendar: Status 403
+2026-06-06 13:43:02,347 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:02,359 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:03,126 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:03,644 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:03,946 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:04,068 [ERROR] Client Error: Object of type bool is not JSON serializable
+2026-06-06 13:43:04,508 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:04,755 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:04,920 [ERROR] Client Error: Object of type bool is not JSON serializable
+2026-06-06 13:43:04,927 [ERROR] Client Error: Object of type bool is not JSON serializable
+2026-06-06 13:43:05,826 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:43:05,957 [ERROR] Client Error: Object of type bool is not JSON serializable
+2026-06-06 13:43:05,973 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:11,684 [INFO] Skipping FinBERT initialization (Test Mode)
+2026-06-06 13:44:11,694 [INFO] AAT Engine Running on 127.0.0.1:5555
+2026-06-06 13:44:12,789 [ERROR] Decryption Error: Incorrect padding
+2026-06-06 13:44:13,290 [ERROR] Decryption Error: Incorrect padding
+2026-06-06 13:44:14,012 [WARNING] Fetch failed for https://www.forexfactory.com/calendar: Status 403
+2026-06-06 13:44:15,113 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:16,187 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:16,511 [WARNING] Fetch failed for https://www.forexfactory.com/calendar: Status 403
+2026-06-06 13:44:16,902 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:17,485 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:18,663 [WARNING] Fetch failed for https://www.forexfactory.com/calendar: Status 403
+2026-06-06 13:44:18,683 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:19,090 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:20,114 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:21,389 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:21,640 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:23,005 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403

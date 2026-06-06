@@ -8,6 +8,7 @@ import logging
 import re
 import sqlite3
 import os
+from questdb.ingress import Sender
 from datetime import datetime, timedelta
 from AAT_StrategyMaster_V1_0_0 import StrategyMaster
 from AAT_RiskManager_V1_0_0 import RiskManager
@@ -33,14 +34,25 @@ class AutonomousAutoTrader:
         self.news_cache = []
         self.sentiment_text = ""
         self.db_path = "db/aat_trading.db"
+        self.quest_host = os.environ.get("QUESTDB_HOST", "localhost")
+        self.quest_port = int(os.environ.get("QUESTDB_PORT", 9009))
         self._init_db()
         threading.Thread(target=self.background_aggregator, daemon=True).start()
+
+    def log_quest(self, table, data):
+        try:
+            with Sender(self.quest_host, self.quest_port) as sender:
+                sender.row(table, symbols={"source": "aat_engine"}, columns=data).at_now()
+                sender.flush()
+        except Exception as e:
+            logging.debug(f"QuestDB offline: {e}")
 
     def _init_db(self):
         if not os.path.exists('db'): os.makedirs('db')
         conn = sqlite3.connect(self.db_path)
         conn.execute("CREATE TABLE IF NOT EXISTS logs (timestamp TEXT, level TEXT, message TEXT)")
         conn.execute("CREATE TABLE IF NOT EXISTS trades (timestamp TEXT, symbol TEXT, signal TEXT, confidence REAL, status TEXT)")
+        conn.execute("CREATE TABLE IF NOT EXISTS aat_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, item TEXT, finding_insight TEXT, priority INTEGER, status TEXT, recommendations TEXT, diff_log TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)")
         conn.commit()
         conn.close()
 
@@ -50,11 +62,21 @@ class AutonomousAutoTrader:
         conn.commit()
         conn.close()
 
+    def audit_log(self, category, item, insight, priority=1, status="Info"):
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("INSERT INTO aat_audit (category, item, finding_insight, priority, status) VALUES (?, ?, ?, ?, ?)",
+                     (category, item, insight, priority, status))
+        conn.commit()
+        conn.close()
+
     def background_aggregator(self):
         while self.active:
             try:
                 self.news_cache = self.aggregator.fetch_forexfactory_news()
                 self.sentiment_text = self.aggregator.fetch_fxstreet_sentiment() + " " + self.aggregator.fetch_reuters_bloomberg_rss()
+                if len(self.sentiment_text) < 100:
+                    self.sentiment_text = self.aggregator.get_failover_data("EURUSD=X")
+                self.audit_log("Aggregator", "Cycle Complete", f"Fetched {len(self.news_cache)} news events.", 2)
             except Exception as e:
                 logging.error(f"Aggregator Error: {e}")
             time.sleep(300)
@@ -78,12 +100,12 @@ class AutonomousAutoTrader:
             return None
 
     def handle_client(self, conn, addr):
+        start_time = time.time()
         with conn:
             try:
                 data_raw = conn.recv(10240).decode('utf-8').strip()
                 if not data_raw: return
 
-                # Decrypt
                 decrypted = self.security.decrypt(data_raw)
                 if not decrypted: return
                 data = json.loads(decrypted)
@@ -93,7 +115,10 @@ class AutonomousAutoTrader:
                 dfs = self.fetch_data(symbol)
 
                 if dfs:
-                    signal, conf, tf_results = self.strategy_master.get_consensus_signal(dfs, self.sentiment_text)
+                    symbol_sentiment = self.aggregator.fetch_fxstreet_sentiment(symbol_filter=symbol)
+                    combined_sentiment = (symbol_sentiment if len(symbol_sentiment) > 50 else self.sentiment_text)
+
+                    signal, conf, tf_results = self.strategy_master.get_consensus_signal(dfs, combined_sentiment)
 
                     news_impact = False
                     for event in self.news_cache:
@@ -108,17 +133,33 @@ class AutonomousAutoTrader:
                         current_profit_pips=data.get("current_profit_pips", 0)
                     )
 
+                    # Arbitrage Monitoring (Functional)
+                    broker_price = dfs['M1']['Close'].iloc[-1]
+                    try:
+                        # Fetch fresh benchmark for arbitrage
+                        bench_ticker = yf.Ticker(self.map_symbol(symbol))
+                        yf_price = bench_ticker.fast_info['lastPrice']
+                    except:
+                        yf_price = broker_price
+
+                    price_diff = abs(broker_price - yf_price)
+                    latency = (time.time() - start_time) * 1000 # ms
+
                     response = {
                         "status": "success", "symbol": symbol, "signal": signal, "confidence": int(conf),
-                        "verified": signal != "NEUTRAL", "recommended_lot": lot_size, "news_impact": news_impact,
+                        "verified": 1 if signal != "NEUTRAL" else 0, "recommended_lot": lot_size, "news_impact": 1 if news_impact else 0,
                         "regime": self.risk_manager.evaluate_market_regime(dfs.get('H1')),
                         "var": round(self.risk_manager.calculate_var(dfs.get('H1')), 4),
-                        "correlation": 0.0, "polymarket": "Neutral"
+                        "correlation": 0.0, "polymarket": "Neutral",
+                        "latency": round(latency, 2), "arb_alert": 1 if price_diff > 0.0005 else 0
                     }
+
+                    self.log_quest("signals", {"symbol": symbol, "signal": signal, "conf": float(conf), "latency": latency})
+                    self.audit_log("Strategy", "Signal Generated", f"Symbol: {symbol}, Signal: {signal}, Conf: {conf}", 1, "Success")
+
                     for tf, score in tf_results.items(): response[tf] = int(score)
                 else: response = {"status": "error", "message": "Data fetch failed"}
 
-                # Encrypt and Send
                 encrypted_resp = self.security.encrypt(json.dumps(response)) + "\n"
                 conn.sendall(encrypted_resp.encode('utf-8'))
 
@@ -136,5 +177,4 @@ class AutonomousAutoTrader:
                 threading.Thread(target=self.handle_client, args=(conn, addr), daemon=True).start()
 
 if __name__ == "__main__":
-    import os
     AutonomousAutoTrader().run()

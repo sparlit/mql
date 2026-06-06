@@ -28,25 +28,38 @@ class StrategyMaster:
         return model
 
     def _init_faiss(self):
-        patterns = np.random.rand(1000, 64).astype('float32')
-        self.faiss_index.add(patterns)
+        sig_path = "Python/models/faiss_signatures.npy"
+        if os.path.exists(sig_path):
+            signatures = np.load(sig_path).astype('float32')
+        else:
+            signatures = np.random.randn(1000, 64).astype('float32')
+            os.makedirs("Python/models", exist_ok=True)
+        self.faiss_index.add(signatures)
 
     def _init_finbert(self):
         if os.environ.get("SKIP_FINBERT") == "1":
             logging.info("Skipping FinBERT initialization (Test Mode)")
             return
         try:
-            # Attempt to load local FinBERT, if fails it might download (requires internet)
             model_name = "ProsusAI/finbert"
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-            self.bert_model = AutoModelForSequenceClassification.from_pretrained(model_name)
-            logging.info("FinBERT initialized successfully")
+            model = AutoModelForSequenceClassification.from_pretrained(model_name)
+
+            # Dynamic Quantization for CPU performance (Actionable Point 10)
+            try:
+                self.bert_model = torch.quantization.quantize_dynamic(
+                    model, {torch.nn.Linear}, dtype=torch.qint8
+                )
+                logging.info("FinBERT initialized with Dynamic Quantization")
+            except Exception as q_err:
+                logging.warning(f"Quantization failed, using standard model: {q_err}")
+                self.bert_model = model
+
         except Exception as e:
             logging.error(f"FinBERT Initialization Error: {e}. Falling back to VADER-like logic.")
 
     def get_sentiment_score(self, text):
         if not self.bert_model or not self.tokenizer:
-            # Fallback logic
             bullish = ['buy', 'bullish', 'growth', 'upward', 'high']
             bearish = ['sell', 'bearish', 'decline', 'downward', 'low']
             score = 0
@@ -79,7 +92,6 @@ class StrategyMaster:
             pattern = df['Close'].pct_change().fillna(0).tail(64).values.astype('float32')
             if len(pattern) == 64:
                 D, I = self.faiss_index.search(pattern.reshape(1, -1), 5)
-                # If matches are 'good', boost score (Simplified logic)
                 if D[0][0] < 0.01: score *= 1.2
 
             tf_results[tf] = score
@@ -91,17 +103,15 @@ class StrategyMaster:
         if total_score > 15: signal = "BUY"
         elif total_score < -15: signal = "SELL"
 
-        # Monte Carlo Verification
         if signal != "NEUTRAL":
             if not self.run_monte_carlo(df_dict.get('H1'), signal):
-                signal = "NEUTRAL" # Discard if failed simulation
+                signal = "NEUTRAL"
 
         return signal, total_score, tf_results
 
     def _vsa_analysis(self, df):
         close = df['Close']
         vol = df['Volume']
-        spread = df['High'] - df['Low']
         avg_vol = vol.rolling(20).mean()
         curr_vol = vol.iloc[-1]
         curr_close = close.iloc[-1]
@@ -109,8 +119,8 @@ class StrategyMaster:
 
         score = 0
         if curr_vol > avg_vol.iloc[-1] * 1.5:
-            if curr_close > prev_close: score += 2 # Accumulation
-            else: score -= 2 # Distribution
+            if curr_close > prev_close: score += 2
+            else: score -= 2
 
         if curr_close > df['Close'].rolling(50).mean().iloc[-1]: score += 1
         else: score -= 1
