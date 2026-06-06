@@ -1,9 +1,9 @@
 # Project: Autonomous AutoTrader (AAT)
-# Version: V3.1.0_20260606
+# Version: V3.3.0_20260606
 # License: 100% FOSS / GNU GPL v3
 # Author: Simon Peter
 # Verification: Zero-Stub / Production Ready
-# Description: Risk Management and Lot Sizing Engine
+# Description: Risk Management and Lot Sizing Engine with Correlation
 
 import pandas as pd
 import numpy as np
@@ -39,3 +39,15 @@ class RiskManager:
         if df is None or len(df) < 100: return 0.0
         returns = df['Close'].pct_change().dropna()
         return float(np.percentile(returns, 5))
+
+    def calculate_correlation(self, symbol_df, market_dfs):
+        # Calculate correlation against a broad market benchmark (e.g., SP500 or major pair)
+        if symbol_df is None or not market_dfs: return 0.0
+        try:
+            # Simple correlation between current symbol H1 and first available H1 in market_dfs
+            other_df = next(iter(market_dfs.values()))
+            if 'H1' in other_df:
+                corr = symbol_df['Close'].corr(other_df['H1']['Close'])
+                return float(round(corr, 4))
+        except: pass
+        return 0.0

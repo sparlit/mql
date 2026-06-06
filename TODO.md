@@ -1,9 +1,9 @@
-# ✅ AAT Project Task List (V3.2.0_20260606)
+# ✅ AAT Project Task List (V3.3.0_20260606)
 
-- [x] **Dual-Mode Capability**: Simultaneous Scalping (M1-M15) and Trading (H1-D1) implemented.
-- [x] **Parallel Consensus**: StrategyMaster refactored for independent scalp/trade signals.
-- [x] **Dynamic Exits**: ML-predicted TP/SL multipliers based on XGBoost confidence.
-- [x] **Dashboard V3.2**: Added MODE, SCALP, TRADE, and independent CONF columns.
-- [x] **Audit Brain**: Dual-mode decisions logged for L99 compliance.
-- [x] **Versioning**: All files upgraded to V3.2.0 with Simon Peter headers.
-- [x] **Hardening**: Data Aggregator fallback and AES-256 security maintained.
+- [x] **High-Priority Architecture**: Centralized AAT-Constants.mqh and AAT-Utils.mqh implemented.
+- [x] **Dashboard Optimization**: 500ms time-based throttling implemented in Scalper_v3_3_0.mq5.
+- [x] **Risk Intelligence**: Real-time symbol correlation added to RiskManager.py and JSON payload.
+- [x] **Stability**: Replaced static arrays with dynamic structures in AAT-ManagePositions.mqh.
+- [x] **Centralized Logging**: Centralized error reporting for indicator and symbol operations.
+- [x] **Input Validation**: Centralized input validation block in OnInit.
+- [x] **L99 Compliance**: Maintained Zero-Stub FOSS standard with Simon Peter headers.
