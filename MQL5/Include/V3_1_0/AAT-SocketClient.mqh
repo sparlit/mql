@@ -21,10 +21,10 @@
    int send(int s, char& buf[], int len, int flags);
    int recv(int s, char& buf[], int len, int flags);
    int closesocket(int s);
-   int WSAGetLastError();
    int ioctlsocket(int s, long cmd, uint& argp);
    uint inet_addr(string cp);
    ushort htons(ushort hostshort);
+   int WSAGetLastError();
 #import
 
 struct sockaddr {
