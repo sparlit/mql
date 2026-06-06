@@ -157,6 +157,7 @@ public:
    void Disconnect() {
       if(m_socket != -1) closesocket(m_socket);
       m_socket = -1;
-      if(m_state != STATE_COMPLETED && m_state != STATE_ERROR) m_state = STATE_IDLE;
+      // Reset state to IDLE to allow retries (Fixes permanent ERROR state)
+      m_state = STATE_IDLE;
    }
 };
