@@ -1,0 +1,17 @@
+2026-06-06 13:44:11,684 [INFO] Skipping FinBERT initialization (Test Mode)
+2026-06-06 13:44:11,694 [INFO] AAT Engine Running on 127.0.0.1:5555
+2026-06-06 13:44:12,789 [ERROR] Decryption Error: Incorrect padding
+2026-06-06 13:44:13,290 [ERROR] Decryption Error: Incorrect padding
+2026-06-06 13:44:14,012 [WARNING] Fetch failed for https://www.forexfactory.com/calendar: Status 403
+2026-06-06 13:44:15,113 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:16,187 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:16,511 [WARNING] Fetch failed for https://www.forexfactory.com/calendar: Status 403
+2026-06-06 13:44:16,902 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:17,485 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:18,663 [WARNING] Fetch failed for https://www.forexfactory.com/calendar: Status 403
+2026-06-06 13:44:18,683 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:19,090 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:20,114 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:21,389 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:21,640 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403
+2026-06-06 13:44:23,005 [WARNING] Fetch failed for https://www.fxstreet.com/news?q=sentiment: Status 403

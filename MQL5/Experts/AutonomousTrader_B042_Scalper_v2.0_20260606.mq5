@@ -71,7 +71,7 @@ void OnTimer()
 
 void SetupDashboardHeaders()
 {
-   string headers[] = {"Symbol","M1","M5","M15","M30","H1","H4","D1","W1","MN","CONSENSUS","STATUS"};
+   string headers[] = {"Symbol","M1","M5","M15","M30","H1","H4","D1","W1","MN","CONSENSUS","STATUS","LATENCY","HEALTH"};
    for(int i=0; i<ArraySize(headers); i++) dashboard.SetHeader(i, headers[i]);
    dashboard.SetCellValue(1, 0, _Symbol, clrWhite);
 }
@@ -79,6 +79,9 @@ void SetupDashboardHeaders()
 void UpdateDynamicDashboard()
 {
    dashboard.SetCellValue(2, 2, "SPREAD: " + IntegerToString((int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD)), clrCyan);
+
+   // Logic for Health Row
+   dashboard.SetCellValue(3, 11, "ENGINE OK", clrLime);
 
    double total_pl = 0;
    for(int i=PositionsTotal()-1; i>=0; i--)
@@ -121,8 +124,12 @@ void ProcessEngineResponse(string resp)
    bool news = CJsonParser::GetBool(resp, "news_impact");
    string signal = CJsonParser::GetString(resp, "signal");
    double lot = CJsonParser::GetDouble(resp, "recommended_lot");
+   double latency = CJsonParser::GetDouble(resp, "latency");
+   bool arb = CJsonParser::GetBool(resp, "arb_alert");
 
    dashboard.SetCellValue(1, 10, signal + "(" + DoubleToString(CJsonParser::GetDouble(resp, "confidence"), 0) + ")");
+   dashboard.SetCellValue(1, 12, DoubleToString(latency, 2) + "ms", (latency < 200 ? clrLime : clrYellow));
+   dashboard.SetCellValue(1, 13, (arb ? "ARB ALERT" : "STABLE"), (arb ? clrRed : clrCyan));
 
    if(news) ExecuteNewsStraddle(lot);
    else if(verified)
