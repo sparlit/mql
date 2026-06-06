@@ -1,9 +1,9 @@
 # Project: Autonomous AutoTrader (AAT)
-# Version: V3.2.0_20260606
+# Version: V3.3.0_20260606
 # License: 100% FOSS / GNU GPL v3
 # Author: Simon Peter
 # Verification: Zero-Stub / Production Ready
-# Description: Main Logic Engine for Dual-Mode (Scalp + Trade) Execution
+# Description: Main Logic Engine for Multi-Chart Autonomous Trading
 
 import socket
 import json
@@ -40,8 +40,7 @@ class AutonomousAutoTrader:
         self.aggregator = DataAggregator()
         self.security = AATSecurity()
         self.active = True
-        self.news_cache = []
-        self.sentiment_text = ""
+        self.market_cache = {} # Global cache for correlation
         self.db_path = "db/aat_trading.db"
         self.quest_host = os.environ.get("QUESTDB_HOST", "localhost")
         self.quest_port = int(os.environ.get("QUESTDB_PORT", 9009))
@@ -73,8 +72,6 @@ class AutonomousAutoTrader:
             try:
                 self.news_cache = self.aggregator.fetch_forexfactory_news()
                 self.sentiment_text = self.aggregator.fetch_fxstreet_sentiment() + " " + self.aggregator.fetch_reuters_bloomberg_rss()
-                if len(self.sentiment_text) < 100:
-                    self.sentiment_text = self.aggregator.get_failover_data("EURUSD=X")
             except Exception as e:
                 logging.error(f"Aggregator Error: {e}")
             time.sleep(300)
@@ -109,10 +106,9 @@ class AutonomousAutoTrader:
                 self.risk_manager.account_balance = data.get("balance", 10000)
                 dfs = self.fetch_data(symbol)
                 if dfs:
+                    self.market_cache[symbol] = dfs # Update global cache for correlation
                     symbol_sentiment = self.aggregator.fetch_fxstreet_sentiment(symbol_filter=symbol)
                     combined_sentiment = (symbol_sentiment if len(symbol_sentiment) > 50 else self.sentiment_text)
-
-                    # Dual-Mode Consensus
                     res = self.strategy_master.get_dual_consensus(dfs, combined_sentiment)
 
                     mode = "NEUTRAL"
@@ -125,11 +121,10 @@ class AutonomousAutoTrader:
                         if event['currency'] in symbol and abs(event['datetime'] - datetime.now()) < timedelta(minutes=30):
                             news_impact = True; break
 
-                    lot_size = self.risk_manager.calculate_position_size(
-                        entry_price=dfs['H1']['Close'].iloc[-1],
-                        stop_loss_points=data.get("sl_points", 200),
-                        tick_value=data.get("tick_value", 1.0)
-                    )
+                    lot_size = self.risk_manager.calculate_position_size(dfs['H1']['Close'].iloc[-1], data.get("sl_points", 200), data.get("tick_value", 1.0))
+
+                    # Correlation Calculation (Priority 2)
+                    correlation = self.risk_manager.calculate_correlation(dfs.get('H1'), self.market_cache)
 
                     broker_price = float(dfs['M1']['Close'].iloc[-1])
                     try:
@@ -144,12 +139,10 @@ class AutonomousAutoTrader:
                         "scalp_conf": int(res["scalp_conf"]), "trade_conf": int(res["trade_conf"]),
                         "recommended_lot": float(lot_size), "news_impact": bool(news_impact),
                         "latency": float(round(latency, 2)), "arb_alert": bool(abs(broker_price - yf_price) > 0.0005),
-                        "tp_mult": res["exit_mult"]["tp"], "sl_mult": res["exit_mult"]["sl"]
+                        "tp_mult": res["exit_mult"]["tp"], "sl_mult": res["exit_mult"]["sl"],
+                        "correlation": float(correlation)
                     }
-
                     self.log_quest("signals", {"symbol": symbol, "mode": mode, "latency": latency})
-                    self.audit_log("Strategy", "Dual Signal", f"Mode: {mode}, Scalp: {res['scalp_signal']}, Trade: {res['trade_signal']}", 1, "Success")
-
                 else: response = {"status": "error", "message": "Data fetch failed"}
                 encrypted_resp = self.security.encrypt(json.dumps(response)) + "\n"
                 conn.sendall(encrypted_resp.encode('utf-8'))
@@ -161,7 +154,7 @@ class AutonomousAutoTrader:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((self.host, self.port))
             s.listen(50)
-            logging.info(f"AAT Engine V3.2.0 (Dual-Mode) Running on {self.host}:{self.port}")
+            logging.info(f"AAT Engine V3.3.0 Running on {self.host}:{self.port}")
             while self.active:
                 conn, addr = s.accept()
                 threading.Thread(target=self.handle_client, args=(conn, addr), daemon=True).start()
