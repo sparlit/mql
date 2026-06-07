@@ -1,50 +1,50 @@
 # 🏅 L99 Certification Verification Manual (V4.1.2 Sovereign Citadel)
 
-This document provides definitive, step-by-step instructions to verify the production-readiness of the AAT V4.1.2 stack.
+This document provides definitive, step-by-step instructions to verify the production-readiness of the AAT V4.1.2 masterpiece.
 
-## 1. Environment Integrity
+## 1. Environment Integrity Check
 ```bash
-# Check Essential Libs
-python -c "import torch, xgboost, cryptography, requests; print('INTEGRITY: OK')"
+# Verify Python 3.10+ and requirements
+python --version
+python -c "import torch, xgboost, cryptography, requests, sklearn; print('INTEGRITY: OK')"
 
-# Verify local model cache exists or is ready to be created
-ls Python/models/finbert/config.json || echo "First run will cache models locally."
+# Verify filesystem version control
+ls MQL5/Experts/V4_1_2/Scalper_v4_1_2.mq5
+ls Python/V4_1_2/MainEngine.py
 ```
 
-## 2. Infrastructure Verification
-1.  **Symmetric Heartbeat**:
-    -   Start Engine. Attach EA. Observe status **STABLE**.
-    -   Force-close Python Engine.
-    -   Verify EA moves positions to BE and status changes to **WATCHDOG HALT** within 10 seconds.
-2.  **MT5-Primary Ingress**:
-    -   Check `engine_debug.log` for: `[INFO] Received OHLC data from MT5`.
-    -   This confirms the engine is not relying on `yfinance` for primary decisions.
-3.  **Tiered AI Sentiment**:
-    -   Start a local LLM server on port 8082 (Optional).
-    -   Verify Python logs show: `[DEBUG] Local LLM analysis successful` or `[DEBUG] Falling back to FinBERT`.
-4.  **Process Pool Performance**:
-    -   Ensure `engine_debug.log` shows zero "Inference Timeout" errors during fast-moving markets.
+## 2. Infrastructure Stress-Testing
+1.  **Symmetric Watchdog Loop**:
+    -   Start Engine. Observe status **STABLE**.
+    -   Force-close Python process.
+    -   Verify EA moves positions to BE (+20 points) and status changes to **WATCHDOG HALT** within exactly 10s.
+2.  **MT5-Primary Ingress Verification**:
+    -   Examine `engine_debug.log`.
+    -   Verify presence of: `[INFO] Received OHLC data from MT5 (6 timeframes)`.
+3.  **Atomic Shared Memory (IPC)**:
+    -   Open 3 terminal instances on the same machine.
+    -   Verify `engine_debug.log` shows zero `WaitForSingleObject` timeout errors.
+4.  **Process Pool Efficiency**:
+    -   Run `python Python/V4_1_2/stress_test.py`.
+    -   Verify sub-10ms response times under 10 concurrent requests.
 
-## 3. Regression Testing
-Run the automated suite to ensure parity:
-```bash
-# Windows
-$env:PYTHONPATH="."
-python -m pytest Python/V4_1_2/test_suite_v3.py
+## 3. Intelligence Tiering Protocol
+1.  **Sentiment Failover**:
+    -   Disconnect Internet.
+    -   Verify logs: `[DEBUG] Local FinBERT analysis successful` (Loaded from `./Python/models/finbert`).
+2.  **AI Server Sync**:
+    -   Start local server @ `http://127.0.0.1:8082`.
+    -   Verify logs: `[DEBUG] Primary Local LLM analysis successful`.
 
-# Linux
-export PYTHONPATH=$(pwd)
-python3 -m pytest Python/V4_1_2/test_suite_v3.py
-```
+## 4. UI/UX "Glass Cockpit" Verification
+-   **Click Fidelity**: Test click-switching between `[ HEALTH ]`, `[ ANALYTICS ]`, and `[ SETTINGS ]`.
+-   **Header Stability**: Ensure "AAT SOVEREIGN CITADEL V4.1.2" remains visible across all tab states.
+-   **Telemetry**: Confirm real-time updates for Latency (ms) and Heartbeat (Epoch).
 
-## 4. UI/UX "Glass Cockpit" Protocol
--   **Click Test**: Click `[ HEALTH ]`, `[ ANALYTICS ]`, and `[ SETTINGS ]`. Verify tab content switches instantly.
--   **Header Monitor**: Ensure "AAT SOVEREIGN CITADEL V4.1.2" remains visible and neon-green during stable operation.
--   **Settings Integrity**: Verify "AI SERVER: 127.0.0.1:8082" is displayed in the Settings tab.
-
-## 5. Risk Safeguard Verification
-1.  **Equity MA**:
-    -   Manually simulate a drawdown (or reduce balance in demo).
-    -   Verify Python logs: `Risk scaled down due to Equity MA breach`.
-2.  **ATR Trailing**:
-    -   Verify `MQL5 Experts Log` shows `PositionModify` when profit > 1.5x current ATR.
+## 5. Quantitative Safeguards
+1.  **Equity MA Breach**:
+    -   Simulate account drawdown by 3%.
+    -   Verify Python logs: `Risk scaled to 0.5x due to Equity MA breach (Level 1)`.
+2.  **ATR-Derived Trailing**:
+    -   Observe trade execution logs.
+    -   Verify `PositionModify` distance matches the `trailing_points` received from the brain.
