@@ -26,18 +26,31 @@ class StrategyMaster:
     def _load_xgb_model(self):
         model = xgb.XGBClassifier()
         model_path = "Python/models/xgb_v2.json"
+        os.makedirs("Python/models", exist_ok=True)
         if os.path.exists(model_path):
-            model.load_model(model_path)
+            try:
+                model.load_model(model_path)
+            except Exception as e:
+                logging.error(f"XGB Load Error: {e}")
+                self._train_dummy_xgb(model)
         else:
-            X = np.random.rand(100, 10)
-            y = np.random.randint(0, 2, 100)
-            model.fit(X, y)
+            self._train_dummy_xgb(model)
         return model
+
+    def _train_dummy_xgb(self, model):
+        X = np.random.rand(100, 10)
+        y = np.random.randint(0, 2, 100)
+        model.fit(X, y)
 
     def _init_faiss(self):
         sig_path = "Python/models/faiss_signatures.npy"
+        os.makedirs("Python/models", exist_ok=True)
         if os.path.exists(sig_path):
-            signatures = np.load(sig_path).astype('float32')
+            try:
+                signatures = np.load(sig_path).astype('float32')
+            except Exception as e:
+                logging.error(f"FAISS Load Error: {e}")
+                signatures = np.random.randn(1000, 64).astype('float32')
         else:
             signatures = np.random.randn(1000, 64).astype('float32')
         self.faiss_index.add(signatures)

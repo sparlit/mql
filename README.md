@@ -68,13 +68,12 @@ High-speed benchmark price distribution using a custom C++ DLL.
    # Make script executable and run
    chmod +x setup_portable_python.sh
    ./setup_portable_python.sh
+   pip install -r Python/requirements.txt
    ```
 2. **Start the Python Engine**:
    ```bash
-   # Activate virtual environment and run
-   source Python/venv/bin/activate
-   export PYTHONPATH=$(pwd)
-   python3 Python/V3_1_0/MainEngine.py
+   # Run with PYTHONPATH set to root
+   PYTHONPATH=. python3 Python/V3_1_0/MainEngine.py
    ```
 
 ### 📈 MetaTrader 5 Configuration

@@ -17,6 +17,9 @@
 #include <V3_1_0\AAT-JsonParser.mqh>
 #include <V3_1_0\AAT-ManagePositions.mqh>
 
+input string   InpMasterKey    = "AAT_SECURE_FOSS_KEY_256_BIT_STRIP";
+input string   InpEngineHost   = "127.0.0.1";
+input int      InpEnginePort   = 5555;
 input double   InpRiskPercent  = 1.0;
 input int      InpMagicScalp   = 123456;
 input int      InpMagicTrade   = 654321;
@@ -31,6 +34,7 @@ datetime       g_last_success_time = 0;
 int            g_recovery_counter = 0;
 
 int OnInit() {
+   socket_client.SetSecurityKey(InpMasterKey);
    mgr_scalp = new CManagePositions(_Symbol, InpMagicScalp);
    mgr_trade = new CManagePositions(_Symbol, InpMagicTrade);
    if(!dashboard.Create(10, 10, 100, 30, 1200, 240)) return(INIT_FAILED);
@@ -103,8 +107,14 @@ void AnalyzeMarket() {
 
    if(socket_client.GetState() != STATE_IDLE) return;
 
-   string req = "{\"symbol\":\"" + _Symbol + "\", \"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2) + "}";
-   socket_client.AsyncRequest(req);
+   string req = "{" +
+      "\"symbol\":\"" + _Symbol + "\"," +
+      "\"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2) + "," +
+      "\"equity\":" + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY), 2) + "," +
+      "\"tick_value\":" + DoubleToString(SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE), 5) + "," +
+      "\"point\":" + DoubleToString(SymbolInfoDouble(_Symbol, SYMBOL_POINT), 8) +
+   "}";
+   socket_client.AsyncRequest(InpEngineHost, InpEnginePort, req);
 }
 
 void ProcessResponse(string resp) {

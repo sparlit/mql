@@ -11,3 +11,5 @@ scipy
 statsmodels
 transformers
 torch
+questdb
+lxml

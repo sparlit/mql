@@ -79,7 +79,7 @@ public:
       return true;
    }
 
-   bool AsyncRequest(string data)
+   bool AsyncRequest(string host, int port, string data)
    {
       if(m_state != STATE_IDLE) return false;
       m_send_buffer = m_security.Encrypt(data) + "\n";
@@ -95,8 +95,8 @@ public:
 
       sockaddr server;
       server.family = 2;
-      server.port = htons((ushort)ENGINE_PORT);
-      server.addr = inet_addr(ENGINE_HOST);
+      server.port = htons((ushort)port);
+      server.addr = inet_addr(host);
 
       connect(m_socket, server, sizeof(sockaddr));
       return true;
@@ -152,6 +152,10 @@ public:
       string decrypted = m_security.Decrypt(m_recv_buffer);
       m_state = STATE_IDLE;
       return decrypted;
+   }
+
+   void SetSecurityKey(string key) {
+      m_security.SetKey(key);
    }
 
    void Disconnect() {

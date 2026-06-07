@@ -30,10 +30,30 @@ class RiskManager:
         tr = pd.concat([high_low, high_cp, low_cp], axis=1).max(axis=1)
         return tr.rolling(period).mean()
 
-    def calculate_position_size(self, entry_price, stop_loss_points, tick_value, is_pyramid=False, current_profit_pips=0):
-        if not is_pyramid: return 0.01
-        if current_profit_pips >= stop_loss_points: return 0.01
-        return 0.0
+    def calculate_position_size(self, equity, stop_loss_points, tick_value, symbol_point, is_pyramid=False, current_profit_pips=0):
+        """
+        Institutional Equity-Based Lot Sizing: Lot = (Equity * Risk%) / (SL_Points * TickValue/Point)
+        Note: MT5 TickValue is often per 1.0 lot per point.
+        """
+        try:
+            risk_amount = equity * self.max_equity_risk
+            # Standard formula: Lots = Risk_Amount / (SL_Points * (TickValue / Point))
+            # However, if tick_value is already adjusted for point, it's Risk / (SL * TV)
+            if stop_loss_points <= 0: return 0.01
+
+            denominator = stop_loss_points * tick_value
+            if denominator <= 0: return 0.01
+
+            lots = risk_amount / denominator
+            lots = round(max(0.01, min(lots, 50.0)), 2)
+
+            if is_pyramid:
+                if current_profit_pips < (stop_loss_points * 0.5): return 0.0
+                return round(lots * 0.5, 2)
+
+            return lots
+        except Exception:
+            return 0.01
 
     def calculate_var(self, df):
         if df is None or len(df) < 100: return 0.0
