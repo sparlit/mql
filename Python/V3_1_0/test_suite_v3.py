@@ -27,7 +27,12 @@ def test_aggregator_failover(aggregator):
     assert isinstance(rss, str)
 
 def test_dual_consensus(strategy):
-    dfs = {tf: pd.DataFrame({'Close': np.random.randn(100).cumsum() + 100, 'Volume': np.random.randint(10, 100, 100)}) for tf in ['M1','M5','M15','H1','H4','D1']}
+    dfs = {tf: pd.DataFrame({
+        'Close': np.random.randn(100).cumsum() + 100,
+        'High': np.random.randn(100).cumsum() + 101,
+        'Low': np.random.randn(100).cumsum() + 99,
+        'Volume': np.random.randint(10, 100, 100)
+    }) for tf in ['M1','M5','M15','H1','H4','D1']}
     res = strategy.get_dual_consensus(dfs, "Market is stable")
     assert "scalp_signal" in res
     assert "trade_signal" in res

@@ -1,59 +1,41 @@
-# 🏅 L99 Certification Verification Manual (V3.1.0_20260606)
+# 🏅 L99 Certification Verification Manual (V4.1.0 Sovereign Citadel)
 
-This document provides step-by-step instructions to verify the production-readiness of the Autonomous MT5 Autotrader V3.1.0.
+This document provides step-by-step instructions to verify the production-readiness of the Sovereign Citadel AAT V4.1.0.
 
 ## 1. Environment Verification
 ```bash
-# Install and Verify Python Environment
-pip install -r Python/requirements.txt
-pip list | grep -E "torch|transformers|xgboost|faiss|questdb|pandas|yfinance"
+# Verify Python Environment & Vault
+python -c "import cryptography; print('Security Layer: OK')"
+ls Python/V3_1_0/vault.json || echo "Vault missing (Warning: Local Induction will create it)"
 ```
 
-## 2. Infrastructure Testing
-1. Start QuestDB (Standard Docker or Portable) on port 9009:
-   ```bash
-   # Using Docker
-   docker run -p 9009:9009 -p 8812:8812 questdb/questdb
-   ```
-2. Start Engine:
-   - Linux: `PYTHONPATH=. python3 Python/V3_1_0/MainEngine.py`
-   - Windows (PS): `$env:PYTHONPATH="."; python Python/V3_1_0/MainEngine.py`
-   - Windows (CMD): `set PYTHONPATH=. && python Python/V3_1_0/MainEngine.py`
-3. Run `PYTHONPATH=. python3 Python/V3_1_0/stress_test.py` to simulate 10 concurrent connections.
-4. Verify SQLite audit logs: `sqlite3 db/aat_trading.db "SELECT * FROM aat_audit;"`.
-5. Verify Maintenance logs: `sqlite3 db/aat_trading.db "SELECT * FROM dev_maintenance_log;"`.
+## 2. Infrastructure Testing (Sovereign Core)
+1. **Symmetric Heartbeat (AP 29 Refined)**:
+   - Start Engine: `PYTHONPATH=. python Python/V3_1_0/MainEngine.py`
+   - Observe MT5 Dashboard status: **STABLE** (Green).
+   - Kill Python process. Observe dashboard status: **WATCHDOG HALT** (Red) within exactly 10s.
+2. **MT5-Primary Ingress (AP 30 Refined)**:
+   - Check `engine_debug.log`.
+   - Verify log line: `[DEBUG] Reconciling position ...` and `[INFO] Received OHLC data from MT5`.
+3. **Atomic Shared Memory (AP 31 Refined)**:
+   - Open 3 terminals. Verify `engine_debug.log` shows zero race condition errors for shared benchmark updates.
 
 ## 3. Unit Testing
-Run the versioned regression suite:
+Run the refined V4.1.0 regression suite:
 ```bash
-# Linux
-export PYTHONPATH=$(pwd)
-python3 -m pytest Python/V3_1_0/test_suite_v3.py
-
-# Windows (PS)
 $env:PYTHONPATH="."
 python -m pytest Python/V3_1_0/test_suite_v3.py
 ```
 
-## 4. MT5 Dashboard
-Verify the dashboard displays:
-- **ENGINE V4.0.0 OK**
-- **LATENCY** in ms.
-- **STABLE** or **ARB ALERT** status.
-- **WATCHDOG** status (STABLE / RECOVERING / HALT).
+## 4. UI/UX "Glass Cockpit"
+Verify the dashboard features:
+- **Global Header**: "AAT SOVEREIGN CITADEL V4.1.0" in Neon Green.
+- **Tabs**: Clickable `[ HEALTH ]`, `[ ANALYTICS ]`, and `[ SETTINGS ]`.
+- **Latency**: Sub-50ms (Localhost) or Sub-200ms (VPS).
 
-## 5. V4.0 Feature Verification
-### Watchdog & Heartbeat (AP 29)
-1. Close the Python Engine.
-2. Observe EA moving all positions to Break-Even (BE) and status changing to **WATCHDOG HALT** after 15s.
-3. Restart Python Engine.
-4. Observe status changing to **RECOVERING 1/3**, **2/3**, then **STABLE**.
-
-### Non-Blocking Communication (AP 30)
-1. Open MT5 Chart and move the window while EA is analyzing.
-2. UI should remain fluid with zero "Not Responding" events.
-
-### Arbitrage & Shared Memory (AP 31)
-1. Open two MT5 terminals.
-2. Verify `SharedMemory.dll` is in `MQL5/Libraries/V3_1_0/`.
-3. Check `engine_debug.log` for shared benchmark updates.
+## 5. Risk & Execution Verification
+1. **Equity MA Protection**:
+   - Manually reduce account balance by 5%.
+   - Verify Python log: `Risk scaled down to 0.25x due to Equity MA breach`.
+2. **ATR Trailing**:
+   - Open a test trade. Verify EA modifies SL after profit exceeds 1.5x ATR.
