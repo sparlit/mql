@@ -14,18 +14,7 @@
 
 #define FIONBIO 0x8004667E
 #define WSAEWOULDBLOCK 10035
-
-#import "ws2_32.dll"
-   int socket(int af, int type, int protocol);
-   int connect(int s, sockaddr& name, int namelen);
-   int send(int s, char& buf[], int len, int flags);
-   int recv(int s, char& buf[], int len, int flags);
-   int closesocket(int s);
-   int ioctlsocket(int s, long cmd, uint& argp);
-   uint inet_addr(string cp);
-   ushort htons(ushort hostshort);
-   int WSAGetLastError();
-#import
+#define SOCKET_BUFFER_SIZE 10240
 
 struct sockaddr {
     short family;
@@ -33,6 +22,18 @@ struct sockaddr {
     uint addr;
     char zero[8];
 };
+
+#import "ws2_32.dll"
+   int socket(int af, int type, int protocol);
+   int connect(int s, sockaddr& name, int namelen);
+   int send(int s, uchar& buf[], int len, int flags);
+   int recv(int s, uchar& buf[], int len, int flags);
+   int closesocket(int s);
+   int ioctlsocket(int s, long cmd, uint& argp);
+   uint inet_addr(string cp);
+   ushort htons(ushort hostshort);
+   int WSAGetLastError();
+#import
 
 enum ENUM_SOCKET_STATE {
    STATE_IDLE,
@@ -52,9 +53,10 @@ private:
    string            m_send_buffer;
    string            m_recv_buffer;
    datetime          m_last_action;
+   bool              m_is_connected;
 
 public:
-   CSocketClient() : m_socket(-1), m_state(STATE_IDLE), m_last_action(0) {}
+   CSocketClient() : m_socket(-1), m_state(STATE_IDLE), m_last_action(0), m_is_connected(false) {}
   ~CSocketClient() { Disconnect(); }
 
    ENUM_SOCKET_STATE GetState() { return m_state; }
@@ -118,9 +120,9 @@ public:
       }
 
       if(m_state == STATE_SENDING) {
-         char buf[];
+         uchar buf[];
          StringToCharArray(m_send_buffer, buf);
-         int sent = send(m_socket, buf[0], ArraySize(buf)-1, 0);
+         int sent = send(m_socket, buf, ArraySize(buf)-1, 0);
          if(sent > 0) {
             m_state = STATE_RECEIVING;
             m_last_action = TimeCurrent();
@@ -131,8 +133,8 @@ public:
       }
 
       if(m_state == STATE_RECEIVING) {
-         char buf[SOCKET_BUFFER_SIZE];
-         int received = recv(m_socket, buf[0], SOCKET_BUFFER_SIZE, 0);
+         uchar buf[SOCKET_BUFFER_SIZE];
+         int received = recv(m_socket, buf, SOCKET_BUFFER_SIZE, 0);
          if(received > 0) {
             m_recv_buffer += CharArrayToString(buf, 0, received);
             if(StringFind(m_recv_buffer, "\n") != -1) {
