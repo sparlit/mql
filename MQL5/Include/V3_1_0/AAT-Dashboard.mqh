@@ -25,9 +25,9 @@ private:
    color             m_neon_orange;
 
    string            m_headers[];
-   string            m_data[][12];
-   color             m_colors[][12];
-   bool              m_readonly[][12];
+   string            m_data[][16];
+   color             m_colors[][16];
+   bool              m_readonly[][16];
 
    bool              m_config_open;
    int               m_active_tab; // 0: Health, 1: Analytics, 2: Settings
@@ -38,7 +38,7 @@ public:
                                      m_neon_blue(0xFF00F3FF), m_neon_yellow(0xFFFFF000),
                                      m_neon_orange(0xFFFF9900)
    {
-      m_rows = 8; m_cols = 12;
+      m_rows = 8; m_cols = 16;
       ArrayResize(m_headers, m_cols);
       ArrayResize(m_data, m_rows);
       ArrayResize(m_colors, m_rows);
