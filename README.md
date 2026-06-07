@@ -42,19 +42,27 @@ High-speed benchmark price distribution using a custom C++ DLL.
 - Python 3.10 or higher.
 - SharedMemory.dll (included in `MQL5/Libraries/V3_1_0/`).
 
-### 💻 Windows Setup (CMD/PowerShell)
+### 💻 Windows Setup
 1. **Prepare Environment**:
-   ```cmd
-   :: Run the automated setup script
-   setup_portable_python.bat
+   ```powershell
+   # Run the automated setup script
+   .\setup_portable_python.bat
    ```
 2. **Start the Python Engine**:
-   ```cmd
-   :: Activate virtual environment and run
-   call Python\venv\Scripts\activate
-   set PYTHONPATH=%CD%
-   python Python\V3_1_0\MainEngine.py
-   ```
+   - **Using PowerShell**:
+     ```powershell
+     $env:PYTHONPATH = "."
+     python Python/V3_1_0/MainEngine.py
+     ```
+   - **Using Command Prompt (CMD)**:
+     ```cmd
+     set PYTHONPATH=.
+     python Python/V3_1_0/MainEngine.py
+     ```
+   - **Using Automated Script**:
+     ```powershell
+     .\run_engine.bat
+     ```
 
 ### 🐧 Linux Setup (Bash)
 1. **Prepare Environment**:

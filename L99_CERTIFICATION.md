@@ -10,15 +10,23 @@ pip list | grep -E "torch|transformers|xgboost|faiss|questdb"
 
 ## 2. Infrastructure Testing
 1. Start QuestDB (Standard Docker or Portable).
-2. Run `export PYTHONPATH=$(pwd) && python3 Python/V3_1_0/MainEngine.py`.
+2. Start Engine:
+   - Linux: `export PYTHONPATH=$(pwd) && python3 Python/V3_1_0/MainEngine.py`
+   - Windows (PS): `$env:PYTHONPATH="."; python Python/V3_1_0/MainEngine.py`
+   - Windows (CMD): `set PYTHONPATH=. && python Python/V3_1_0/MainEngine.py`
 3. Run `python3 Python/V3_1_0/stress_test.py` to simulate 10 concurrent connections.
 4. Verify SQLite audit logs: `sqlite3 db/aat_trading.db "SELECT * FROM aat_audit;"`.
 
 ## 3. Unit Testing
 Run the versioned regression suite:
 ```bash
+# Linux
 export PYTHONPATH=$(pwd)
 python3 -m pytest Python/V3_1_0/test_suite_v3.py
+
+# Windows (PS)
+$env:PYTHONPATH="."
+python -m pytest Python/V3_1_0/test_suite_v3.py
 ```
 
 ## 4. MT5 Dashboard
