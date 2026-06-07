@@ -54,7 +54,8 @@ class AutonomousAutoTrader:
         self.aggregator_thread = threading.Thread(target=self.background_aggregator, daemon=True)
         self.aggregator_thread.start()
         self.last_aggregator_run = time.time()
-        self.last_client_activity = time.time()
+        self.engine_start_time = time.time()
+        self.last_client_activity = 0 # Initialize to 0 to trigger grace period
         self.watchdog_thread = threading.Thread(target=self.system_watchdog, daemon=True)
         self.watchdog_thread.start()
 
@@ -109,13 +110,23 @@ class AutonomousAutoTrader:
             logging.debug(f"QuestDB not available: {e}")
 
     def system_watchdog(self):
-        """Bidirectional Watchdog (Priority 2): Halts logic if no activity for 10s (Symmetric Citadel)"""
+        """Bidirectional Watchdog (Priority 2): Halts logic if no activity for 30s (Institutional Margin)"""
         while self.active:
-            if time.time() - self.last_client_activity > 10:
+            now = time.time()
+            # 1. Initial Grace Period: 5 minutes to connect first client
+            if self.last_client_activity == 0:
+                if now - self.engine_start_time > 300:
+                    if not hasattr(self, 'watchdog_halted') or not self.watchdog_halted:
+                        logging.warning("Watchdog: Initial 5m grace period expired with zero connections. Entering safety halt.")
+                        self.watchdog_halted = True
+                time.sleep(5); continue
+
+            # 2. Runtime Watchdog: 30s timeout with margin for jitter
+            if now - self.last_client_activity > 30:
                 if not hasattr(self, 'watchdog_halted') or not self.watchdog_halted:
-                    logging.warning("Watchdog: No client activity for 10s. Entering safety halt.")
+                    logging.warning("Watchdog: No client activity for 30s. Entering safety halt.")
                     self.watchdog_halted = True
-                    self.audit_log("Safety", "WatchdogHalt", "Engine suspended due to client inactivity (10s)", priority=3, status="HALTED")
+                    self.audit_log("Safety", "WatchdogHalt", "Engine suspended due to client inactivity (30s)", priority=3, status="HALTED")
             else:
                 if hasattr(self, 'watchdog_halted') and self.watchdog_halted:
                     logging.info("Watchdog: Client activity resumed. Resuming engine.")

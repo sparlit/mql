@@ -66,10 +66,22 @@ class StrategyMaster:
             return
         try:
             model_name = "ProsusAI/finbert"
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-            model = AutoModelForSequenceClassification.from_pretrained(model_name)
+            local_path = "./Python/models/finbert"
+
+            # Optimization: Try local loading first to avoid HF Hub latency
+            if os.path.exists(local_path):
+                self.tokenizer = AutoTokenizer.from_pretrained(local_path, local_files_only=True)
+                model = AutoModelForSequenceClassification.from_pretrained(local_path, local_files_only=True)
+            else:
+                self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+                model = AutoModelForSequenceClassification.from_pretrained(model_name)
+                # Save locally for future use
+                os.makedirs(local_path, exist_ok=True)
+                self.tokenizer.save_pretrained(local_path)
+                model.save_pretrained(local_path)
+
             self.bert_model = torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
-            logging.info("FinBERT V3.2.0 (Dual-Mode) initialized")
+            logging.info("FinBERT V4.1.2 (Optimized Load) initialized")
         except Exception as e:
             logging.error(f"FinBERT Error: {e}")
 
