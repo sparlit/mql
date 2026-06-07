@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AAT Sovereign Citadel V5.0.0</title>
+    <style>
+        body { background: #121212; color: #39FF14; font-family: 'Courier New', Courier, monospace; }
+        .stat-card { border: 1px solid #333; padding: 20px; margin: 10px; display: inline-block; min-width: 200px; }
+        .neon-blue { color: #00F3FF; }
+    </style>
+</head>
+<body>
+    <h1>🛰️ AAT SOVEREIGN CITADEL V5.0.0</h1>
+    <div class="stat-card">
+        <h3>HEARTBEAT</h3>
+        <p>{{ stats.heartbeat }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>LATENCY</h3>
+        <p class="neon-blue">{{ stats.latency }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>VERSION</h3>
+        <p>{{ stats.version }}</p>
+    </div>
+</body>
+</html>
