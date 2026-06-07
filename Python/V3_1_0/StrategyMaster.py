@@ -12,10 +12,15 @@ import faiss
 import logging
 import os
 import torch
+import requests
+import json
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 class StrategyMaster:
     def __init__(self):
+        self.local_llm_url = "http://127.0.0.1:8082/v1/chat/completions"
+        self.openrouter_url = "https://openrouter.ai/api/v1/chat/completions"
+        self.openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
         self.xgb_model = self._load_xgb_model()
         self.faiss_index = faiss.IndexFlatL2(64)
         self._init_faiss()
@@ -69,6 +74,36 @@ class StrategyMaster:
             logging.error(f"FinBERT Error: {e}")
 
     def get_sentiment_score(self, text):
+        """Tiered AI Sentiment Analysis: Local (8082) -> OpenRouter -> FinBERT"""
+
+        # 1. Try Local LLM (Sovereign Primary)
+        try:
+            payload = {
+                "model": "local-model",
+                "messages": [{"role": "user", "content": f"Analyze forex sentiment (-1 to 1): {text}"}],
+                "temperature": 0.1
+            }
+            resp = requests.post(self.local_llm_url, json=payload, timeout=2)
+            if resp.status_code == 200:
+                score = float(resp.json()['choices'][0]['message']['content'])
+                return np.clip(score, -1.0, 1.0)
+        except: pass
+
+        # 2. Try OpenRouter (Failover)
+        if self.openrouter_key:
+            try:
+                headers = {"Authorization": f"Bearer {self.openrouter_key}"}
+                payload = {
+                    "model": "openai/gpt-3.5-turbo",
+                    "messages": [{"role": "user", "content": f"Forex sentiment score (-1 to 1): {text}"}]
+                }
+                resp = requests.post(self.openrouter_url, headers=headers, json=payload, timeout=5)
+                if resp.status_code == 200:
+                    score = float(resp.json()['choices'][0]['message']['content'])
+                    return np.clip(score, -1.0, 1.0)
+            except: pass
+
+        # 3. Fallback to Local FinBERT
         if not self.bert_model or not self.tokenizer:
             return 0.0
         inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
