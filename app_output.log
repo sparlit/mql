@@ -1,0 +1,20 @@
+/app/src/core/main.py:42: DeprecationWarning:
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+
+  @app.on_event("startup")
+INFO:     Started server process [872871]
+INFO:     Waiting for application startup.
+WARNING:root:Citadel Sync Connectivity Issue: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: /api/sync (Caused by NewConnectionError("HTTPConnection(host='localhost', port=9000): Failed to establish a new connection: [Errno 111] Connection refused"))
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+WARNING:root:Citadel Sync Connectivity Issue: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: /api/sync (Caused by NewConnectionError("HTTPConnection(host='localhost', port=9000): Failed to establish a new connection: [Errno 111] Connection refused"))
+WARNING:root:Citadel Sync Connectivity Issue: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: /api/sync (Caused by NewConnectionError("HTTPConnection(host='localhost', port=9000): Failed to establish a new connection: [Errno 111] Connection refused"))
+INFO:     127.0.0.1:49908 - "GET / HTTP/1.1" 200 OK
+WARNING:root:Citadel Sync Connectivity Issue: HTTPConnectionPool(host='localhost', port=9000): Max retries exceeded with url: /api/sync (Caused by NewConnectionError("HTTPConnection(host='localhost', port=9000): Failed to establish a new connection: [Errno 111] Connection refused"))
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [872871]

@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //| Project: Autonomous AutoTrader (AAT)                             |
-//| Version: V4.1.2_20260607                                         |
+//| Version: V5.0.0_20260607                                         |
 //| License: 100% FOSS / GNU GPL v3                                  |
 //| Status: Sovereign Citadel Masterpiece                 |
 //| Author: Simon Peter                                              |
@@ -11,12 +11,12 @@
 #property version   "4.00"
 #property strict
 
-#include <V4_1_2\AAT-Constants.mqh>
-#include <V4_1_2\AAT-Utils.mqh>
-#include <V4_1_2\AAT-Dashboard.mqh>
-#include <V4_1_2\AAT-SocketClient.mqh>
-#include <V4_1_2\AAT-JsonParser.mqh>
-#include <V4_1_2\AAT-ManagePositions.mqh>
+#include <AAT-Constants.mqh>
+#include <AAT-Utils.mqh>
+#include <AAT-Dashboard.mqh>
+#include <AAT-SocketClient.mqh>
+#include <AAT-JsonParser.mqh>
+#include <AAT-ManagePositions.mqh>
 
 input string   InpMasterKey    = "AAT_SECURE_FOSS_KEY_256_BIT_STRIP";
 input string   InpEngineHost   = "127.0.0.1";

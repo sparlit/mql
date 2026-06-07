@@ -3,11 +3,18 @@
 
 import jwt
 import datetime
+import json
+import os
 from fastapi import Request, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 
-SECRET_KEY = "AAT_CITADEL_SUPER_SECRET_FOSS_2026"
+# Load from Vault
+VAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "vault.json")
+with open(VAULT_PATH, "r") as f:
+    vault = json.load(f)
+
+SECRET_KEY = vault.get("JWT_SECRET", "FALLBACK_SECRET")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 hours
 

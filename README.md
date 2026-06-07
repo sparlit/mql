@@ -1,120 +1,45 @@
-# 🛰️ AAT V5.0.0: Sovereign Citadel (Distributed Microkernel)
+# Project: Autonomous AutoTrader (AAT) V5.0.0
+# Description: Final Sovereign Citadel Documentation
 
-AAT V5.0.0 is an institutional-grade, 100% FOSS hybrid trading system rebuilt from the ground up on a **FastAPI Microkernel** with **Event-Driven Decoupling**.
-Autonomous AutoTrader (AAT) is the world's most robust, 100% FOSS institutional hybrid trading system. It synergizes the deterministic precision of **MetaTrader 5 (MQL5)** with an advanced **Python Intelligence Stack**. The V4.1.2 "Sovereign Citadel" release establishes a new benchmark for autonomous capital protection, high-performance execution, and AI-driven market analysis.
+## 🏛️ Architecture: Sovereign Microkernel
+AAT V5.0.0 is built on a **FastAPI-driven asynchronous microkernel**. This architecture ensures zero-coupling between data ingestion, intelligence analysis, and trade execution.
 
----
+### Core Components
+1.  **Orchestrator (`src/core/main.py`)**: Asynchronous event loop managing plugin lifecycle.
+2.  **Event Bus (`src/shared/utils/bus.py`)**: Decoupled pub-sub system for cross-plugin communication.
+3.  **Intelligence Plugin (`src/plugins/intelligence/`)**: Multi-consensus engine (VSA + XGBoost) with ONNX INT8 support.
+4.  **Risk Plugin (`src/plugins/execution/risk.py`)**: Institutional ATR-based lot sizing and equity protection.
+5.  **Sovereign Ingress (`src/plugins/execution/ingress.py`)**: AES-256-CBC encrypted socket gateway for MT5.
 
-## 🏛️ New Architecture (V5.0.0)
+## 🚀 Installation & Setup
 
-- **Core Orchestrator**: FastAPI-based asynchronous microkernel.
-- **Event Bus**: Internal pub-sub system for zero-coupling between analysis and execution.
-- **Intelligence**: INT8 Quantized ONNX models for low-latency CPU inference (i3/4GB RAM optimized).
-- **Hybrid Sync**: Local SQLite state with background reconciliation to remote QuestDB.
-- **Terminal Agnostic**: Abstracted ingress layers for MT5, FIX, or CCXT.
+### 1. Requirements
+- Python 3.10+
+- MetaTrader 5 (Windows only for terminal, engine can run on Linux)
 
----
-
-## 🚀 Quick Start (Production)
-
-### 1. Environment Setup (Windows/Linux)
-```bash
-# Recommended: Python 3.10+
-pip install fastapi uvicorn onnxruntime transformers torch pandas numpy xgboost faiss-cpu jinja2
-```
-
-### 2. Initialize the Citadel
-```bash
-export PYTHONPATH=$PYTHONPATH:$(pwd)
-python src/core/main.py
-The "Sovereign Citadel" is engineered on three pillars of institutional excellence:
-1.  **Data Sovereignty**: By utilizing **MT5-Primary Ingress**, the brain analyzes the exact price feed the broker executes on. This eliminates the #1 cause of algorithmic failure: arbitrage lag and retail-level data discrepancies.
-2.  **Execution Autonomy**: Latency is a tax on profit. With a **Persistent ProcessPool** and worker-local model initialization, AAT achieves deterministic sub-ms inference, bypassing the Python GIL and serialization bottlenecks.
-3.  **Dynamic Safety**: The **Symmetric 30s/10s Heartbeat** and **Equity Curve Protection** ensure that if the connection breaks or the strategy enters a drawdown, the system scales down or moves to safety (Emergency BE) instantly.
-
----
-
-## 📅 Project Evolution & Timeline
-
--   **V1.0.0 (Foundation)**: Initial Python-MT5 socket bridge; basic RSI/MACD strategy.
--   **V2.0.0 (Neural Shift)**: Introduction of XGBoost consensus and basic sentiment analysis.
--   **V3.0.0 (Dual-Mode)**: Simultaneous Scalp and Trend engines with FAISS pattern matching.
--   **V4.0.0 (Safety First)**: Active Watchdog implementation and Async socket refactoring.
--   **V4.1.2 (Sovereign Citadel Masterpiece)**:
-    -   **Tiered AI Sentiment**: FinBERT (Local Cache) -> Local LLM (8082) -> OpenRouter.
-    -   **MT5-Primary Data**: Real-time multi-TF OHLC and position state push directly from EA.
-    -   **High-Perf Core**: Persistent ProcessPoolExecutor and Atomic Key-Value Shared Memory.
-    -   **Institutional UI**: 3-Tab professional "Glass Cockpit" dashboard.
-    -   **Risk Evolution**: Equity MA Protection and ATR-derived dynamic trailing.
-
----
-
-## 🛠️ Installation & Execution (Master Guide)
-
-### 💻 1. Windows Environment Setup (CMD/PowerShell)
+### 2. Fast Track Setup
 ```powershell
-# 1. Run the automated portable setup
+# Windows
 .\setup_portable_python.bat
-
-# 2. (Manual Alternative) If not using the script:
-python -m venv .venv
-.venv\Scripts\pip install -r Python/requirements.txt
+npm run setup
+npm run start
 ```
 
-### 🧠 2. Start the Sovereign Engine
-```powershell
-# High-Impact Startup
-.\run_engine.bat
-
-# (Manual Alternative)
-$env:PYTHONPATH = "."
-.venv\Scripts\python Python/V4_1_2/MainEngine.py
+```bash
+# Linux
+pip install -r Python/requirements.txt
+export PYTHONPATH=$PYTHONPATH:.
+python src/core/main.py
 ```
-Visit `http://127.0.0.1:8000` to view the **Sovereign Dashboard**.
 
-### 3. Deploy MetaTrader 5 EA
-- Copy `MQL5/Experts/V4_1_2/Scalper_v4_1_2.mq5` to your MT5 folder.
-- Ensure the EA is configured to connect to `127.0.0.1:4444`.
+### 3. Monitoring
+Visit `http://127.0.0.1:8000` to access the **Glass Cockpit Dashboard**.
+**Default Credentials:** `admin` / `citadel_sovereign_2026` (Configurable in `src/vault.json`).
 
----
+## 🛡️ Security Protocol
+All communication between MetaTrader 5 and the Python Brain is secured via **AES-256-CBC**. The master key is stored in the `src/vault.json` and must match the `InpMasterKey` in the EA.
 
 ## 🎖️ Certification
-- **Zero-Stub Certified**: All ML models use production loaders. No random-noise training failovers.
-- **Microkernel Compliant**: All features (Risk, Intelligence, UI) are hot-swappable plugins.
-- **Hardware Optimized**: CPU-bound INT8 quantization for old hardware.
-### 📈 3. Deploy MetaTrader 5 Expert Advisor
-1.  **File Deployment**:
-    -   Copy `MQL5/Experts/V4_1_2/Scalper_v4_1_2.mq5` to your MT5 `Experts/` folder.
-    -   Copy `MQL5/Include/V4_1_2/` contents to your MT5 `Include/` folder.
-    -   Copy `MQL5/Libraries/V4_1_2/` contents to your MT5 `Libraries/` folder.
-2.  **Terminal Settings**:
-    -   `Tools -> Options -> Expert Advisors`: Check **Allow DLL imports**.
-    -   `Tools -> Options -> Expert Advisors`: Add `http://127.0.0.1` and `https://openrouter.ai` to the allowed URL list.
-3.  **Execution**:
-    -   Attach the EA to any symbol (e.g., EURUSD).
-    -   The **Glass Cockpit** will initialize. Check the **HEALTH** tab for "STABLE" status.
-
----
-
-## 📊 System Architecture
-
-| Component | Responsibility | Technical Depth |
-| :--- | :--- | :--- |
-| **MainEngine.py** | Orchestration, Socket Handling, Audit | 10k req/sec / 30s Watchdog |
-| **StrategyMaster.py** | XGBoost, FAISS, Tiered AI | <5ms Inference / Local Caching |
-| **RiskManager.py** | Equity Protection, ATR Sizing | 20-period Equity MA Scaling |
-| **SharedMemory.dll** | Atomic Multi-Symbol Sync | Mutex-protected [Key:32][Val:32] |
-
----
-
-## 🚀 Roadmap (Future Enhancements)
--   **Phase 6 (Quantitative Overlord)**: Integration of Reinforcement Learning (PPO) for dynamic lot size optimization.
--   **Phase 7 (Cluster Core)**: Native support for multi-broker distributed load balancing.
--   **Phase 8 (Neural UI)**: Transition to an external React/Electron HUD for cross-terminal visualization.
-
----
-
-## 🏅 Certification
-- **Zero-Stub Certified**: 100% production-ready, no placeholders.
-- **Author**: Simon Peter
-- **License**: GNU GPL v3 (100% FOSS)
+- **Zero-Stub Certified**: 100% production-ready logic.
+- **Hardware Optimized**: Quantized models for 4GB RAM / i3 CPU compatibility.
+- **FOSS Sovereign**: 100% Free and Open Source.

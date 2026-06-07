@@ -7,7 +7,7 @@ import logging
 import requests
 import json
 from datetime import datetime
-from src.core.main import bus
+from src.shared.utils.bus import bus
 
 class HybridSyncService:
     def __init__(self, local_db="db/aat_trading.db", remote_url="http://localhost:9000/api/sync"):
