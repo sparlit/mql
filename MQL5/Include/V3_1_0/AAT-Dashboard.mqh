@@ -44,7 +44,6 @@ public:
       ArrayResize(m_colors, m_rows);
       ArrayResize(m_readonly, m_rows);
       m_config_open = false;
-      m_config_anim = 0.0;
    }
                     ~CDashboard() { m_canvas.Destroy(); }
 
@@ -120,6 +119,7 @@ public:
    {
       m_canvas.TextOut(10, 50, "RISK PER TRADE: 1.0%", ColorToARGB(m_neon_blue));
       m_canvas.TextOut(10, 80, "VAULT STATUS: SECURE", ColorToARGB(m_neon_green));
+      m_canvas.TextOut(10, 110, "AI SERVER: 127.0.0.1:8082", ColorToARGB(m_neon_yellow));
    }
 
    void SetTab(int tab) { m_active_tab = tab; Render(); }
