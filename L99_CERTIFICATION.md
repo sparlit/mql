@@ -30,11 +30,11 @@ Run the automated suite to ensure parity:
 ```bash
 # Windows
 $env:PYTHONPATH="."
-python -m pytest Python/V3_1_0/test_suite_v3.py
+python -m pytest Python/V4_1_2/test_suite_v3.py
 
 # Linux
 export PYTHONPATH=$(pwd)
-python3 -m pytest Python/V3_1_0/test_suite_v3.py
+python3 -m pytest Python/V4_1_2/test_suite_v3.py
 ```
 
 ## 4. UI/UX "Glass Cockpit" Protocol

@@ -18,7 +18,7 @@ The "Sovereign Citadel" is built on three pillars of institutional excellence:
 -   **V1.0.0 (Foundation)**: Initial Python-MT5 socket bridge with basic RSI/MACD logic.
 -   **V2.0.0 (Neural Shift)**: Introduction of XGBoost consensus and sentiment analysis.
 -   **V3.0.0 (Dual-Mode)**: Simultaneous Scalp and Trend engines with FAISS pattern matching.
--   **V4.0.0 (Safety First)**: Active Watchdog implementation and Async socket refactoring.
+-   **V4.1.2 (Safety First)**: Active Watchdog implementation and Async socket refactoring.
 -   **V4.1.2 (Sovereign Citadel)**:
     -   **Optimized AI Tiering**: FinBERT (Local) -> Local LLM (8082) -> OpenRouter.
     -   **MT5-Primary Data Ingress**: Real-time OHLC push directly from EA.
@@ -45,13 +45,13 @@ pip install pandas numpy xgboost transformers torch yfinance faiss-cpu cryptogra
 
 # Manual Start (Ensuring PYTHONPATH is correct)
 $env:PYTHONPATH = "."
-python Python/V3_1_0/MainEngine.py
+python Python/V4_1_2/MainEngine.py
 ```
 
 ### 📈 3. Deploy MetaTrader 5 Expert Advisor
 1.  **File Deployment**:
-    -   Copy `MQL5/Experts/V3_1_0/Scalper_v4_0_0.mq5` to your MT5 `Experts/` folder.
-    -   Ensure `MQL5/Include/V3_1_0/` and `MQL5/Libraries/V3_1_0/` contents are in their respective MT5 folders.
+    -   Copy `MQL5/Experts/V4_1_2/Scalper_v4_0_0.mq5` to your MT5 `Experts/` folder.
+    -   Ensure `MQL5/Include/V4_1_2/` and `MQL5/Libraries/V4_1_2/` contents are in their respective MT5 folders.
 2.  **Terminal Settings**:
     -   `Tools -> Options -> Expert Advisors`: Check **Allow DLL imports**.
     -   `Tools -> Options -> Expert Advisors`: Add `http://127.0.0.1` and `https://openrouter.ai`.
