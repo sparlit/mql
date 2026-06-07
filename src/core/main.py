@@ -1,49 +1,40 @@
 # Project: Autonomous AutoTrader (AAT) V5.0.0
 # Description: Event-Driven Microkernel Orchestrator
 
-from fastapi import FastAPI, BackgroundTasks, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-import asyncio
+import os
+import json
 import logging
-from typing import Dict, Any, Callable, List
+import asyncio
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from typing import Dict, Any
+
+# Shared Utils (Fix circular dependency)
+from src.shared.utils.bus import bus
 
 # Core & Security
 from src.core.auth import create_access_token, get_current_user
 
-# Plugin UI
-from src.plugins.ui.portal import router as ui_router
-
-class EventBus:
-    def __init__(self):
-        self.subscribers: Dict[str, List[Callable]] = {}
-
-    def subscribe(self, event_type: str, callback: Callable):
-        if event_type not in self.subscribers:
-            self.subscribers[event_type] = []
-        self.subscribers[event_type].append(callback)
-
-    async def emit(self, event_type: str, data: Any):
-        if event_type in self.subscribers:
-            tasks = [callback(data) for callback in self.subscribers[event_type]]
-            await asyncio.gather(*tasks)
+# Load Vault for credentials
+VAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "vault.json")
+with open(VAULT_PATH, "r") as f:
+    vault = json.load(f)
 
 app = FastAPI(title="AAT Sovereign Citadel V5.0.0")
-bus = EventBus()
 
-# Initialize Global Plugins (Registry)
-# In production, these would be dynamically loaded from a plugins folder
+# Lazy imports to avoid initialization before bus is ready
 from src.plugins.intelligence.engine import intelligence
 from src.plugins.execution.risk import risk_plugin
 from src.plugins.execution.ingress import run_ingress
 from src.plugins.data.aggregator import data_plugin
 from src.shared.db.sync_service import sync_service
+from src.plugins.ui.portal import router as ui_router
 
-# Include UI Plugin Router
 app.include_router(ui_router)
 
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    if form_data.username == "admin" and form_data.password == "citadel":
+    if form_data.username == vault["ADMIN_USERNAME"] and form_data.password == vault["ADMIN_PASSWORD"]:
         access_token = create_access_token(data={"sub": form_data.username})
         return {"access_token": access_token, "token_type": "bearer"}
     raise HTTPException(status_code=400, detail="Incorrect username or password")
