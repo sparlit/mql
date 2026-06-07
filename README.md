@@ -1,7 +1,5 @@
 # 🌌 Autonomous AutoTrader (AAT) V4.0.0
 
-## 🛡️ Industrial-Grade L99 Certified FOSS Trading System
-
 Autonomous AutoTrader (AAT) is a high-performance, 100% FOSS hybrid trading system. It synergizes the deterministic execution of **MetaTrader 5 (MQL5)** with the advanced machine learning and NLP capabilities of **Python**. V4.0 introduces the **Industrial Safety Protocol (ISP)**, setting a new standard for autonomous capital protection.
 
 ---
