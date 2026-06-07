@@ -19,7 +19,7 @@
 
 input string   InpMasterKey    = "AAT_SECURE_FOSS_KEY_256_BIT_STRIP";
 input string   InpEngineHost   = "127.0.0.1";
-input int      InpEnginePort   = 5555;
+input int      InpEnginePort   = 4444;
 input double   InpRiskPercent  = 1.0;
 input int      InpMagicScalp   = 123456;
 input int      InpMagicTrade   = 654321;
