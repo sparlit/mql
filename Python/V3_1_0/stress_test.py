@@ -15,7 +15,7 @@ def simulate_client(client_id, symbol="EURUSD"):
     security = AATSecurity()
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect(("127.0.0.1", 5555))
+            s.connect(("127.0.0.1", 4444))
             payload = {"symbol": symbol, "balance": 10000}
             s.sendall(security.encrypt(json.dumps(payload)).encode() + b"\n")
             resp = s.recv(10240).decode().strip()

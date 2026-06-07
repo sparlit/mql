@@ -10,7 +10,11 @@ pip list | grep -E "torch|transformers|xgboost|faiss|questdb|pandas|yfinance"
 ```
 
 ## 2. Infrastructure Testing
-1. Start QuestDB (Standard Docker or Portable) on port 9009.
+1. Start QuestDB (Standard Docker or Portable) on port 9009:
+   ```bash
+   # Using Docker
+   docker run -p 9009:9009 -p 8812:8812 questdb/questdb
+   ```
 2. Start Engine:
    - Linux: `PYTHONPATH=. python3 Python/V3_1_0/MainEngine.py`
    - Windows (PS): `$env:PYTHONPATH="."; python Python/V3_1_0/MainEngine.py`

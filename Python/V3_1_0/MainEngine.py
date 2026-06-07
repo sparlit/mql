@@ -32,7 +32,7 @@ logging.basicConfig(
 )
 
 class AutonomousAutoTrader:
-    def __init__(self, host='127.0.0.1', port=5555, questdb_host='localhost', questdb_port=9009):
+    def __init__(self, host='127.0.0.1', port=4444, questdb_host='localhost', questdb_port=9009):
         self.host = host
         self.port = port
         self.questdb_host = questdb_host
@@ -57,12 +57,19 @@ class AutonomousAutoTrader:
         if not os.path.exists('db'): os.makedirs('db')
         conn = sqlite3.connect(self.db_path)
         conn.execute("CREATE TABLE IF NOT EXISTS aat_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, item TEXT, finding_insight TEXT, priority INTEGER, status TEXT, recommendations TEXT, diff_log TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)")
+        conn.execute("CREATE TABLE IF NOT EXISTS dev_maintenance_log (id INTEGER PRIMARY KEY AUTOINCREMENT, file_path TEXT, finding TEXT, fix_action TEXT, impact TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)")
         conn.commit(); conn.close()
 
     def audit_log(self, category, item, insight, priority=1, status="Info"):
         conn = sqlite3.connect(self.db_path)
         conn.execute("INSERT INTO aat_audit (category, item, finding_insight, priority, status) VALUES (?, ?, ?, ?, ?)",
                      (category, item, insight, priority, status))
+        conn.commit(); conn.close()
+
+    def maintenance_log(self, file_path, finding, fix_action, impact):
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("INSERT INTO dev_maintenance_log (file_path, finding, fix_action, impact) VALUES (?, ?, ?, ?)",
+                     (file_path, finding, fix_action, impact))
         conn.commit(); conn.close()
 
     def quest_log_signal(self, symbol, mode, scalp_sig, trade_sig, latency, health):

@@ -70,7 +70,7 @@ void UpdateDynamicDashboard() {
 
 void AnalyzeMarket() {
    string request = "{\"symbol\":\"" + _Symbol + "\", \"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2) + "}";
-   if(socket_client.Connect("127.0.0.1", 5555)) {
+   if(socket_client.Connect("127.0.0.1", 4444)) {
       if(socket_client.SendEncrypted(request)) {
          string resp = socket_client.ReceiveDecrypted();
          if(resp != "") ProcessResponse(resp);

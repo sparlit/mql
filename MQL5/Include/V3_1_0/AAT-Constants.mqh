@@ -21,9 +21,9 @@
 
 //--- Connectivity
 #define ENGINE_HOST            "127.0.0.1"
-#define ENGINE_PORT            5555
+#define ENGINE_PORT            4444
 
 //--- String Constants
-#define STR_ENGINE_OK          "ENGINE V3.3.0 OK"
+#define STR_ENGINE_OK          "ENGINE V4.0.0 OK"
 #define STR_ARB_ALERT          "ARB ALERT"
 #define STR_STABLE             "STABLE"
