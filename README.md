@@ -108,6 +108,6 @@ High-speed benchmark price distribution using a custom C++ DLL.
 ---
 
 ## 🏅 Certification & License
-- **L99 Certified**: Zero-Stub, 100% production-ready code.
+- Zero-Stub, 100% production-ready code.
 - **License**: GNU GPL v3 (100% FOSS).
 - **Author**: Simon Peter
