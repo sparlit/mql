@@ -74,9 +74,21 @@ class StrategyMaster:
             logging.error(f"FinBERT Error: {e}")
 
     def get_sentiment_score(self, text):
-        """Tiered AI Sentiment Analysis: Local (8082) -> OpenRouter -> FinBERT"""
+        """Tiered AI Sentiment Analysis: FinBERT -> Local (8082) -> OpenRouter"""
 
-        # 1. Try Local LLM (Sovereign Primary)
+        # 1. Try Local FinBERT (Primary)
+        if self.bert_model and self.tokenizer:
+            try:
+                inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
+                outputs = self.bert_model(**inputs)
+                probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
+                sentiment = torch.argmax(probs).item()
+                if sentiment == 0: return float(probs[0][0].item())
+                if sentiment == 1: return float(-probs[0][1].item())
+            except Exception as e:
+                logging.error(f"FinBERT Sentiment Error: {e}")
+
+        # 2. Try Local LLM (Failover 1)
         try:
             payload = {
                 "model": "local-model",
@@ -89,7 +101,7 @@ class StrategyMaster:
                 return np.clip(score, -1.0, 1.0)
         except: pass
 
-        # 2. Try OpenRouter (Failover)
+        # 3. Try OpenRouter (Failover 2)
         if self.openrouter_key:
             try:
                 headers = {"Authorization": f"Bearer {self.openrouter_key}"}
@@ -103,15 +115,6 @@ class StrategyMaster:
                     return np.clip(score, -1.0, 1.0)
             except: pass
 
-        # 3. Fallback to Local FinBERT
-        if not self.bert_model or not self.tokenizer:
-            return 0.0
-        inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
-        outputs = self.bert_model(**inputs)
-        probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
-        sentiment = torch.argmax(probs).item()
-        if sentiment == 0: return float(probs[0][0].item())
-        if sentiment == 1: return float(-probs[0][1].item())
         return 0.0
 
     def get_dual_consensus(self, df_dict, sentiment_text=""):
