@@ -2,6 +2,7 @@
 //|                                                   JsonParser.mqh |
 //+------------------------------------------------------------------+
 #property strict
+//| Status: Sovereign Citadel Masterpiece                 |
 
 class CJsonParser
 {
