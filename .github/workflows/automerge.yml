@@ -22,19 +22,20 @@ jobs:
       - name: Install Trading Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r Python/requirements.txt
+          pip install fastapi uvicorn requests pyjwt passlib[bcrypt] python-multipart jinja2 pandas numpy xgboost faiss-cpu transformers torch optimum[onnxruntime]
 
       - name: Run Python Smoke Test
         run: |
           # Ensure essential directories exist
-          mkdir -p Python/logs Python/db Python/models Python/data
+          mkdir -p db logs models data
 
-          # Start engine
-          python Python/main_engine.py > engine.log 2>&1 &
+          # Start V5 engine
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          python src/core/main.py > engine.log 2>&1 &
 
           # Wait for engine to start or timeout (NLP models can take 2-3 mins)
           echo "Waiting for Brain to start..."
-          for i in {1..40}; do
+          for i in {1..60}; do
             if grep -q "Brain listening" engine.log; then
               echo "Brain is ready!"
               break
@@ -43,8 +44,10 @@ jobs:
             sleep 5
           done
 
-          python Python/stress_test.py || echo "Warning: Test skipped due to environment limitations, proceeding with secure merge."
-          kill $(pgrep -f main_engine.py) || true
+          # Verify health
+          curl -v http://127.0.0.1:8000/health || (cat engine.log && exit 1)
+
+          kill $(pgrep -f "src/core/main.py") || true
           cat engine.log
 
       - name: Force Admin Merge via PR Bypass
