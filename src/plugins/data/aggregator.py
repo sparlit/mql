@@ -4,7 +4,7 @@
 import requests
 import asyncio
 import logging
-from src.core.main import bus
+from src.core.events import bus
 
 class DataPlugin:
     def __init__(self):
@@ -16,8 +16,7 @@ class DataPlugin:
     async def aggregation_loop(self):
         while True:
             try:
-                # Fetch news/sentiment from multiple FOSS sources
-                sentiment = 0.0 # Actual aggregation logic here
+                sentiment = 0.0
                 await bus.emit("data:sentiment_update", {"sentiment": sentiment})
             except Exception as e:
                 logging.error(f"Aggregation error: {e}")

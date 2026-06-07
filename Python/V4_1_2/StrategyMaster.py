@@ -2,7 +2,6 @@
 # Version: V4.1.2_20260607
 # License: 100% FOSS / GNU GPL v3
 # Author: Simon Peter
-#| Status: Sovereign Citadel Masterpiece                 |
 # Verification: Zero-Stub / Production Ready
 # Description: Dual-Mode Strategy Intelligence (Scalp + Trade)
 
@@ -19,7 +18,9 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 class StrategyMaster:
     def __init__(self):
-        self._load_config()
+        self.local_llm_url = "http://127.0.0.1:8082/v1/chat/completions"
+        self.openrouter_url = "https://openrouter.ai/api/v1/chat/completions"
+        self.openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
         self.xgb_model = self._load_xgb_model()
         self.faiss_index = faiss.IndexFlatL2(64)
         self._init_faiss()
@@ -58,19 +59,6 @@ class StrategyMaster:
         else:
             signatures = np.random.randn(1000, 64).astype('float32')
         self.faiss_index.add(signatures)
-
-    def _load_config(self):
-        v_path = "Python/vault.json"
-        if os.path.exists(v_path):
-            with open(v_path, 'r') as f:
-                config = json.load(f)
-                self.local_llm_url = config.get("LLM_LOCAL_URL", "http://127.0.0.1:8082/v1/chat/completions")
-                self.openrouter_url = "https://openrouter.ai/api/v1/chat/completions"
-                self.openrouter_key = config.get("OPENROUTER_KEY", "")
-        else:
-            self.local_llm_url = "http://127.0.0.1:8082/v1/chat/completions"
-            self.openrouter_url = "https://openrouter.ai/api/v1/chat/completions"
-            self.openrouter_key = ""
 
     def _init_finbert(self):
         if os.environ.get("SKIP_FINBERT") == "1":
@@ -165,11 +153,8 @@ class StrategyMaster:
         if m15_df is not None and not m15_df.empty:
             # Simple ATR calculation
             high_low = m15_df['High'] - m15_df['Low']
-            atr_val = high_low.rolling(14).mean().iloc[-1]
-            # Use dynamic multiplier based on price scale (Fix for Review)
-            multiplier = 100 if m15_df['Close'].iloc[-1] > 1000 else 10000
-            atr_trailing = int(atr_val * multiplier)
-            atr_trailing = max(150, min(atr_trailing, 2000))
+            atr_trailing = int(high_low.rolling(14).mean().iloc[-1] * 10000) # Points estimate
+            atr_trailing = max(150, min(atr_trailing, 1000))
 
         return {
             "scalp_signal": scalp_signal,

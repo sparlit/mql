@@ -2,7 +2,6 @@
 # Version: V4.1.2_20260607
 # License: 100% FOSS / GNU GPL v3
 # Author: Simon Peter
-#| Status: Sovereign Citadel Masterpiece                 |
 # Verification: Zero-Stub / Production Ready
 # Description: Main Logic Engine with Active Heartbeat and Non-Blocking Dual-Mode
 
@@ -47,7 +46,6 @@ class AutonomousAutoTrader:
         self.risk_manager = RiskManager()
         self.aggregator = DataAggregator()
         self.security = AATSecurity()
-        self.vault = self._load_vault()
         self.active = True
         self.market_cache = {}
         self.cache_lock = threading.Lock()
@@ -67,12 +65,6 @@ class AutonomousAutoTrader:
             max_workers=max(1, multiprocessing.cpu_count() - 1),
             initializer=self._init_inference_worker
         )
-
-    def _load_vault(self):
-        v_path = "Python/vault.json"
-        if os.path.exists(v_path):
-            with open(v_path, 'r') as f: return json.load(f)
-        return {}
 
     def _init_db(self):
         if not os.path.exists('db'): os.makedirs('db')
@@ -169,7 +161,7 @@ class AutonomousAutoTrader:
         # 1. Clean Symbol (Suffix Detection & Regex)
         clean_symbol = SYMBOL_CLEAN_RE.sub('', symbol.split('.')[0]).upper()
 
-        mapping = self.vault.get("SYMBOL_MAPPING", {})
+        mapping = {"XAUUSD": "GC=F", "XAGUSD": "SI=F", "WTI": "CL=F", "SP500": "ES=F"}
         yf_symbol = mapping.get(clean_symbol, f"{clean_symbol}=X" if len(clean_symbol)==6 else clean_symbol)
 
         dfs = {}

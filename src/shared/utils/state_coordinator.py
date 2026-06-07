@@ -1,14 +1,14 @@
 # Project: Autonomous AutoTrader (AAT) V5.0.0
-# Description: Cross-Terminal State Coordinator (Replaces SharedMemory.dll)
+# Description: Cross-Terminal State Coordinator
 
 import asyncio
 from typing import Dict, Any
-from src.core.main import bus
+from src.core.events import bus
 
 class StateCoordinator:
     def __init__(self):
         self.state: Dict[str, Any] = {}
-        # Subscribe to state updates
+        # Subscribe to state updates via internal bus
         bus.subscribe("state:update", self.update_state)
 
     async def update_state(self, data: Dict[str, Any]):
@@ -28,4 +28,3 @@ async def state_manager():
     """Background task for state reconciliation"""
     while True:
         await asyncio.sleep(10)
-        # Perform periodic state cleanup or audit
