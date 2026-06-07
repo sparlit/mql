@@ -44,11 +44,39 @@ public:
          if(m_pos.SelectByIndex(i) && m_pos.Symbol() == m_symbol && m_pos.Magic() == m_magic)
          {
             double be_price = m_pos.PriceOpen();
-            if(m_pos.PositionType() == POSITION_TYPE_BUY) be_price += 20 * SymbolInfoDouble(m_symbol, SYMBOL_POINT);
-            else be_price -= 20 * SymbolInfoDouble(m_symbol, SYMBOL_POINT);
+            double point = SymbolInfoDouble(m_symbol, SYMBOL_POINT);
+            if(m_pos.PositionType() == POSITION_TYPE_BUY) be_price += 20 * point;
+            else be_price -= 20 * point;
 
             m_trade.PositionModify(m_pos.Ticket(), be_price, m_pos.TakeProfit());
             CAATUtils::LogInfo("WATCHDOG: Emergency BE move for ticket " + IntegerToString(m_pos.Ticket()));
+         }
+      }
+   }
+
+   // Refined Professional Execution (Priority 2)
+   void TrailingStop(int atr_points)
+   {
+      for(int i=PositionsTotal()-1; i>=0; i--)
+      {
+         if(m_pos.SelectByIndex(i) && m_pos.Symbol() == m_symbol && m_pos.Magic() == m_magic)
+         {
+            double point = SymbolInfoDouble(m_symbol, SYMBOL_POINT);
+            double bid = SymbolInfoDouble(m_symbol, SYMBOL_BID);
+            double ask = SymbolInfoDouble(m_symbol, SYMBOL_ASK);
+
+            if(m_pos.PositionType() == POSITION_TYPE_BUY)
+            {
+               double new_sl = bid - atr_points * point;
+               if(new_sl > m_pos.StopLoss() + 5 * point)
+                  m_trade.PositionModify(m_pos.Ticket(), new_sl, m_pos.TakeProfit());
+            }
+            else
+            {
+               double new_sl = ask + atr_points * point;
+               if(new_sl < m_pos.StopLoss() - 5 * point || m_pos.StopLoss() == 0)
+                  m_trade.PositionModify(m_pos.Ticket(), new_sl, m_pos.TakeProfit());
+            }
          }
       }
    }

@@ -97,12 +97,22 @@ class StrategyMaster:
         # Dynamic ML-predicted Exit multipliers (Actionable Point 23)
         exit_params = self._predict_exits(trade_score + scalp_score)
 
+        # Dynamic ATR-based Trailing Points (Institutional Grade)
+        m15_df = df_dict.get('M15')
+        atr_trailing = 200
+        if m15_df is not None and not m15_df.empty:
+            # Simple ATR calculation
+            high_low = m15_df['High'] - m15_df['Low']
+            atr_trailing = int(high_low.rolling(14).mean().iloc[-1] * 10000) # Points estimate
+            atr_trailing = max(150, min(atr_trailing, 1000))
+
         return {
             "scalp_signal": scalp_signal,
             "trade_signal": trade_signal,
             "scalp_conf": float(scalp_score),
             "trade_conf": float(trade_score),
-            "exit_mult": exit_params
+            "exit_mult": exit_params,
+            "trailing_points": atr_trailing
         }
 
     def _calculate_consensus(self, df_dict, tfs, sentiment_score):

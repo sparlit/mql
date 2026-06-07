@@ -16,6 +16,8 @@ import re
 import sqlite3
 import os
 import numpy as np
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
 from questdb.ingress import Sender, IngressError
 from datetime import datetime, timedelta
 
@@ -24,6 +26,9 @@ from Python.V3_1_0.StrategyMaster import StrategyMaster
 from Python.V3_1_0.RiskManager import RiskManager
 from Python.V3_1_0.DataAggregator import DataAggregator
 from Python.V3_1_0.Security import AATSecurity
+
+# Pre-compiled Regex for performance (Fix for Review)
+SYMBOL_CLEAN_RE = re.compile(r'[^A-Z0-9]')
 
 logging.basicConfig(
     level=logging.INFO,
@@ -53,6 +58,13 @@ class AutonomousAutoTrader:
         self.watchdog_thread = threading.Thread(target=self.system_watchdog, daemon=True)
         self.watchdog_thread.start()
 
+        # Persistent Process Pool for Inference (Fix for Review)
+        # initializer loads models once per worker process to avoid per-request pickling overhead
+        self.executor = ProcessPoolExecutor(
+            max_workers=max(1, multiprocessing.cpu_count() - 1),
+            initializer=self._init_inference_worker
+        )
+
     def _init_db(self):
         if not os.path.exists('db'): os.makedirs('db')
         conn = sqlite3.connect(self.db_path)
@@ -70,6 +82,13 @@ class AutonomousAutoTrader:
         conn = sqlite3.connect(self.db_path)
         conn.execute("INSERT INTO dev_maintenance_log (file_path, finding, fix_action, impact) VALUES (?, ?, ?, ?)",
                      (file_path, finding, fix_action, impact))
+        conn.commit(); conn.close()
+
+    def evolution_log(self, file_path, line_number, old_logic, new_logic, reasoning):
+        """Automated Logic Change Auditing (Sovereign Citadel V4.1.0)"""
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("INSERT INTO dev_evolution (file_path, line_number, old_logic, new_logic, reasoning) VALUES (?, ?, ?, ?, ?)",
+                     (file_path, line_number, old_logic, new_logic, reasoning))
         conn.commit(); conn.close()
 
     def quest_log_signal(self, symbol, mode, scalp_sig, trade_sig, latency, health):
@@ -90,13 +109,13 @@ class AutonomousAutoTrader:
             logging.debug(f"QuestDB not available: {e}")
 
     def system_watchdog(self):
-        """Bidirectional Watchdog (Priority 2): Halts logic if no activity for 60s"""
+        """Bidirectional Watchdog (Priority 2): Halts logic if no activity for 10s (Symmetric Citadel)"""
         while self.active:
-            if time.time() - self.last_client_activity > 60:
+            if time.time() - self.last_client_activity > 10:
                 if not hasattr(self, 'watchdog_halted') or not self.watchdog_halted:
-                    logging.warning("Watchdog: No client activity for 60s. Entering safety halt.")
+                    logging.warning("Watchdog: No client activity for 10s. Entering safety halt.")
                     self.watchdog_halted = True
-                    self.audit_log("Safety", "WatchdogHalt", "Engine suspended due to client inactivity", priority=3, status="HALTED")
+                    self.audit_log("Safety", "WatchdogHalt", "Engine suspended due to client inactivity (10s)", priority=3, status="HALTED")
             else:
                 if hasattr(self, 'watchdog_halted') and self.watchdog_halted:
                     logging.info("Watchdog: Client activity resumed. Resuming engine.")
@@ -126,25 +145,61 @@ class AutonomousAutoTrader:
 
         return status
 
-    def fetch_data(self, symbol):
-        yf_symbol = self.aggregator.get_failover_data(symbol) if "X" not in symbol else symbol
-        # Map symbol logic from previous versions
+    def fetch_data(self, symbol, mt5_ohlc=None):
+        """Refined Data Ingestion: MT5-Primary with yfinance verification/failover"""
+        # 1. Clean Symbol (Suffix Detection & Regex)
+        clean_symbol = SYMBOL_CLEAN_RE.sub('', symbol.split('.')[0]).upper()
+
         mapping = {"XAUUSD": "GC=F", "XAGUSD": "SI=F", "WTI": "CL=F", "SP500": "ES=F"}
-        yf_symbol = mapping.get(symbol, f"{symbol}=X" if len(symbol)==6 else symbol)
+        yf_symbol = mapping.get(clean_symbol, f"{clean_symbol}=X" if len(clean_symbol)==6 else clean_symbol)
+
+        dfs = {}
+        # 2. Use MT5-Primary Data if available
+        if mt5_ohlc:
+            for tf, prices in mt5_ohlc.items():
+                dfs[tf] = pd.DataFrame({'Close': prices, 'Volume': [0]*len(prices)})
+
+        # 3. yfinance Verification/Failover
         try:
-            ticker = yf.Ticker(yf_symbol)
-            dfs = {}
-            for tf, (per, inv) in {'M1':('1d','1m'),'M5':('5d','5m'),'M15':('5d','15m'),'H1':('1mo','1h'),'H4':('1mo','4h'),'D1':('1y','1d')}.items():
-                df = ticker.history(period=per, interval=inv)
-                if not df.empty: dfs[tf] = df
+            if not dfs or any(dfs[tf].empty for tf in ['M1', 'H1', 'D1']):
+                ticker = yf.Ticker(yf_symbol)
+                for tf, (per, inv) in {'M1':('1d','1m'),'M5':('5d','5m'),'M15':('5d','15m'),'H1':('1mo','1h'),'H4':('1mo','4h'),'D1':('1y','1d')}.items():
+                    if tf not in dfs or dfs[tf].empty:
+                        df = ticker.history(period=per, interval=inv)
+                        if not df.empty: dfs[tf] = df
             return dfs
         except Exception as e:
-            logging.error(f"Fetch Error: {e}"); return None
+            logging.error(f"Fetch Error: {e}"); return dfs if dfs else None
+
+    def _run_inference_static(strategy_master, dfs, sentiment):
+        """Static method for ProcessPoolExecutor compatibility"""
+        try:
+            return strategy_master.get_dual_consensus(dfs, sentiment)
+        except Exception as e:
+            logging.error(f"Inference Static Error: {e}")
+            return None
+
+    @staticmethod
+    def _init_inference_worker():
+        """Worker initializer: Load heavy models once per process"""
+        global worker_strategy
+        os.environ["SKIP_FINBERT"] = "0" # Ensure workers load FinBERT if not in test
+        worker_strategy = StrategyMaster()
+
+    @staticmethod
+    def _run_inference_in_worker(dfs, sentiment):
+        """Execute inference using the worker-local strategy instance"""
+        global worker_strategy
+        try:
+            return worker_strategy.get_dual_consensus(dfs, sentiment)
+        except Exception as e:
+            logging.error(f"Worker Inference Error: {e}")
+            return None
 
     def handle_client(self, conn, addr):
         start_time = time.time()
         self.last_client_activity = time.time()
-        conn.settimeout(10.0)
+        conn.settimeout(15.0)
         with conn:
             try:
                 data_raw = conn.recv(10240).decode('utf-8').strip()
@@ -152,16 +207,22 @@ class AutonomousAutoTrader:
                 decrypted = self.security.decrypt(data_raw)
                 if not decrypted: return
                 data = json.loads(decrypted)
+
+                # Symmetric Heartbeat: Update last activity on any valid decrypted packet
+                self.last_client_activity = time.time()
+
                 symbol = data.get("symbol", "EURUSD")
                 equity = float(data.get("equity", data.get("balance", 10000)))
                 tick_value = float(data.get("tick_value", 1.0))
                 symbol_point = float(data.get("point", 0.00001))
+                positions = data.get("positions", []) # State Reconciliation Ingress
+                mt5_ohlc = data.get("ohlc", None) # MT5-Primary OHLC Ingress
 
                 # Active Heartbeat Implementation (Priority 1)
                 heartbeat = int(time.time())
                 health = self.check_health()
 
-                dfs = self.fetch_data(symbol)
+                dfs = self.fetch_data(symbol, mt5_ohlc)
                 if dfs:
                     with self.cache_lock:
                         self.market_cache[symbol] = dfs
@@ -174,7 +235,21 @@ class AutonomousAutoTrader:
 
                     symbol_sentiment = self.aggregator.fetch_fxstreet_sentiment(symbol_filter=symbol)
                     combined_sentiment = (symbol_sentiment if len(symbol_sentiment) > 50 else self.sentiment_text)
-                    res = self.strategy_master.get_dual_consensus(dfs, combined_sentiment)
+
+                    # Persistent Process Pool Inference (Fix for Review)
+                    # Bypasses GIL and avoids per-request pickling of heavy models
+                    future = self.executor.submit(self._run_inference_in_worker, dfs, combined_sentiment)
+                    try:
+                        res = future.result(timeout=15.0)
+                    except Exception as e:
+                        logging.error(f"Inference Timeout/Error: {e}")
+                        res = None
+
+                    if not res:
+                        response = {"status": "error", "message": "Inference timeout", "heartbeat": heartbeat, "health": "DEGRADED"}
+                        encrypted_resp = self.security.encrypt(json.dumps(response)) + "\n"
+                        conn.sendall(encrypted_resp.encode('utf-8'))
+                        return
 
                     mode = "NEUTRAL"
                     if res["scalp_signal"] != "NEUTRAL" and res["trade_signal"] != "NEUTRAL": mode = "BOTH"
@@ -195,7 +270,8 @@ class AutonomousAutoTrader:
                         "scalp_signal": res["scalp_signal"], "trade_signal": res["trade_signal"],
                         "recommended_lot": float(lot_size), "latency": float(round(latency, 2)),
                         "heartbeat": heartbeat, "health": health,
-                        "tp_mult": res["exit_mult"]["tp"], "sl_mult": res["exit_mult"]["sl"]
+                        "tp_mult": res["exit_mult"]["tp"], "sl_mult": res["exit_mult"]["sl"],
+                        "trailing_points": res.get("trailing_points", 200)
                     }
                     # Tiered Storage: High-frequency signal logging to QuestDB
                     self.quest_log_signal(symbol, mode, res["scalp_signal"], res["trade_signal"], latency, health)

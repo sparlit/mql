@@ -23,7 +23,7 @@ input int      InpEnginePort   = 4444;
 input double   InpRiskPercent  = 1.0;
 input int      InpMagicScalp   = 123456;
 input int      InpMagicTrade   = 654321;
-input int      InpWatchdogSec  = 15; // Heartbeat Timeout (sec)
+input int      InpWatchdogSec  = 10; // Symmetric Heartbeat Timeout (sec)
 
 CDashboard     dashboard;
 CSocketClient  socket_client;
@@ -32,6 +32,7 @@ CManagePositions *mgr_trade;
 bool           g_watchdog_active = false;
 datetime       g_last_success_time = 0;
 int            g_recovery_counter = 0;
+int            g_trailing_points = 200;
 
 int OnInit() {
    socket_client.SetSecurityKey(InpMasterKey);
@@ -53,6 +54,10 @@ void OnTick() {
    mgr_scalp.Update();
    mgr_trade.Update();
 
+   // Active Trailing Logic (Fix for Review)
+   mgr_scalp.TrailingStop(g_trailing_points);
+   mgr_trade.TrailingStop(g_trailing_points * 2);
+
    // Arbitrage Logic Evolution (AP 31)
    double current_price = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    CAATUtils::SetSharedBenchmark(_Symbol, current_price);
@@ -66,6 +71,13 @@ void OnTick() {
       } else {
          dashboard.SetCellValue(1, 14, "STABLE", clrLime);
       }
+   }
+}
+
+void OnChartEvent(const int id, const long &lparam, const double &dparam, const string &sparam) {
+   if(id == CHARTEVENT_CLICK) {
+      int tab = dashboard.GetTabAt( (int)lparam, (int)dparam );
+      if(tab >= 0) dashboard.SetTab(tab);
    }
 }
 
@@ -107,12 +119,42 @@ void AnalyzeMarket() {
 
    if(socket_client.GetState() != STATE_IDLE) return;
 
+   // Get Position State for Reconciliation
+   string pos_json = "";
+   for(int i=PositionsTotal()-1; i>=0; i--) {
+      if(PositionSelectByTicket(PositionGetTicket(i))) {
+         if(pos_json != "") pos_json += ",";
+         pos_json += "{\"ticket\":" + IntegerToString(PositionGetInteger(POSITION_TICKET)) +
+                     ",\"type\":" + IntegerToString(PositionGetInteger(POSITION_TYPE)) + "}";
+      }
+   }
+
+   // Get OHLC Data for Primary Ingress (Priority 2)
+   string ohlc_json = "";
+   ENUM_TIMEFRAMES tfs[] = {PERIOD_M1, PERIOD_M5, PERIOD_M15, PERIOD_H1, PERIOD_H4, PERIOD_D1};
+   string tf_names[] = {"M1", "M5", "M15", "H1", "H4", "D1"};
+
+   for(int t=0; t<ArraySize(tfs); t++) {
+      double closes[];
+      if(CopyClose(_Symbol, tfs[t], 0, 5, closes) == 5) {
+         if(ohlc_json != "") ohlc_json += ",";
+         ohlc_json += "\"" + tf_names[t] + "\":[" +
+            DoubleToString(closes[0], 5) + "," +
+            DoubleToString(closes[1], 5) + "," +
+            DoubleToString(closes[2], 5) + "," +
+            DoubleToString(closes[3], 5) + "," +
+            DoubleToString(closes[4], 5) + "]";
+      }
+   }
+
    string req = "{" +
       "\"symbol\":\"" + _Symbol + "\"," +
       "\"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2) + "," +
       "\"equity\":" + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY), 2) + "," +
       "\"tick_value\":" + DoubleToString(SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE), 5) + "," +
-      "\"point\":" + DoubleToString(SymbolInfoDouble(_Symbol, SYMBOL_POINT), 8) +
+      "\"point\":" + DoubleToString(SymbolInfoDouble(_Symbol, SYMBOL_POINT), 8) + "," +
+      "\"positions\":[" + pos_json + "]," +
+      "\"ohlc\":{" + ohlc_json + "}" +
    "}";
    socket_client.AsyncRequest(InpEngineHost, InpEnginePort, req);
 }
@@ -138,5 +180,7 @@ void ProcessResponse(string resp) {
 
    string mode = CJsonParser::GetString(resp, "mode");
    dashboard.SetCellValue(1, 1, mode, (mode == "BOTH" ? clrGold : clrCyan));
-   // ... rest of signal processing ...
+
+   g_trailing_points = (int)CJsonParser::GetDouble(resp, "trailing_points");
+   if(g_trailing_points <= 0) g_trailing_points = 200;
 }

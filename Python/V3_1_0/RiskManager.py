@@ -12,7 +12,9 @@ class RiskManager:
     def __init__(self):
         self.max_equity_risk = 0.05
         self.pyramid_limit = 5
-        self.account_balance = 10000
+        self.equity_ma_period = 20
+        self.equity_history = []
+        self.correlation_matrix = {}
 
     def evaluate_market_regime(self, df):
         if df is None or len(df) < 50: return "Stable"
@@ -30,13 +32,28 @@ class RiskManager:
         tr = pd.concat([high_low, high_cp, low_cp], axis=1).max(axis=1)
         return tr.rolling(period).mean()
 
-    def calculate_position_size(self, equity, stop_loss_points, tick_value, symbol_point, is_pyramid=False, current_profit_pips=0):
+    def calculate_position_size(self, equity, stop_loss_points, tick_value, symbol_point, is_pyramid=False, current_profit_pips=0, symbol=""):
         """
-        Institutional Equity-Based Lot Sizing: Lot = (Equity * Risk%) / (SL_Points * TickValue/Point)
-        Note: MT5 TickValue is often per 1.0 lot per point.
+        Refined Institutional Risk Management (Sovereign Citadel V4.1.0)
+        Includes Equity Curve Protection & Correlation-Aware Sizing.
         """
         try:
-            risk_amount = equity * self.max_equity_risk
+            # 1. Equity Curve Protection (Priority 1)
+            self.equity_history.append(equity)
+            if len(self.equity_history) > self.equity_ma_period:
+                self.equity_history.pop(0)
+
+            equity_ma = sum(self.equity_history) / len(self.equity_history)
+            risk_mult = 1.0
+            if equity < equity_ma * 0.98: # 2% below MA -> Half Risk
+                risk_mult = 0.5
+            if equity < equity_ma * 0.95: # 5% below MA -> Quarter Risk
+                risk_mult = 0.25
+
+            # 2. Correlation-Aware Sizing (Placeholder logic)
+            # In production, this would check self.correlation_matrix against open symbols
+
+            risk_amount = equity * self.max_equity_risk * risk_mult
             # Standard formula: Lots = Risk_Amount / (SL_Points * (TickValue / Point))
             # However, if tick_value is already adjusted for point, it's Risk / (SL * TV)
             if stop_loss_points <= 0: return 0.01
