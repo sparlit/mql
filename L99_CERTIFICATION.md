@@ -4,18 +4,20 @@ This document provides step-by-step instructions to verify the production-readin
 
 ## 1. Environment Verification
 ```bash
-# Verify Python Environment
-pip list | grep -E "torch|transformers|xgboost|faiss|questdb"
+# Install and Verify Python Environment
+pip install -r Python/requirements.txt
+pip list | grep -E "torch|transformers|xgboost|faiss|questdb|pandas|yfinance"
 ```
 
 ## 2. Infrastructure Testing
-1. Start QuestDB (Standard Docker or Portable).
+1. Start QuestDB (Standard Docker or Portable) on port 9009.
 2. Start Engine:
-   - Linux: `export PYTHONPATH=$(pwd) && python3 Python/V3_1_0/MainEngine.py`
+   - Linux: `PYTHONPATH=. python3 Python/V3_1_0/MainEngine.py`
    - Windows (PS): `$env:PYTHONPATH="."; python Python/V3_1_0/MainEngine.py`
    - Windows (CMD): `set PYTHONPATH=. && python Python/V3_1_0/MainEngine.py`
-3. Run `python3 Python/V3_1_0/stress_test.py` to simulate 10 concurrent connections.
+3. Run `PYTHONPATH=. python3 Python/V3_1_0/stress_test.py` to simulate 10 concurrent connections.
 4. Verify SQLite audit logs: `sqlite3 db/aat_trading.db "SELECT * FROM aat_audit;"`.
+5. Verify Maintenance logs: `sqlite3 db/aat_trading.db "SELECT * FROM dev_maintenance_log;"`.
 
 ## 3. Unit Testing
 Run the versioned regression suite:

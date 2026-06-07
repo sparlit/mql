@@ -16,7 +16,7 @@ import re
 import sqlite3
 import os
 import numpy as np
-from questdb.ingress import Sender
+from questdb.ingress import Sender, IngressError
 from datetime import datetime, timedelta
 
 # Absolute Versioned Imports
@@ -32,20 +32,26 @@ logging.basicConfig(
 )
 
 class AutonomousAutoTrader:
-    def __init__(self, host='127.0.0.1', port=5555):
+    def __init__(self, host='127.0.0.1', port=5555, questdb_host='localhost', questdb_port=9009):
         self.host = host
         self.port = port
+        self.questdb_host = questdb_host
+        self.questdb_port = questdb_port
         self.strategy_master = StrategyMaster()
         self.risk_manager = RiskManager()
         self.aggregator = DataAggregator()
         self.security = AATSecurity()
         self.active = True
         self.market_cache = {}
+        self.cache_lock = threading.Lock()
         self.db_path = "db/aat_trading.db"
         self._init_db()
         self.aggregator_thread = threading.Thread(target=self.background_aggregator, daemon=True)
         self.aggregator_thread.start()
         self.last_aggregator_run = time.time()
+        self.last_client_activity = time.time()
+        self.watchdog_thread = threading.Thread(target=self.system_watchdog, daemon=True)
+        self.watchdog_thread.start()
 
     def _init_db(self):
         if not os.path.exists('db'): os.makedirs('db')
@@ -58,6 +64,38 @@ class AutonomousAutoTrader:
         conn.execute("INSERT INTO aat_audit (category, item, finding_insight, priority, status) VALUES (?, ?, ?, ?, ?)",
                      (category, item, insight, priority, status))
         conn.commit(); conn.close()
+
+    def quest_log_signal(self, symbol, mode, scalp_sig, trade_sig, latency, health):
+        try:
+            with Sender(self.questdb_host, self.questdb_port) as sender:
+                sender.table('aat_signals') \
+                    .symbol('symbol', symbol) \
+                    .symbol('mode', mode) \
+                    .symbol('health', health) \
+                    .column('scalp_sig', scalp_sig) \
+                    .column('trade_sig', trade_sig) \
+                    .column('latency', float(latency)) \
+                    .at_now()
+                sender.flush()
+        except IngressError as e:
+            logging.error(f"QuestDB Ingress Error: {e}")
+        except Exception as e:
+            logging.debug(f"QuestDB not available: {e}")
+
+    def system_watchdog(self):
+        """Bidirectional Watchdog (Priority 2): Halts logic if no activity for 60s"""
+        while self.active:
+            if time.time() - self.last_client_activity > 60:
+                if not hasattr(self, 'watchdog_halted') or not self.watchdog_halted:
+                    logging.warning("Watchdog: No client activity for 60s. Entering safety halt.")
+                    self.watchdog_halted = True
+                    self.audit_log("Safety", "WatchdogHalt", "Engine suspended due to client inactivity", priority=3, status="HALTED")
+            else:
+                if hasattr(self, 'watchdog_halted') and self.watchdog_halted:
+                    logging.info("Watchdog: Client activity resumed. Resuming engine.")
+                    self.watchdog_halted = False
+                    self.audit_log("Safety", "WatchdogResume", "Engine resumed activity", priority=1, status="OK")
+            time.sleep(5)
 
     def background_aggregator(self):
         while self.active:
@@ -98,6 +136,8 @@ class AutonomousAutoTrader:
 
     def handle_client(self, conn, addr):
         start_time = time.time()
+        self.last_client_activity = time.time()
+        conn.settimeout(10.0)
         with conn:
             try:
                 data_raw = conn.recv(10240).decode('utf-8').strip()
@@ -106,6 +146,9 @@ class AutonomousAutoTrader:
                 if not decrypted: return
                 data = json.loads(decrypted)
                 symbol = data.get("symbol", "EURUSD")
+                equity = float(data.get("equity", data.get("balance", 10000)))
+                tick_value = float(data.get("tick_value", 1.0))
+                symbol_point = float(data.get("point", 0.00001))
 
                 # Active Heartbeat Implementation (Priority 1)
                 heartbeat = int(time.time())
@@ -113,7 +156,15 @@ class AutonomousAutoTrader:
 
                 dfs = self.fetch_data(symbol)
                 if dfs:
-                    self.market_cache[symbol] = dfs
+                    with self.cache_lock:
+                        self.market_cache[symbol] = dfs
+
+                    if hasattr(self, 'watchdog_halted') and self.watchdog_halted:
+                        response = {"status": "halted", "message": "Engine in safety halt", "heartbeat": int(time.time()), "health": "HALTED"}
+                        encrypted_resp = self.security.encrypt(json.dumps(response)) + "\n"
+                        conn.sendall(encrypted_resp.encode('utf-8'))
+                        return
+
                     symbol_sentiment = self.aggregator.fetch_fxstreet_sentiment(symbol_filter=symbol)
                     combined_sentiment = (symbol_sentiment if len(symbol_sentiment) > 50 else self.sentiment_text)
                     res = self.strategy_master.get_dual_consensus(dfs, combined_sentiment)
@@ -124,7 +175,12 @@ class AutonomousAutoTrader:
                     elif res["trade_signal"] != "NEUTRAL": mode = "TRADE"
 
                     news_impact = False # news logic maintained
-                    lot_size = self.risk_manager.calculate_position_size(dfs['H1']['Close'].iloc[-1], 200, 1.0)
+
+                    # Robust ATR-based SL points or fixed 200 points
+                    atr = self.risk_manager._calc_atr(dfs['M15']).iloc[-1]
+                    sl_points = max(200, int(atr / symbol_point) if symbol_point > 0 else 200)
+
+                    lot_size = self.risk_manager.calculate_position_size(equity, sl_points, tick_value, symbol_point)
 
                     latency = (time.time() - start_time) * 1000
                     response = {
@@ -134,6 +190,8 @@ class AutonomousAutoTrader:
                         "heartbeat": heartbeat, "health": health,
                         "tp_mult": res["exit_mult"]["tp"], "sl_mult": res["exit_mult"]["sl"]
                     }
+                    # Tiered Storage: High-frequency signal logging to QuestDB
+                    self.quest_log_signal(symbol, mode, res["scalp_signal"], res["trade_signal"], latency, health)
                 else: response = {"status": "error", "message": "Data fetch failed", "heartbeat": heartbeat, "health": health}
 
                 encrypted_resp = self.security.encrypt(json.dumps(response)) + "\n"

@@ -12,8 +12,8 @@ from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 
 class AATSecurity:
-    def __init__(self):
-        self.key = b'AAT_SECURE_FOSS_KEY_256_BIT_STRIP'[:32].ljust(32, b'0')
+    def __init__(self, key_str="AAT_SECURE_FOSS_KEY_256_BIT_STRIP"):
+        self.key = key_str.encode()[:32].ljust(32, b'\0')
 
     def encrypt(self, text):
         iv = os.urandom(16)
