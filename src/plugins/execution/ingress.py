@@ -41,6 +41,7 @@ class SocketIngressPlugin:
     async def start(self):
         server = await asyncio.start_server(self.handle_client, self.host, self.port)
         logging.info(f"Sovereign Ingress active on {self.host}:{self.port}")
+        print(f"Brain listening on {self.host}:{self.port}") # CI marker
         async with server:
             await server.serve_forever()
 
