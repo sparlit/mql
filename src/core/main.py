@@ -9,11 +9,8 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Dict, Any
 
-# Shared Utils (Fix circular dependency)
-from src.shared.utils.bus import bus
-
 # Core Components
-from src.core.events import bus
+from src.shared.utils.bus import bus
 from src.core.auth import create_access_token, get_current_user
 
 # Load Vault for credentials

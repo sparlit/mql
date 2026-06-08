@@ -1,10 +1,9 @@
 //+------------------------------------------------------------------+
-//| Project: Autonomous AutoTrader (AAT)                             |
-//| Version: V3.3.0_20260607                                         |
-//| License: 100% FOSS / GNU GPL v3                                  |
+//| Project: Autonomous AutoTrader (AAT) V5.0.0                      |
+//| Date: 2026-06-08                                                 |
 //| Author: Simon Peter                                              |
-//| Verification: Zero-Stub / Production Ready                       |
-//| Description: Centralized Utilities and Error Logging              |
+//| Certification: Zero-Stub Certified / 100% FOSS                   |
+//+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2026, Simon Peter"
 #property strict

@@ -1,10 +1,9 @@
 //+------------------------------------------------------------------+
-//|                                                       AAT-Security |
-//|                                  Copyright 2024, AI Trader Corp. |
+//| Project: Autonomous AutoTrader (AAT) V5.0.0                      |
+//| Date: 2026-06-08                                                 |
+//| Author: Simon Peter                                              |
+//| Certification: Zero-Stub Certified / 100% FOSS                   |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2024, AI Trader Corp."
-#property strict
-
 /*
    AAT-Security-V1.0.0.mqh
 

@@ -1,10 +1,9 @@
 //+------------------------------------------------------------------+
-//|                                              AAT-Dashboard.mqh |
+//| Project: Autonomous AutoTrader (AAT) V5.0.0                      |
+//| Date: 2026-06-08                                                 |
+//| Author: Simon Peter                                              |
+//| Certification: Zero-Stub Certified / 100% FOSS                   |
 //+------------------------------------------------------------------+
-#include <Canvas\Canvas.mqh>
-
-class CDashboard
-  {
 private:
    CCanvas           m_canvas;
    int               m_width;

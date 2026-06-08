@@ -1,5 +1,5 @@
 # Project: Autonomous AutoTrader (AAT) V5.0.0
-# Description: MQL5/Socket Ingress Plugin with AES-256 Decryption
+# Description: Hardened MQL5 Ingress with Bidirectional AES-256 Encryption
 
 import socket
 import asyncio
@@ -18,9 +18,19 @@ with open(VAULT_PATH, "r") as f:
     vault = json.load(f)
 MASTER_KEY = vault.get("MASTER_KEY", "AAT_SECURE_FOSS_KEY_256_BIT_STRIP").encode()[:32].ljust(32, b'\0')
 
-class Decryptor:
+class Cryptor:
     @staticmethod
-    def decrypt(ct_b64):
+    def encrypt(data: str) -> str:
+        iv = os.urandom(16)
+        cipher = Cipher(algorithms.AES(MASTER_KEY), modes.CBC(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        padder = padding.PKCS7(128).padder()
+        padded_data = padder.update(data.encode()) + padder.finalize()
+        ct = encryptor.update(padded_data) + encryptor.finalize()
+        return base64.b64encode(iv + ct).decode()
+
+    @staticmethod
+    def decrypt(ct_b64: str) -> str:
         try:
             combined = base64.b64decode(ct_b64)
             iv, ct = combined[:16], combined[16:]
@@ -29,8 +39,7 @@ class Decryptor:
             padded_data = decryptor.update(ct) + decryptor.finalize()
             unpadder = padding.PKCS7(128).unpadder()
             return (unpadder.update(padded_data) + unpadder.finalize()).decode()
-        except Exception as e:
-            logging.error(f"Decryption failed: {e}")
+        except Exception:
             return None
 
 class SocketIngressPlugin:
@@ -41,7 +50,7 @@ class SocketIngressPlugin:
     async def start(self):
         server = await asyncio.start_server(self.handle_client, self.host, self.port)
         logging.info(f"Sovereign Ingress active on {self.host}:{self.port}")
-        print(f"Brain listening on {self.host}:{self.port}") # CI marker
+        print(f"Brain listening on {self.host}:{self.port}")
         async with server:
             await server.serve_forever()
 
@@ -51,26 +60,24 @@ class SocketIngressPlugin:
             if not data: return
 
             raw_message = data.decode().strip()
-            decrypted = Decryptor.decrypt(raw_message)
+            decrypted = Cryptor.decrypt(raw_message)
 
             if decrypted:
                 payload = json.loads(decrypted)
-                logging.debug(f"Decrypted payload: {payload.get('symbol')}")
-
                 # Emit to bus for intelligence/risk processing
                 await bus.emit("data:market_update", payload)
 
-                # Simple Success Response
-                resp = {"status": "success", "health": "OK", "timestamp": os.getpid()}
-                # Note: In production, the response should also be encrypted.
-                # For this step, we focus on ingress decryption.
-                writer.write(json.dumps(resp).encode() + b"\n")
+                # Encrypted Success Response
+                resp_payload = json.dumps({"status": "success", "engine_v": "5.0.0"})
+                encrypted_resp = Cryptor.encrypt(resp_payload)
+
+                writer.write(encrypted_resp.encode() + b"\n")
                 await writer.drain()
 
             writer.close()
             await writer.wait_closed()
         except Exception as e:
-            logging.error(f"Ingress handler error: {e}")
+            logging.error(f"Ingress error: {e}")
 
 async def run_ingress():
     ingress = SocketIngressPlugin()
