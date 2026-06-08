@@ -72,7 +72,7 @@ class IntelligencePlugin:
 
         result = {
             "symbol": symbol,
-            "signal": signal,
+            "signal": "NEUTRAL",
             "score": float(total_score),
             "confidence": float(min(1.0, abs(total_score) / 10.0))
         }

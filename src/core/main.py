@@ -12,7 +12,8 @@ from typing import Dict, Any
 # Shared Utils (Fix circular dependency)
 from src.shared.utils.bus import bus
 
-# Core & Security
+# Core Components
+from src.core.events import bus
 from src.core.auth import create_access_token, get_current_user
 
 # Load Vault for credentials
@@ -42,7 +43,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 @app.on_event("startup")
 async def startup_event():
     logging.info("AAT Microkernel V5.0.0 starting...")
-    # Start Background Services
+    # Start Background Ingress Service
     asyncio.create_task(run_ingress())
     await bus.emit("system:startup", {"status": "initializing"})
 

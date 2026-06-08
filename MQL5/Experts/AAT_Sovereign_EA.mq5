@@ -2,7 +2,6 @@
 //| Project: Autonomous AutoTrader (AAT)                             |
 //| Version: V5.0.0_20260607                                         |
 //| License: 100% FOSS / GNU GPL v3                                  |
-//| Status: Sovereign Citadel Masterpiece                 |
 //| Author: Simon Peter                                              |
 //| Verification: Zero-Stub / Production Ready                       |
 //| Description: V4.0 Autonomous EA with L99 Active Watchdog         |

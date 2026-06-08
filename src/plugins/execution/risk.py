@@ -1,5 +1,5 @@
 # Project: Autonomous AutoTrader (AAT) V5.0.0
-# Description: Risk Management Plugin (Institutional Grade)
+# Description: Risk Management Plugin
 
 import pandas as pd
 import numpy as np

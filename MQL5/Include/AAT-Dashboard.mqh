@@ -2,7 +2,6 @@
 //|                                              AAT-Dashboard.mqh |
 //+------------------------------------------------------------------+
 #include <Canvas\Canvas.mqh>
-//| Status: Sovereign Citadel Masterpiece                 |
 
 class CDashboard
   {
