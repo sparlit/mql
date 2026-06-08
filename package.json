@@ -5,8 +5,8 @@
   "main": "src/core/main.py",
   "scripts": {
     "start": "python src/core/main.py",
-    "test": "pytest tests/",
-    "setup": ".\setup_portable_python.bat",
+    "test": "python -m pytest tests/",
+    "setup": ".\\setup_portable_python.bat",
     "quantize": "python src/shared/models/quantize_model.py"
   },
   "author": "Simon Peter",

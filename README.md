@@ -7,78 +7,54 @@ This "Sovereign Citadel" release establishes a new benchmark for autonomous capi
 ---
 
 ## 🏛️ Architecture: Sovereign Microkernel
-AAT V5.0.0 is built on an **Event-Driven Asynchronous Microkernel**. This architecture ensures zero-coupling between data ingestion, intelligence analysis, and trade execution.
+AAT V5.0.0 is built on an **Event-Driven Asynchronous Hybrid Microkernel**. This architecture ensures zero-coupling between data ingestion, institutional intelligence, and trade execution.
 
-- **Orchestrator (`src/core/main.py`)**: Asynchronous event loop managing plugin lifecycle and JWT auth.
-- **Event Bus (`src/shared/utils/bus.py`)**: Decoupled pub-sub system for cross-plugin communication.
-- **Intelligence Plugin (`src/plugins/intelligence/`)**: Multi-consensus engine (VSA + XGBoost) with ONNX INT8 support.
-- **Risk Plugin (`src/plugins/execution/risk.py`)**: Institutional ATR-based lot sizing and equity protection.
-- **Sovereign Ingress (`src/plugins/execution/ingress.py`)**: AES-256-CBC encrypted socket gateway for MT5.
+- **Orchestrator (`src/core/main.py`)**: Asynchronous event loop managing plugin lifecycle and Hardened RBAC.
+- **Sovereign Log (`db/sovereign_audit.db`)**: Automated chronological audit trail from code commit to execution.
+- **Intelligence Plugin (`src/plugins/intelligence/engine.py`)**: Institutional SMC (Order Blocks, Liquidity Grabs) + XGBoost Ensemble.
+- **Risk Plugin (`src/plugins/execution/risk.py`)**: Institutional ATR-based lot sizing with real-time equity protection.
+- **Sovereign Ingress (`src/plugins/execution/ingress.py`)**: Bidirectional AES-256-CBC encrypted socket gateway for MT5.
 
 ---
 
 ## 🚀 Installation & Setup (Step-by-Step)
 
 ### 📋 Prerequisites
-- **Python 3.10 or 3.11** (Recommended for stability with ONNX/PyTorch).
-- **Node.js 20+** (Optional, for using `npm` orchestration commands).
+- **Python 3.10 or 3.11** (Recommended).
 - **MetaTrader 5 Terminal** (Windows required for EA execution).
 
-### 💻 1. Environment Setup
+### 💻 1. Unified Installation (Cross-Platform)
+The easiest way to install is using the Sovereign Universal Installer:
 
-#### **Windows (PowerShell - Recommended)**
-```powershell
-# Clone the repository
-git clone https://github.com/sparlit/mql.git
-cd mql
-
-# Initialize portable environment
-.\setup_portable_python.bat
-
-# Install all institutional dependencies
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-#### **Linux (Ubuntu/Debian)**
 ```bash
-# Clone the repository
+# Clone and Enter
 git clone https://github.com/sparlit/mql.git
 cd mql
 
-# Create and activate virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
+# Run the Universal Installer
+python aat_install.py
 ```
 
 ### 🔐 2. Configuration (`src/vault.json`)
-Before starting, configure your institutional vault. This file contains all sensitive keys and credentials.
+Before starting, update your institutional vault with strong credentials.
 
-```bash
-# Edit the vault using your preferred editor
-nano src/vault.json
+```json
+{
+  "MASTER_KEY": "YOUR_32_CHAR_AES_KEY",
+  "ADMIN_USERNAME": "your_user",
+  "ADMIN_PASSWORD": "your_secure_password",
+  "JWT_SECRET": "your_hex_secret"
+}
 ```
 
-**Key Parameters:**
-- `MASTER_KEY`: 32-character string for AES-256-CBC encryption (Must match EA input).
-- `ADMIN_USERNAME`: Dashboard login username.
-- `ADMIN_PASSWORD`: Dashboard login password.
-- `JWT_SECRET`: Secret key for JWT token generation.
-
 ### 🧠 3. Start the Sovereign Engine
-The engine must be run from the root directory to ensure module resolution.
-
 ```bash
-# Set PYTHONPATH to root (Linux/macOS)
-export PYTHONPATH=$PYTHONPATH:.
-python src/core/main.py
+# Windows
+scripts\run_engine.bat
 
-# PowerShell (Windows)
-$env:PYTHONPATH = "."
+# Linux/macOS
+source .venv/bin/activate
+export PYTHONPATH=.
 python src/core/main.py
 ```
 
@@ -92,10 +68,6 @@ Visit `http://127.0.0.1:8000` to access the **Glass Cockpit Dashboard**.
 1.  **Expert Advisor**: Copy `MQL5/Experts/AAT_Sovereign_EA.mq5` to your MT5 `MQL5/Experts/` folder.
 2.  **Includes**: Copy all files from `MQL5/Include/` to your MT5 `MQL5/Include/` folder.
 
-### **Terminal Configuration**
-1.  **Allow DLLs**: `Tools -> Options -> Expert Advisors` -> Check **Allow DLL imports**.
-2.  **Allow URLs**: Add `http://127.0.0.1:8000` and `https://openrouter.ai` to the allowed URL list.
-
 ### **EA Inputs**
 - `InpMasterKey`: Must match `MASTER_KEY` in `src/vault.json`.
 - `InpEngineHost`: `127.0.0.1`
@@ -103,21 +75,17 @@ Visit `http://127.0.0.1:8000` to access the **Glass Cockpit Dashboard**.
 
 ---
 
-## 🩺 5. Sovereign Verification (Smoke Test)
-
-To verify the installation is production-ready, run the automated test suite:
+## 🩺 5. Sovereign Verification
 
 ```bash
 # Run unified core tests
 python -m pytest tests/
-
-# Verify the Health Endpoint
-curl http://127.0.0.1:8000/health
 ```
 
 ---
 
 ## 🎖️ Certification & Compliance
-- **Zero-Stub Certified**: 100% production-ready logic, no placeholders or random noise fallovers.
-- **Hardware Optimized**: INT8 Quantized models ensure sub-ms latency on i3/4GB hardware.
+- **Zero-Stub Certified**: 100% production-ready logic, no placeholders.
+- **Institutional SMC**: Native Order Block and Liquidity Grab detection.
+- **Hardware Optimized**: Optimized for i3/4GB hardware.
 - **FOSS Sovereign**: 100% Free and Open Source under GNU GPL v3.

@@ -1,10 +1,9 @@
 //+------------------------------------------------------------------+
-//|                                                   JsonParser.mqh |
+//| Project: Autonomous AutoTrader (AAT) V5.0.0                      |
+//| Date: 2026-06-08                                                 |
+//| Author: Simon Peter                                              |
+//| Certification: Zero-Stub Certified / 100% FOSS                   |
 //+------------------------------------------------------------------+
-#property strict
-
-class CJsonParser
-{
 public:
    static string GetString(string json, string key)
    {
