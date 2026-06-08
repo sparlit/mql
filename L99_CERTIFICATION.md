@@ -1,50 +1,52 @@
-# 🏅 L99 Certification Verification Manual (V4.1.2 Sovereign Citadel)
+# 🏅 L99 Certification Verification Manual (V5.0.0 Sovereign Citadel)
 
-This document provides definitive, step-by-step instructions to verify the production-readiness of the AAT V4.1.2 masterpiece.
+This document provides definitive, step-by-step instructions to verify the production-readiness of the AAT V5.0.0 Microkernel architecture.
 
 ## 1. Environment Integrity Check
 ```bash
 # Verify Python 3.10+ and requirements
 python --version
-python -c "import torch, xgboost, cryptography, requests, sklearn; print('INTEGRITY: OK')"
+python -c "import fastapi, torch, xgboost, cryptography, requests, sklearn, onnxruntime; print('INTEGRITY: OK')"
 
-# Verify filesystem version control
-ls MQL5/Experts/V4_1_2/Scalper_v4_1_2.mq5
-ls Python/V4_1_2/MainEngine.py
+# Verify filesystem version control (Zero Legacy Folders)
+# The following should return errors (meaning legacy folders are gone)
+ls Python/V4_1_2/ 2>/dev/null || echo "LEGACY REMOVED: OK"
+ls MQL5/Experts/V4_1_2/ 2>/dev/null || echo "LEGACY REMOVED: OK"
+
+# Verify new structure
+ls MQL5/Experts/AAT_Sovereign_EA.mq5
+ls src/core/main.py
 ```
 
 ## 2. Infrastructure Stress-Testing
-1.  **Symmetric Watchdog Loop**:
-    -   Start Engine. Observe status **STABLE**.
-    -   Force-close Python process.
-    -   Verify EA moves positions to BE (+20 points) and status changes to **WATCHDOG HALT** within exactly 10s.
-2.  **MT5-Primary Ingress Verification**:
-    -   Examine `engine_debug.log`.
-    -   Verify presence of: `[INFO] Received OHLC data from MT5 (6 timeframes)`.
-3.  **Atomic Shared Memory (IPC)**:
-    -   Open 3 terminal instances on the same machine.
-    -   Verify `engine_debug.log` shows zero `WaitForSingleObject` timeout errors.
-4.  **Process Pool Efficiency**:
-    -   Run `python Python/V4_1_2/stress_test.py`.
-    -   Verify sub-10ms response times under 10 concurrent requests.
+1.  **Event Bus Latency**:
+    -   Start Engine.
+    -   Verify logs: `[INFO] AAT Microkernel V5.0.0 starting...`.
+    -   The system should initialize in < 5s on SSD hardware.
+2.  **Socket Ingress Decryption**:
+    -   Connect using a mock client with AES-256-CBC.
+    -   Verify engine prints: `Brain listening on 0.0.0.0:4444`.
+    -   Verify `src/plugins/execution/ingress.py` emits `data:market_update` upon valid decryption.
+3.  **Atomic State Handling**:
+    -   Run `python -m pytest tests/test_core.py`.
+    -   Verify all 2 tests pass (Bus Emission and Vault loading).
 
 ## 3. Intelligence Tiering Protocol
-1.  **Sentiment Failover**:
-    -   Disconnect Internet.
-    -   Verify logs: `[DEBUG] Local FinBERT analysis successful` (Loaded from `./Python/models/finbert`).
-2.  **AI Server Sync**:
-    -   Start local server @ `http://127.0.0.1:8082`.
-    -   Verify logs: `[DEBUG] Primary Local LLM analysis successful`.
+1.  **ONNX INT8 Quantization**:
+    -   Run `python src/shared/models/quantize_model.py`.
+    -   Verify `src/shared/models/finbert_onnx/model_quantized.onnx` exists.
+2.  **Consensus Engine**:
+    -   Examine `src/plugins/intelligence/engine.py`.
+    -   Ensure `IntelligencePlugin` successfully loads `xgb_production.json` if present.
 
 ## 4. UI/UX "Glass Cockpit" Verification
--   **Click Fidelity**: Test click-switching between `[ HEALTH ]`, `[ ANALYTICS ]`, and `[ SETTINGS ]`.
--   **Header Stability**: Ensure "AAT SOVEREIGN CITADEL V4.1.2" remains visible across all tab states.
--   **Telemetry**: Confirm real-time updates for Latency (ms) and Heartbeat (Epoch).
+-   **Dashboard Load**: Navigate to `http://127.0.0.1:8000`.
+-   **Telemetry Visibility**: Ensure "SYSTEM STATUS: STABLE" is visible in the top right.
+-   **Log Stream**: Confirm the "Risk & Audit Trail" section displays live event emissions.
 
 ## 5. Quantitative Safeguards
-1.  **Equity MA Breach**:
-    -   Simulate account drawdown by 3%.
-    -   Verify Python logs: `Risk scaled to 0.5x due to Equity MA breach (Level 1)`.
-2.  **ATR-Derived Trailing**:
-    -   Observe trade execution logs.
-    -   Verify `PositionModify` distance matches the `trailing_points` received from the brain.
+1.  **ATR-Derived Sizing**:
+    -   Check `src/plugins/execution/risk.py`.
+    -   Verify lot size is calculated using the formula: `(Equity * Risk%) / (SL_Points * TickValue)`.
+2.  **Symmetric Watchdog**:
+    -   Ensure `src/plugins/execution/ingress.py` closes connections gracefully on invalid payloads to prevent memory leaks.
