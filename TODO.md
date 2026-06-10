@@ -1,30 +1,46 @@
-# 🔥 Project Phoenix - AAT V7.0.0: Institutional Roadmap
+# 🛠️ Project Phoenix: The "Gods Engineer" Revamp Checklist
 
-## 🛡️ PHASE 1: INSTITUTIONAL CORE & GOVERNANCE (IN PROGRESS)
-- [x] Zero-Stub Institutional Logic (SMC + ATR).
-- [x] Hardened RBAC Security Layer.
-- [x] Universal Python Installer (`aat_install.py`).
-- [x] Bidirectional AES-256-CBC Encryption.
-- [x] Sovereign Audit Database (`db/sovereign_audit.db`).
-- [ ] **Model Governance Engine (Layer 5.5):** Implement drift detection and confidence decay.
-- [ ] **DataHub HA Architecture:** Finalize Event Journaling and Replay Queues.
-- [ ] **Exposure Graph Engine:** Integrate global currency risk enforcement.
-- [ ] **EventBus Hardening:** Resolve circular dependencies and standardize AES response handling.
+## 🏗️ 1. ARCHITECTURE & PERSISTENCE (THE FOUNDATION)
+- [ ] **DataHub HA Implementation:**
+    - [ ] Set up Raft-based consensus for Primary/Secondary DataHub.
+    - [ ] Implement `sovereign_event_journal.db` for Event Sourcing.
+- [ ] **Merkle-Audit Ledger:**
+    - [ ] Create hashing service for decision provenance.
+    - [ ] Integrate Merkle root anchoring in `sovereign_audit.db`.
+- [ ] **Rust-Ingress Sidecar (Phase 1.5):**
+    - [ ] Move AES decryption from Python to high-performance Rust/C++ module.
+    - [ ] Implement Z-Score Outlier filtering on the firehose.
 
-## 📈 PHASE 2: ADVANCED LIQUIDITY & INTELLIGENCE
-- [ ] **Execution Analytics:** Deploy Fill Rate, Slippage, and Latency monitors.
-- [ ] **Broker Health Engine:** Continuous scoring and automated risk scaling.
-- [ ] **Macro Intelligence Layer:** Automatic risk reduction during high-impact events (CPI/FOMC).
-- [ ] **Wyckoff & FAISS:** Automate phase detection and similarity search for regime alignment.
-- [ ] **Quantize XGBoost:** Port models to ONNX for 0.1ms inference.
+## 🛡️ 2. INSTITUTIONAL RISK (THE FIREWALL)
+- [ ] **Exposure Graph Engine:**
+    - [ ] Implement Vectorized Currency Risk calculation (Layer 4).
+    - [ ] Create dynamic covariance tensor for portfolio scaling (Layer 5).
+- [ ] **Broker Health Engine:**
+    - [ ] Track Slippage Tiers and Fill Latency per symbol.
+    - [ ] Implement automatic Risk-Scaling multiplier based on Broker Score.
+- [ ] **Gravity Dead-Man Switch:**
+    - [ ] Create heartbeat watchdog between MT5 EA and Python Core.
+    - [ ] Script the "Safe Mode" emergency procedure (Tighten SL, Cancel Pendings).
 
-## 🏛️ PHASE 3: THE FINCON TERMINAL & SCALE
-- [ ] **FinCon Terminal:** Bloomberg-class React/Next.js dashboard for multi-node monitoring.
-- [ ] **Chaos Engineering Framework:** Implement continuous resilience testing (Network Split, Data Corruption).
-- [ ] **Multi-Broker Hub:** Concurrent terminal management and synchronization.
-- [ ] **L99 Automation:** Finalize automated L99 Certification Framework V2.
+## 🧠 3. INTELLIGENCE & GOVERNANCE (THE BRAIN)
+- [ ] **Model Governance Engine (Layer 5.5):**
+    - [ ] Implement Population Stability Index (PSI) monitoring.
+    - [ ] Create "Shadow Mode" promotion path for Champion-Challenger testing.
+- [ ] **Bayesian Liquidity Inference:**
+    - [ ] Refactor SMC logic into probabilistic Liquidity Priors.
+    - [ ] Integrate Volume Profile Convergence as a validation filter.
+- [ ] **Oracle Mesh:**
+    - [ ] Build consensus-based Macro Engine (Bloomberg + Investing + ForexFactory).
+    - [ ] Implement "Consensus Veto" for High-Impact events.
 
-## 🩺 CONTINUOUS TASKS
-- [ ] Maintain 100% FOSS compliance (GNU GPL v3).
-- [ ] Monitor `sovereign_audit.db` for execution anomalies.
-- [ ] Update `PROJECT.md` to reflect certification status.
+## 📊 4. UI & TELEMETRY (THE GLASS COCKPIT)
+- [ ] **FinCon Terminal (Next.js):**
+    - [ ] Design real-time institutional dashboard.
+    - [ ] Integrate Web-Socket telemetry for <10ms UI updates.
+- [ ] **L99 Automation:**
+    - [ ] Script the "Phoenix Gauntlet" validation pipeline (DSR, PBO, Monte Carlo).
+
+## 🩺 5. CONTINUOUS MAINTENANCE
+- [ ] 100% FOSS Compliance audit.
+- [ ] Periodic Merkle Ledger verification.
+- [ ] Stress-test "Chaos Engineering" suite (Network Split simulation).
