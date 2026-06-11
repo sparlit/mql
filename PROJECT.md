@@ -1,171 +1,104 @@
-# 🔥 Project Phoenix - AAT V7.1.0 (The Hybrid Revamp)
+# ⚖️ Project Phoenix - AAT V7.1.0 (The Rebuilt Sovereign)
+## *The Institutional Trading Platform Re-Make*
 
-## The Sovereign Institutional Trading Platform
+### 🏛️ Status: The V7.1.0 Pivot
+The project has undergone a "Ruthless Autopsy" and is being rebuilt as a **Modular Monolith** with clean boundaries. We have discarded architectural vanity in favor of **Operational Excellence**.
 
-### Status
-
-✅ Production Core Refactoring (Hybrid Kernel Init)
-✅ Governance Layer V2 (Pre-Computed Context)
-✅ Universal Broker Abstraction Layer
-✅ Order Flow Toxicity Engine Integration
-
----
-
-## 👁️ 1. Vision & Mission
-
-**Vision:** To architect the world's first **Hybrid High-Frequency Retail Platform**, combining the ease of Python for quantitative research with the raw speed of Rust for execution. We aim to bridge the gap between institutional microstructure analysis and sovereign retail capital deployment.
-
-**Mission:** To maximize risk-adjusted expectancy through **Deterministic Latency** and **Adverse Selection Protection**. We do not predict the future; we react to the present with institutional speed and mathematical discipline.
-
-### Primary Performance Objectives (Dynamic)
-
-| Metric                        | Condition                  | Target   |
-| ----------------------------- | -------------------------- | -------- |
-| Sharpe Ratio                  | Low Volatility Regime      | > 2.5    |
-| Sharpe Ratio                  | High Volatility/Crisis     | > 1.5    |
-| Sortino Ratio                 | Global                     | > 3.0    |
-| MAR Ratio                     | Global                     | > 2.0    |
-| Risk of Ruin                  | Annualized                 | < 0.5%   |
-| Max Drawdown                  | Defensive Mode             | < 5%      |
-| Max Drawdown                  | Offensive Mode             | < 12%     |
-| Execution Latency (Internal)  | Tick-to-Order              | < 100µs   |
-| Capital Preservation Priority | Absolute                   | Primary   |
+✅ **Core Integrity:** Modular Monolith Architecture (Phased Implementation)
+✅ **Governance:** PostgreSQL-ACID Persistence (Replacing SQLite)
+🟡 **Execution:** MT5 (Phase 1 MVP) → FIX Gateway (Phase 2 Sovereign)
+🟡 **Intelligence:** XGBoost + LSTM Ensemble (Simplified)
 
 ---
 
-## 💎 2. Core Values
+## 👁️ 1. The Institutional Reality Audit
 
-- **Sovereignty:** Broker-Agnostic Execution. Your logic, your capital, your choice of counterparty.
-- **Determinism:** No Garbage Collection pauses. No blocking I/O. Predictable execution paths.
-- **Transparency:** Provenance logging for every nanosecond of decision making.
-- **Resilience:** Chaos-native architecture. If a component fails, the system degrades gracefully, it does not crash.
-- **Institutional Discipline:** We lose small and win big. We refuse to trade in toxic liquidity conditions.
+Project Phoenix V7.1.0 is built on the ruins of over-ambitious drafts. We acknowledge these brutal truths:
+
+1.  **MT5 is a Retail Trap:** B-book brokers conflict with client success. Phase 1 proves logic on MT5; Phase 2 migrates to **FIX Gateway** for true institutional liquidity.
+2.  **SQLite is not for Audit:** Institutional compliance requires ACID-compliant, replicated storage. **PostgreSQL** is now the mandatory governance store.
+3.  **Custom Event Buses Deadlock:** The legacy `bus.py` is deprecated. **Redis Streams** with consumer groups and **Protobuf** schemas provide the production backbone.
+4.  **The ML Frankenstein is Dead:** Removed FinBERT/FAISS/RL bloat. Simplified to **XGBoost + LSTM** for production stability.
+5.  **Compliance is not an Add-on:** MiFID III, Basel FRTB, and GDPR audit trails are built into the core hashing chains from Day 1.
 
 ---
 
-## 🏗️ 3. Architecture (V7.1 Phoenix Hybrid Kernel)
+## 👁️ 2. Vision & Mission
 
-Project Phoenix moves from pure Python to a **Rust-Python Polyglot Microkernel** designed for extreme performance and safety.
+**Vision:** To democratize institutional-grade trading through a transparent, auditable, and resilient platform that prioritizes capital preservation above all else.
+
+**Mission:** Project Phoenix maximizes long-term risk-adjusted expectancy while maintaining strict capital preservation through disciplined governance and execution.
+
+### 📊 Performance Targets (Realistic & Phased)
+| Metric | Phase 1 (MVP) | Phase 2 (Stretch) | Priority |
+| :--- | :--- | :--- | :--- |
+| **Sharpe Ratio** | > 1.0 | > 2.0 | High |
+| **Sortino Ratio** | > 1.5 | > 3.0 | High |
+| **Max Drawdown** | < 10.0% | < 5.0% | **ABSOLUTE** |
+| **Risk of Ruin** | < 1.0% | < 0.1% | **ABSOLUTE** |
+| **Execution Cost** | < 15% Returns | < 5% Returns | Critical |
+
+---
+
+## 🏗️ 3. Architecture: The Rebuilt Microkernel
+
+The V7.1.0 revamp moves from an over-engineered microkernel to a **Modular Monolith with Clean Boundaries**.
 
 ### 🧩 System Overview
-- **Sovereign Ingress (Rust):** High-speed TCP/TLS Gateway. Handles encryption (AES-256-GCM) and protocol parsing.
-- **The Event Bus (Rust):** A lock-free, single-producer multi-consumer (SPMC) ring buffer. Zero-allocation message passing.
-- **The Compute Engine (Python):** Asyncio workers for AI inference, Strategy logic, and Portfolio management. Communicates with Rust via shared memory/ZeroMQ.
-- **The Persistence Layer (Async):**
-    - **Hot Cache:** Redis for immediate state and session data.
-    - **Cold Storage:** QuestDB (Time-Series) + PostgreSQL (Relational Audit) replacing SQLite for concurrency.
-- **Execution Layer (Rust):** Direct interface to the Universal Broker Adapter (MT5/cTrader/FIX).
-
-### 🛠️ Technical Specifications
-- **Core Kernel:** Rust 1.70+ (Tokio Async Runtime).
-- **Logic Layer:** Python 3.11+ (PyO3 Bindings).
-- **Security:** AES-256-GCM + SHA-384 HMAC. P-521 Curve for Internal Key Exchange.
-- **Inference:** ONNX Runtime (C++ bindings) for zero-copy inference.
-- **Protocol:** gRPC/Protobuf for internal service communication.
+- **Sovereign Ingress:** AES-256-GCM Secure Gateway with FIX protocol priority in Phase 2.
+- **Persistence Layer:** PostgreSQL (ACID Governance) + QuestDB (High-frequency telemetry) + Redis Cluster (Hot State).
+- **Event Bus:** Redis Streams with **Protocol Buffers (Protobuf)** for type-safe message passing and schema validation via Buf Registry.
+- **Decision Engine:** Split into **Context Loop** (Slow/Governance) and **Execution Loop** (Fast/Signal).
 
 ---
 
-## 📈 4. Structural Market Reality & Intelligence
+## 🛡️ 4. Institutional Risk & Kill Switches
 
-### Order Flow Toxicity Framework
-We reject the idea of "Liquidity Prediction" in retail markets. Instead, we operate on **Toxicity Detection**.
-* **VPIN (Volume-Synchronized Probability of Informed Trading):** Measures the probability of flow being informed (toxic).
-* **Imbalance Ratio:** Real-time bid/ask volume divergence.
-* **Microstructure Jitter:** Detection of broker-side quote stuffing or latency arbitrage.
+### 7-Layer Risk Stack (Explicit Precedence)
+Precedence: **Portfolio > Currency > Symbol > Strategy > Trade > Broker > Infrastructure.**
+Any layer may independently veto. Pre-trade Monte Carlo simulation is mandatory.
 
-**Rule:** If Toxicity Score > Threshold -> Instantaneously flat (close positions) and disable new entries.
-
-### Institutional Decision Framework (V2 Optimized)
-We split the decision engine into **Slow Context (Pre-Computed)** and **Fast Execution (Reactive)**.
-
-**Slow Loop (1-sec Interval):**
-1. Market Regime Identification (HMM Markov Chains)
-2. Macro Event Assessment (Economic Calendar integration)
-3. Portfolio Exposure Assessment (Graph Engine)
-4. Strategy Qualification (Model Confidence)
-*Output:** A "Trading Permission Ticket" valid for (N) seconds.
-
-**Fast Loop (Tick-Driven, Sub-100µs):**
-1. **Liquidity/Toxicity Check** (Real-time)
-2. **Risk Check** (Dynamic Limits)
-3. **Execution Authorization** (Sign Ticket)
-4. **Order Dispatch**
-
-### Market Regime Engine V3
-Uses Hidden Markov Models (HMM) to determine:
-- Volatility State (Low/Med/High)
-- Trend State (Trend/Range/Reversal)
-- Liquidity State (Toxic/Clean)
+### 4-Level Kill Switch Hierarchy
+1.  **Level 1 (Strategy):** Halt specific strategy on volatility/drawdown breach.
+2.  **Level 2 (Symbol):** Freeze symbol on extreme spread or data gap.
+3.  **Level 3 (Global):** Flatten all positions and disable entry.
+4.  **Level 4 (Infrastructure):** Safe-Mode disconnect on heartbeat failure or audit corruption.
 
 ---
 
-## 🧠 5. Model Governance & AI (Layer 5.5)
+## 👥 5. Team & Operational Growth
 
-### Model Governance Engine
-- **Drift Detection:** Population Stability Index (PSI) calculated on live features.
-- **Shadow Mode:** New models run in parallel to production (taking no trades) to track live performance.
-- **Circuit Breakers:** If a model predicts "Long" but price drops > 0.2% within 10s, the model is instantaneously disabled for 24 hours.
-
-### Machine Learning Architecture V3
-- **XGBoost/LightGBM:** Trained offline in Python, exported to ONNX, executed in Rust.
-- **Online Learning:** River (Python library) for Hoeffding Adaptive Trees running directly on the tick stream for feature extraction.
-
----
-
-## 🛡️ 6. Institutional Risk Architecture V3
-
-### Multi-Layer Risk Stack (Reactive)
-- Layer 1: **Execution Risk** (Latency check - if order takes > 200ms, abort).
-- Layer 2: **Symbol Risk** (Volatility shrink/expansion).
-- Layer 3: **Currency Correlation** (Net exposure calc).
-- Layer 4: **Drawdown Velocity** (If DD drops from 2% to 4% in 1 min -> Global Halt).
-
-### Kill Switch Hierarchy (Automated)
-- Level 1: Model/Strategy Halt (Soft)
-- Level 2: Broker Isolation (Disconnect from one broker, keep others active)
-- Level 3: Global Liquidation (Close all, Flatten)
-- Level 4: Core Dump & Halt (System instability detected)
+A 4-person team is insufficient for an institutional build. Phoenix mandates an **8-Person MVP Team**:
+- 1× Lead Architect
+- 2× Backend/Kernel Engineers
+- 1× Quant Developer (XGB/LSTM)
+- 1× DevOps Engineer (K8s/HA/CI)
+- 1× QA/SDET (Chaos/Replay)
+- 1× Risk & Compliance Officer
+- 1× Operations/Terminal Manager
 
 ---
 
-## 🛰️ 7. Reliability & Resilience
+## 🗺️ 6. Roadmap: The Sovereign Ascent (V7.1.0)
 
-### DataHub High Availability Architecture
-**Hot-Standby Redundancy.**
-- Primary instance writes to Redis Stream.
-- Secondary instance reads from Redis Stream.
-- If Primary heartbeat fails > 5s, Secondary takes over IP address (Virtual IP) and mounts the state.
+### 📍 Phase 1: MVP & Logic Proof (Months 0-6)
+- [ ] Implement **Modular Monolith Core** on PostgreSQL/Redis.
+- [ ] Deploy **XGBoost + LSTM** production ensemble.
+- [ ] Prove logic on single-pair/single-broker MT5 implementation.
+- [ ] **Kill Criterion:** If Sharpe < 0.5 after 6 months live, pivot or abandon.
 
-### Chaos Engineering Framework
-Automated "Game Days" in Paper Trading:
-- Randomly kill the Python process (Rust maintains order safety).
-- Inject 500ms network delay.
-- Corrupt feed data (Negative prices, Spikes).
+### 🚀 Phase 2: FIX & Sovereignty (Months 6-12)
+- [ ] Implement **FIX Gateway** for institutional liquidity.
+- [ ] Deploy **Model Governance Engine** with drift detection.
+- [ ] Multi-broker orchestration and conflict detection.
 
----
+### 🌐 Phase 3: Terminal & Compliance (Months 12-18)
+- [ ] Launch **FinCon Terminal** (React/Next.js dashboard).
+- [ ] Full MiFID III/Basel audit compliance certification.
 
-## 🔬 8. Research & Verification
-
-### L99 Certification Framework V3
-- **L99-A (Code):** Must pass `clippy` (Rust linter) and `ruff` (Python linter) with zero warnings.
-- **L99-B (Latency):** P99 Latency < 200µs.
-- **L99-C (Reality):** Walk-forward analysis must show > 0.05 expectancy per trade.
+### 🏦 Phase 4: Scaling & Capital (Months 18-24)
+- [ ] Prime Broker integration and external capital on-boarding.
+- [ ] Full regulatory licensing.
 
 ---
-
-## 🗺️ 10. Roadmap: The Sovereign Ascent (V7.1)
-
-### 📍 Phase 1: The Hybrid Kernel (Current)
-- [ ] **Port Event Bus to Rust:** Implement lock-free ring buffer.
-- [ ] **Create PyO3 Bindings:** Bridge Python Strategy Logic to Rust Bus.
-- [ ] **Universal Broker Interface:** Abstract MT5 commands to generic traits.
-- [ ] **Migrate Encryption:** Upgrade to AES-256-GCM in Rust.
-
-### 🚀 Phase 2: Toxicity & Speed
-- [ ] **Implement VPIN/Toxicity Engine:** Real-time adverse selection detection.
-- [ ] **Slow/Fast Loop Separation:** Refactor decision engine for dual-path execution.
-- [ ] **Redis Integration:** Replace SQLite with Redis/Postgres combo.
-
-### 🌐 Phase 3: The FinCon Terminal & Scale
-- [ ] Launch **"FinCon Terminal"**: React/Next.js dashboard connecting via WebSockets to Rust Core.
-- [ ] **Multi-Broker Deployment:** Run concurrent instances on different brokers simultaneously.
+*The platform is designed to be explainable, auditable, measurable, and falsifiable at every level.*
