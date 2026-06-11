@@ -1,48 +1,46 @@
-# 🛠️ Project Phoenix: The "Gods Engineer" Revamp Checklist (V8.1.0)
+# 🛠️ Project Phoenix: The "Gods Engineer" Revamp Checklist (V9.0.0)
 
-> **Status:** Total Architectural Revamp
-> **Objective:** 100% Deterministic Execution & Sovereign Capital Protection
+> **Status:** Critical Path Engineering
+> **Mantra:** Deliver working core before perfection.
 
-## 🏗️ EPIC 1: THE HYBRID KERNEL (THE FOUNDATION)
-- [ ] **Rust-Core Ingress (Layer 1):**
-    - [ ] Implement lock-free SPMC Ring Buffer for internal event passing.
-    - [ ] Migrate Ingress from Python to Rust (Tokio-based TCP Server).
-    - [ ] Upgrade encryption to **AES-256-GCM** in the Rust layer.
+## 🏗️ EPIC 1: ARCHITECTURAL DEBT & PERFORMANCE
+- [ ] **Dependency Audit:**
+    - [ ] Audit all Python imports for circular dependencies; refactor to explicit contracts.
+    - [ ] Profile `MQL5-Python` bridge latency; identify jitter bottlenecks.
+- [ ] **Hybrid Kernel Init:**
+    - [ ] Set up Rust crate for AES-256-GCM Ingress (Layer 1).
+    - [ ] Implement lock-free RingBuffer for the "Fast Loop" internal bus.
+
+## 💾 EPIC 2: EVENT SOURCING & PERSISTENCE
+- [ ] **DataHub HA Implementation:**
+    - [ ] Implement persistent Event Journal for all incoming ticks/signals.
+    - [ ] Build Snapshotting mechanism for fast state recovery.
+    - [ ] Implement the Replay Engine for historical state reconstruction.
+- [ ] **DB Migration:**
+    - [ ] Migrate Audit Ledger to PostgreSQL for high-concurrency governance.
+    - [ ] Optimize QuestDB for high-frequency telemetry.
+
+## 🛡️ EPIC 3: INSTITUTIONAL RISK & DATA QUALITY
 - [ ] **Data Quality Firewall (Layer 0):**
-    - [ ] Implement Z-Score outlier detection for every tick.
-    - [ ] Build gap-detection and timestamp-drift validation.
-- [ ] **Python-Rust Bridge (PyO3):**
-    - [ ] Create shared-memory bindings for zero-copy feature delivery to Python.
+    - [ ] Implement Z-Score outlier filtering and gap detection in the Rust ingress.
+- [ ] **Exposure Graph (Layer 4):**
+    - [ ] Build vectorized currency risk enforcement (Portfolio-wide netting).
+- [ ] **Risk Stack V2 (Layer 5):**
+    - [ ] Implement "Drawdown Velocity" halts and "Gravity" Dead-Man switch.
 
-## 🛡️ EPIC 2: INSTITUTIONAL RISK & PORTFOLIO (THE FIREWALL)
-- [ ] **Exposure Graph Engine (Layer 4):**
-    - [ ] Implement vectorized currency risk enforcement (Vectorized Covariance).
-- [ ] **7-Layer Risk Stack (Layer 5):**
-    - [ ] Build Layer 4 (Currency), Layer 5 (Portfolio), and Layer 6 (Broker) risk supervisors.
-- [ ] **The "Gravity" Dead-Man Switch:**
-    - [ ] Implement heartbeat watchdog with autonomous Safe-Mode liquidation.
-
-## 🧠 EPIC 3: INTELLIGENCE & GOVERNANCE (THE BRAIN)
-- [ ] **Pre-Computed Decision Engine:**
-    - [ ] Refactor Decision Engine into "Slow Loop" (Context) and "Fast Loop" (Execution).
-- [ ] **Order Flow Toxicity Engine (Layer 2):**
+## 🧠 EPIC 4: GOVERNANCE & TOXICITY
+- [ ] **Order Flow Toxicity (Layer 2):**
     - [ ] Implement VPIN (Volume-Synchronized Probability of Informed Trading).
-- [ ] **Meta-Governance Layer (Layer 5.6):**
-    - [ ] Build supervisor to monitor drift and calibration of Layer 5.5 (Model Gov).
+- [ ] **Model Governance (Layer 5.5):**
+    - [ ] Build PSI (Population Stability Index) drift detector.
+    - [ ] Implement "Shadow Mode" promotion path for Champion-Challenger logic.
 
-## 🚀 EPIC 4: EXECUTION & MESH (THE SOVEREIGNTY)
-- [ ] **Universal Broker Mesh (Layer 7):**
-    - [ ] Create generic Rust traits for `BrokerAdapter`.
-    - [ ] Implement MT5, FIX, and cTrader adapters.
-- [ ] **Execution Intelligence (Layer 6):**
-    - [ ] Implement real-time slippage modeling and broker health scoring.
+## 📊 EPIC 5: TELEMETRY & OPERATIONS
+- [ ] **Monitoring Baseline:**
+    - [ ] Export system health to Prometheus/Grafana (Core dashboard).
+- [ ] **L99 Certification:**
+    - [ ] Automate DSR (Deflated Sharpe Ratio) and PBO (Probability of Overfitting) gates.
 
-## 📊 EPIC 5: TELEMETRY & CERTIFICATION
-- [ ] **FinCon Terminal:**
-    - [ ] Develop Bloomberg-class React dashboard with WebSocket telemetry.
-- [ ] **The Phoenix Gauntlet (L99 Automation):**
-    - [ ] Script automatic DSR, PBO, and Monte Carlo verification on every commit.
-
-## 🩺 CONTINUOUS TASKS
-- [ ] Maintain 100% FOSS (GNU GPL v3) compliance.
-- [ ] Weekly "Chaos Engineering" simulations (Network split / Data corruption).
+## 🩺 CONTINUOUS MAINTENANCE
+- [ ] Post-trade review rituals (Weekly performance audit).
+- [ ] Chaos Engineering "Game Days" (Injecting latency/disconnects).
