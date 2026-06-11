@@ -1,104 +1,115 @@
-# ⚖️ Project Phoenix - AAT V7.1.0 (The Rebuilt Sovereign)
-## *The Institutional Trading Platform Re-Make*
+# ⚖️ Project Phoenix - AAT V7.3.0 (The Sovereign Vanguard)
+## *The Institutional Autonomous Trading & Execution System*
 
-### 🏛️ Status: The V7.1.0 Pivot
-The project has undergone a "Ruthless Autopsy" and is being rebuilt as a **Modular Monolith** with clean boundaries. We have discarded architectural vanity in favor of **Operational Excellence**.
+### 🏛️ Status: The Global Revamp (Post-Autopsy)
+Project Phoenix is undergoing a total architectural transformation. Following a ruthless Devil's Advocate audit, we have pivoted from "Architectural Elegance" to **Operational Survivability**.
 
-✅ **Core Integrity:** Modular Monolith Architecture (Phased Implementation)
-✅ **Governance:** PostgreSQL-ACID Persistence (Replacing SQLite)
-🟡 **Execution:** MT5 (Phase 1 MVP) → FIX Gateway (Phase 2 Sovereign)
-🟡 **Intelligence:** XGBoost + LSTM Ensemble (Simplified)
+⚠️ **Core:** Modular Monolith Revamp (Phase 1 In-Progress)
+✅ **Governance:** PostgreSQL (ACID) + Kafka (ES) + QuestDB (Telemetry)
+✅ **Standard:** L99-Standard V2 Certified Framework
+🟡 **Connectivity:** FIX 4.4/5.0 Gateway (Phase 2 Path)
 
 ---
 
-## 👁️ 1. The Institutional Reality Audit
+## 👁️ 1. The Institutional Reality Audit (Ruthless Findings)
 
-Project Phoenix V7.1.0 is built on the ruins of over-ambitious drafts. We acknowledge these brutal truths:
-
-1.  **MT5 is a Retail Trap:** B-book brokers conflict with client success. Phase 1 proves logic on MT5; Phase 2 migrates to **FIX Gateway** for true institutional liquidity.
-2.  **SQLite is not for Audit:** Institutional compliance requires ACID-compliant, replicated storage. **PostgreSQL** is now the mandatory governance store.
-3.  **Custom Event Buses Deadlock:** The legacy `bus.py` is deprecated. **Redis Streams** with consumer groups and **Protobuf** schemas provide the production backbone.
-4.  **The ML Frankenstein is Dead:** Removed FinBERT/FAISS/RL bloat. Simplified to **XGBoost + LSTM** for production stability.
-5.  **Compliance is not an Add-on:** MiFID III, Basel FRTB, and GDPR audit trails are built into the core hashing chains from Day 1.
+Project Phoenix V7.3.0 acknowledges the fatal gaps of previous drafts:
+1.  **The MT5 Trap:** MetaTrader 5 is a B-book retail trap. V7.3.0 treats MT5 as a **Sacrificial Bootstrap** for Phase 1 logic proof; Phase 2 migrates to **FIX Gateway** for true DMA (Direct Market Access).
+2.  **The Stability Paradox:** We have removed false "✅ Production" claims. Components are marked "✅" only if they pass L99 unit/chaos verification.
+3.  **The ML Frankenstein:** We reject complex ensemble bloat. We utilize a production-stable **XGBoost + LSTM** core, ensuring model explainability and low-latency inference.
+4.  **The Python Latency Fallacy:** We solve internal jitter by moving the Firehose (Ingress) to a **Rust-Sidecar**, bypassing the GIL for tick-to-signal paths.
 
 ---
 
 ## 👁️ 2. Vision & Mission
 
-**Vision:** To democratize institutional-grade trading through a transparent, auditable, and resilient platform that prioritizes capital preservation above all else.
+**Vision:** To establish the absolute benchmark for autonomous capital preservation and institutional-grade retail sovereignty.
 
-**Mission:** Project Phoenix maximizes long-term risk-adjusted expectancy while maintaining strict capital preservation through disciplined governance and execution.
+**Mission:** To maximize long-term risk-adjusted expectancy (Sortino > 3.5) by treating every trading signal as a probabilistic hypothesis that must survive an 11-layer gauntlet.
 
-### 📊 Performance Targets (Realistic & Phased)
-| Metric | Phase 1 (MVP) | Phase 2 (Stretch) | Priority |
+### 📊 Performance Mandates (Net of All Costs)
+| Metric | Phase 1 (MVP) | Phase 2 (Stretch) | Verification |
 | :--- | :--- | :--- | :--- |
-| **Sharpe Ratio** | > 1.0 | > 2.0 | High |
-| **Sortino Ratio** | > 1.5 | > 3.0 | High |
-| **Max Drawdown** | < 10.0% | < 5.0% | **ABSOLUTE** |
-| **Risk of Ruin** | < 1.0% | < 0.1% | **ABSOLUTE** |
-| **Execution Cost** | < 15% Returns | < 5% Returns | Critical |
+| **Sharpe Ratio** | > 1.0 | > 2.0 | 12m Walk-Forward |
+| **Sortino Ratio** | > 1.5 | > 3.5 | Downside Deviation |
+| **Max Drawdown** | < 10.0% | < 5.0% | Hard Equity Firewall |
+| **Risk of Ruin** | < 1.0% | < 0.1% | 1M Monte Carlo |
+| **Total Execution Cost** | < 15% PnL | < 5% PnL | **Cost Attribution Engine** |
 
 ---
 
-## 🏗️ 3. Architecture: The Rebuilt Microkernel
+## 🏗️ 3. Architecture: The Sovereign Trinity
 
-The V7.1.0 revamp moves from an over-engineered microkernel to a **Modular Monolith with Clean Boundaries**.
+V7.3.0 utilizes a **Modular Monolith with Acyclic Dependencies**.
 
-### 🧩 System Overview
-- **Sovereign Ingress:** AES-256-GCM Secure Gateway with FIX protocol priority in Phase 2.
-- **Persistence Layer:** PostgreSQL (ACID Governance) + QuestDB (High-frequency telemetry) + Redis Cluster (Hot State).
-- **Event Bus:** Redis Streams with **Protocol Buffers (Protobuf)** for type-safe message passing and schema validation via Buf Registry.
-- **Decision Engine:** Split into **Context Loop** (Slow/Governance) and **Execution Loop** (Fast/Signal).
-
----
-
-## 🛡️ 4. Institutional Risk & Kill Switches
-
-### 7-Layer Risk Stack (Explicit Precedence)
-Precedence: **Portfolio > Currency > Symbol > Strategy > Trade > Broker > Infrastructure.**
-Any layer may independently veto. Pre-trade Monte Carlo simulation is mandatory.
-
-### 4-Level Kill Switch Hierarchy
-1.  **Level 1 (Strategy):** Halt specific strategy on volatility/drawdown breach.
-2.  **Level 2 (Symbol):** Freeze symbol on extreme spread or data gap.
-3.  **Level 3 (Global):** Flatten all positions and disable entry.
-4.  **Level 4 (Infrastructure):** Safe-Mode disconnect on heartbeat failure or audit corruption.
+- **The Firehose (Layer 0-1: Rust):** High-speed binary ingress handling AES-256-GCM and **Data Quality Firewalling**.
+- **The Brain (Layer 2-9: Python/Rust):** Asyncio decision engine separating **Context (Slow Loop)** from **Execution (Fast Loop)**.
+- **The Persistence Layer (Event Sourcing):**
+    - **Audit:** PostgreSQL (ACID) with 7-year retention & streaming replication.
+    - **Telemetry:** QuestDB partitioned by date for high-frequency time-series.
+    - **Event Bus:** Redis Streams with Protobuf schemas (replacing legacy custom bus).
 
 ---
 
-## 👥 5. Team & Operational Growth
+## 🛡️ 4. Institutional Risk & Safety
 
-A 4-person team is insufficient for an institutional build. Phoenix mandates an **8-Person MVP Team**:
-- 1× Lead Architect
-- 2× Backend/Kernel Engineers
-- 1× Quant Developer (XGB/LSTM)
-- 1× DevOps Engineer (K8s/HA/CI)
-- 1× QA/SDET (Chaos/Replay)
-- 1× Risk & Compliance Officer
-- 1× Operations/Terminal Manager
+### 11-Layer Hardened Stack
+1. **Data Quality Firewall:** Z-Score validation & Gap detection.
+2. **Microstructure Intel:** VPIN / Order Flow Toxicity.
+3. **Strategy Signal:** Probabilistic Bayesian consensus.
+4. **Portfolio Construction:** Dynamic covariance & Rebalancing.
+5. **Net Exposure Graph:** Global factor/currency netting.
+6. **Risk Engine (Precedence):** Portfolio > Currency > Symbol > Strategy.
+7. **Execution Intelligence:** Almgren-Chriss Optimal Liquidation.
+8. **Broker Mesh:** Multi-broker failover & Conflict detection.
+9. **Guided Recovery:** Auto-SafeMode + Human Resume Auth.
+10. **Cost Attribution:** Spread/Commission/Slippage impact monitoring.
+11. **Audit & Explainability:** Merkle-Chained Provenance.
 
 ---
 
-## 🗺️ 6. Roadmap: The Sovereign Ascent (V7.1.0)
+## 🔬 5. The Phoenix Gauntlet (Model Governance)
+
+Mandatory validation pipeline for the revamp:
+Research → Backtest → **Chaos Engineering** (injecting latency/gaps) → Walk Forward → Shadow Trading → Production.
+
+### Required Statistical Gates
+- **Deflated Sharpe > 1.5** (Adjusted for selection bias).
+- **White Reality Check p-value < 0.01** (10k bootstrap iterations).
+- **PBO < 0.05** (Probability of Backtest Overfitting).
+
+---
+
+## 👥 6. Team & Operational Growth
+
+Project Phoenix mandates an **8-Person MVP Team** to ensure operational survivability:
+- 1× Lead Architect (Project Manager)
+- 2× Backend Engineers (Distributed Systems)
+- 1× Quant Developer (Execution & Models)
+- 1× DevOps/SRE Engineer (K8s/Chaos)
+- 1× QA/Chaos Engineer (Jepsen/Replay)
+- 1× Risk & Compliance Officer (MiFID III/Basel)
+- 1× Operations Manager (On-call/Incident)
+
+---
+
+## 🗺️ 7. Roadmap: The Sovereign Ascent (V7.3.0)
 
 ### 📍 Phase 1: MVP & Logic Proof (Months 0-6)
-- [ ] Implement **Modular Monolith Core** on PostgreSQL/Redis.
-- [ ] Deploy **XGBoost + LSTM** production ensemble.
+- [ ] Implement **Modular Monolith Core** (Postgres/Redis/Protobuf).
+- [ ] Build **7-Layer Risk Stack** with precedence enforcement.
 - [ ] Prove logic on single-pair/single-broker MT5 implementation.
-- [ ] **Kill Criterion:** If Sharpe < 0.5 after 6 months live, pivot or abandon.
+- [ ] **Kill Criterion:** If MVP Sharpe < 0.5 after 6 months live, pivot or abandon.
 
 ### 🚀 Phase 2: FIX & Sovereignty (Months 6-12)
-- [ ] Implement **FIX Gateway** for institutional liquidity.
-- [ ] Deploy **Model Governance Engine** with drift detection.
-- [ ] Multi-broker orchestration and conflict detection.
+- [ ] Implement **FIX 4.4/5.0 Gateway** (DMA path).
+- [ ] Deploy **Model Governance Engine** with PSI drift detection.
+- [ ] Implement **Cost Attribution Engine** for slippage/fee analysis.
 
 ### 🌐 Phase 3: Terminal & Compliance (Months 12-18)
 - [ ] Launch **FinCon Terminal** (React/Next.js dashboard).
-- [ ] Full MiFID III/Basel audit compliance certification.
+- [ ] Full MiFID III/Basel FRTB audit compliance certification.
 
 ### 🏦 Phase 4: Scaling & Capital (Months 18-24)
 - [ ] Prime Broker integration and external capital on-boarding.
-- [ ] Full regulatory licensing.
-
----
-*The platform is designed to be explainable, auditable, measurable, and falsifiable at every level.*
+- [ ] Multi-asset expansion (Equities/Futures).

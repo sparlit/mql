@@ -1,71 +1,51 @@
-# 🛠️ Project Phoenix: Master TODO Tracker (V7.1.0 Re-Make)
+# 🛠️ Project Phoenix: Master TODO Tracker (V7.3.0 Revamp)
 
-> **Status:** 300+ Tasks Across 4 Phases
-> **Objective:** Institutional Operational Excellence
+> **Status:** Critical Path Engineering
+> **Focus:** Operational Survivability & Institutional Connectivity
 
-## 🔴 PHASE 1: MVP & LOGIC PROOF (MONTHS 0-6)
-*Focus: One Strategy, One Broker, One Pair. Prove Alpha.*
+## 🔴 PHASE 1: MVP & LOGIC PROOF (120 TASKS)
+- [ ] **Infrastructure Hardening:**
+    - [ ] Deploy PostgreSQL cluster with streaming replication.
+    - [ ] Set up Redis Streams for the Event Bus.
+    - [ ] Define **Protobuf** schemas for all domain events.
+- [ ] **Data Integrity (Layer 0):**
+    - [ ] Implement Rust-based Z-Score tick validation firewall.
+    - [ ] Build Gap-Detection and Timestamp-Sync monitor.
+- [ ] **Risk Stack (Layer 5-6):**
+    - [ ] Build Synchronous Command Path for risk validation.
+    - [ ] Implement explicit precedence (Portfolio > Currency > Symbol).
+- [ ] **Strategy Bootstrap:**
+    - [ ] Port XGBoost + LSTM ensemble to ONNX.
+    - [ ] Execute first live trade through the Modular Monolith.
 
-### 1.1. Foundation & Core (40 Tasks)
-- [ ] Set up dev/prod parity with Docker & Kubernetes (K3s).
-- [ ] Initialize PostgreSQL cluster with streaming replication.
-- [ ] Set up Redis Cluster for Event Bus (Redis Streams).
-- [ ] Define **Protobuf** schemas for all internal messages.
-- [ ] Integrate **Buf Schema Registry** for contract management.
+## 🟠 PHASE 2: FIX & SOVEREIGNTY (80 TASKS)
+- [ ] **Institutional Execution:**
+    - [ ] Build high-performance FIX protocol engine in Rust.
+    - [ ] Implement Almgren-Chriss Optimal Liquidation model.
+- [ ] **Governance & Cost:**
+    - [ ] Deploy PSI (Population Stability Index) drift monitoring.
+    - [ ] Build **Cost Attribution Engine** (Spread/Slippage/Fee analysis).
+- [ ] **Resilience:**
+    - [ ] Implement "Guided Recovery" with human-in-the-loop resume auth.
 
-### 1.2. Risk & Governance (30 Tasks)
-- [ ] Build the 7-Layer Risk Stack with explicit precedence.
-- [ ] Implement Level 1-4 automatic Kill Switch triggers.
-- [ ] Create pre-trade Monte Carlo simulator (100k runs).
-- [ ] Implement Merkle-Chained Audit logging in PostgreSQL.
+## 🟡 PHASE 3: TERMINAL & COMPLIANCE (60 TASKS)
+- [ ] **The Glass Cockpit:**
+    - [ ] Develop FinCon Terminal (Next.js institutional dashboard).
+    - [ ] Build Audit Explorer for Merkle-Audit Ledger provenance.
+- [ ] **Regulatory Stack:**
+    - [ ] Implement MiFID III circuit breaker triggers.
+    - [ ] Finalize Basel III FRTB capital allocation reporting.
 
-### 1.3. Strategy & Execution (50 Tasks)
-- [ ] Implement **XGBoost + LSTM** model ensemble.
-- [ ] Build the MT5 Adapter (Phase 1 legacy gateway).
-- [ ] Implement VPIN (Volume-Synchronized Probability of Informed Trading).
-- [ ] **Task:** Execute first live trade through the Modular Monolith.
-
----
-
-## 🟠 PHASE 2: FIX & SOVEREIGNTY (MONTHS 6-12)
-*Focus: Exit the Retail Trap. Institutional Connectivity.*
-
-### 2.1. FIX Gateway Implementation
-- [ ] Build high-performance FIX protocol engine in Rust/C++.
-- [ ] Certify FIX connection with Tier-1 Liquidity Provider.
-- [ ] Implement B-book conflict detection & slippage analytics.
-
-### 2.2. Model Governance Engine
-- [ ] Implement PSI (Population Stability Index) drift monitoring.
-- [ ] Build Shadow Mode promotion/demotion pipelines.
-- [ ] Automate confidence decay logic for models.
-
----
-
-## 🟡 PHASE 3: TERMINAL & COMPLIANCE (MONTHS 12-18)
-*Focus: Transparency & Regulatory Readiness.*
-
-### 3.1. FinCon Terminal
-- [ ] Develop Next.js institutional dashboard.
-- [ ] Implement WebSocket telemetry for <14ms UI updates.
-- [ ] Build the "Audit Explorer" for provenance visualization.
-
-### 3.2. Regulatory Stack
-- [ ] Implement MiFID III / Basel FRTB audit reporting.
-- [ ] Finalize GDPR data lineage and privacy controls.
-
----
-
-## 🟢 PHASE 4: SCALING & CAPITAL (MONTHS 18-24)
-*Focus: External Assets & Prime Brokerage.*
-
-- [ ] Integrate with Prime Brokerage (FIX).
-- [ ] Implement Multi-Asset support (Equities/Futures/Options).
-- [ ] Complete full regulatory licensing.
+## 🟢 PHASE 4: SCALING & CAPITAL (40 TASKS)
+- [ ] **Prime Connectivity:**
+    - [ ] Connect to Tier-1 Liquidity Providers via FIX.
+    - [ ] Integrate with Prime Brokerage workflows.
+- [ ] **Certification:**
+    - [ ] Complete full platform L99-Standard V2 audit.
 
 ---
 
 ## 🩺 CONTINUOUS TASKS
-- [ ] Weekly Chaos Engineering "Game Days" (Latency/Gaps/Failures).
-- [ ] Monthly L99-Standard Self-Audit.
-- [ ] Quarterly "Kill Criteria" review (Sharpe > 0.5 Check).
+- [ ] Weekly Jepsen-style network partition testing.
+- [ ] Monthly "Simplicity Budget" review (Kill over-engineering).
+- [ ] Quarterly "Kill Criteria" validation (MVP Sharpe Check).
