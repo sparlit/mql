@@ -1,36 +1,71 @@
-# 🛠️ Project Phoenix: The "Gods Engineer" Hardening Checklist (V9.1.0)
+# 🛠️ Project Phoenix: Master TODO Tracker (V7.1.0 Re-Make)
 
-> **Status:** Critical Path Hardening
-> **Focus:** Zero-Copy Communication & Strongly Consistent Risk
+> **Status:** 300+ Tasks Across 4 Phases
+> **Objective:** Institutional Operational Excellence
 
-## 🏗️ EPIC 1: MICROKERNEL PERFORMANCE
-- [ ] **Shared Memory Bridge:**
-    - [ ] Implement Apache Arrow or a shared-memory ring buffer for Rust-to-Python tick delivery.
-    - [ ] Benchmark and verify P99 jitter < 50µs on the bridge.
-- [ ] **Fast-Path Logic:**
-    - [ ] Migrate critical Layer 5 (Risk) and Layer 6 (SOR) logic to Rust.
+## 🔴 PHASE 1: MVP & LOGIC PROOF (MONTHS 0-6)
+*Focus: One Strategy, One Broker, One Pair. Prove Alpha.*
 
-## 💾 EPIC 2: CONSISTENCY & PERSISTENCE
-- [ ] **Strongly Consistent Risk Path:**
-    - [ ] Refactor Command-Side logic to include synchronous Risk checks before order signing.
-- [ ] **Event Sourcing Upgrade:**
-    - [ ] Implement Merkle-Chaining for the Event Journal in PostgreSQL.
-    - [ ] Build the snapshotting service for the Position state.
+### 1.1. Foundation & Core (40 Tasks)
+- [ ] Set up dev/prod parity with Docker & Kubernetes (K3s).
+- [ ] Initialize PostgreSQL cluster with streaming replication.
+- [ ] Set up Redis Cluster for Event Bus (Redis Streams).
+- [ ] Define **Protobuf** schemas for all internal messages.
+- [ ] Integrate **Buf Schema Registry** for contract management.
 
-## 🛡️ EPIC 3: SOVEREIGN CONNECTIVITY
-- [ ] **FIX-Native Ingress:**
-    - [ ] Develop high-performance FIX protocol engine in Rust.
-    - [ ] Create FIX-to-SharedMemory mapping.
-- [ ] **Broker Mesh:**
-    - [ ] Implement MT5 and cTrader adapters as legacy fallbacks.
+### 1.2. Risk & Governance (30 Tasks)
+- [ ] Build the 7-Layer Risk Stack with explicit precedence.
+- [ ] Implement Level 1-4 automatic Kill Switch triggers.
+- [ ] Create pre-trade Monte Carlo simulator (100k runs).
+- [ ] Implement Merkle-Chained Audit logging in PostgreSQL.
 
-## 🧠 EPIC 4: GOVERNANCE & SAFETY
-- [ ] **Guided Recovery:**
-    - [ ] Implement automatic "Flatten & Freeze" on heartbeat failure.
-    - [ ] Create the "Human-in-the-loop" resume authorization gate.
-- [ ] **Toxicity Monitor:**
-    - [ ] Integrate VPIN calculations into the synchronous fast-path.
+### 1.3. Strategy & Execution (50 Tasks)
+- [ ] Implement **XGBoost + LSTM** model ensemble.
+- [ ] Build the MT5 Adapter (Phase 1 legacy gateway).
+- [ ] Implement VPIN (Volume-Synchronized Probability of Informed Trading).
+- [ ] **Task:** Execute first live trade through the Modular Monolith.
+
+---
+
+## 🟠 PHASE 2: FIX & SOVEREIGNTY (MONTHS 6-12)
+*Focus: Exit the Retail Trap. Institutional Connectivity.*
+
+### 2.1. FIX Gateway Implementation
+- [ ] Build high-performance FIX protocol engine in Rust/C++.
+- [ ] Certify FIX connection with Tier-1 Liquidity Provider.
+- [ ] Implement B-book conflict detection & slippage analytics.
+
+### 2.2. Model Governance Engine
+- [ ] Implement PSI (Population Stability Index) drift monitoring.
+- [ ] Build Shadow Mode promotion/demotion pipelines.
+- [ ] Automate confidence decay logic for models.
+
+---
+
+## 🟡 PHASE 3: TERMINAL & COMPLIANCE (MONTHS 12-18)
+*Focus: Transparency & Regulatory Readiness.*
+
+### 3.1. FinCon Terminal
+- [ ] Develop Next.js institutional dashboard.
+- [ ] Implement WebSocket telemetry for <14ms UI updates.
+- [ ] Build the "Audit Explorer" for provenance visualization.
+
+### 3.2. Regulatory Stack
+- [ ] Implement MiFID III / Basel FRTB audit reporting.
+- [ ] Finalize GDPR data lineage and privacy controls.
+
+---
+
+## 🟢 PHASE 4: SCALING & CAPITAL (MONTHS 18-24)
+*Focus: External Assets & Prime Brokerage.*
+
+- [ ] Integrate with Prime Brokerage (FIX).
+- [ ] Implement Multi-Asset support (Equities/Futures/Options).
+- [ ] Complete full regulatory licensing.
+
+---
 
 ## 🩺 CONTINUOUS TASKS
-- [ ] Run "Latency Regression" tests on every commit.
-- [ ] Verify Merkle integrity of the Audit Ledger weekly.
+- [ ] Weekly Chaos Engineering "Game Days" (Latency/Gaps/Failures).
+- [ ] Monthly L99-Standard Self-Audit.
+- [ ] Quarterly "Kill Criteria" review (Sharpe > 0.5 Check).

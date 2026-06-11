@@ -1,95 +1,104 @@
-# ♾️ Project Phoenix - AAT V9.1.0 (The Hardened Sovereign)
-## *The Institutional Autonomous Microkernel & Persistence Layer*
+# ⚖️ Project Phoenix - AAT V7.1.0 (The Rebuilt Sovereign)
+## *The Institutional Trading Platform Re-Make*
 
-### 🏛️ Status: The Hardened Revamp
-We have moved beyond "Pragmatic Revamp" into **Hardened Sovereignty**. The architecture now enforces deterministic communication and consistent state management.
+### 🏛️ Status: The V7.1.0 Pivot
+The project has undergone a "Ruthless Autopsy" and is being rebuilt as a **Modular Monolith** with clean boundaries. We have discarded architectural vanity in favor of **Operational Excellence**.
 
-✅ **Layer 0:** Data Quality Firewall (Active)
-✅ **Layer 9:** Merkle-Chained Audit Ledger (Active)
-🟡 **Core Migration:** Zero-Copy Shared Memory & FIX-Native Ingress (V9.1.0 Path)
+✅ **Core Integrity:** Modular Monolith Architecture (Phased Implementation)
+✅ **Governance:** PostgreSQL-ACID Persistence (Replacing SQLite)
+🟡 **Execution:** MT5 (Phase 1 MVP) → FIX Gateway (Phase 2 Sovereign)
+🟡 **Intelligence:** XGBoost + LSTM Ensemble (Simplified)
 
 ---
 
-## 👁️ 1. Vision & Mission
+## 👁️ 1. The Institutional Reality Audit
 
-**Vision:** To establish the definitive sovereign platform for institutional-grade capital deployment. Project Phoenix prioritizes **Deterministic Execution**, **Strong Consistency**, and **Operational Survivability**.
+Project Phoenix V7.1.0 is built on the ruins of over-ambitious drafts. We acknowledge these brutal truths:
 
-**Mission:** To maximize risk-adjusted expectancy through a **FIX-Native Architecture**. We treat every signal as a probabilistic hypothesis that must pass a zero-copy, low-latency risk gauntlet.
+1.  **MT5 is a Retail Trap:** B-book brokers conflict with client success. Phase 1 proves logic on MT5; Phase 2 migrates to **FIX Gateway** for true institutional liquidity.
+2.  **SQLite is not for Audit:** Institutional compliance requires ACID-compliant, replicated storage. **PostgreSQL** is now the mandatory governance store.
+3.  **Custom Event Buses Deadlock:** The legacy `bus.py` is deprecated. **Redis Streams** with consumer groups and **Protobuf** schemas provide the production backbone.
+4.  **The ML Frankenstein is Dead:** Removed FinBERT/FAISS/RL bloat. Simplified to **XGBoost + LSTM** for production stability.
+5.  **Compliance is not an Add-on:** MiFID III, Basel FRTB, and GDPR audit trails are built into the core hashing chains from Day 1.
 
-### 📊 Performance Mandates (Hardened)
-| Metric | Reality Target | Hard Limit | Verification |
+---
+
+## 👁️ 2. Vision & Mission
+
+**Vision:** To democratize institutional-grade trading through a transparent, auditable, and resilient platform that prioritizes capital preservation above all else.
+
+**Mission:** Project Phoenix maximizes long-term risk-adjusted expectancy while maintaining strict capital preservation through disciplined governance and execution.
+
+### 📊 Performance Targets (Realistic & Phased)
+| Metric | Phase 1 (MVP) | Phase 2 (Stretch) | Priority |
 | :--- | :--- | :--- | :--- |
-| **Sharpe Ratio** | > 1.0 | > 2.5 | 12m Walk-Forward |
-| **Jitter (P99)** | < 50µs | < 200µs | Shared Memory Profile |
-| **Max Drawdown** | < 10.0% | < 5.0% | Hard Equity Firewall |
-| **Internal Latency** | < 100µs | < 500µs | Tick-to-Auth |
-| **Consistency** | Strong | Absolute | Command-Path Risk |
+| **Sharpe Ratio** | > 1.0 | > 2.0 | High |
+| **Sortino Ratio** | > 1.5 | > 3.0 | High |
+| **Max Drawdown** | < 10.0% | < 5.0% | **ABSOLUTE** |
+| **Risk of Ruin** | < 1.0% | < 0.1% | **ABSOLUTE** |
+| **Execution Cost** | < 15% Returns | < 5% Returns | Critical |
 
 ---
 
-## 📐 2. The Hardened Governance Principles
+## 🏗️ 3. Architecture: The Rebuilt Microkernel
 
-### A. The Simplicity Budget
-Subsystems that increase latency or failure surface without measurable alpha/risk benefit are rejected.
+The V7.1.0 revamp moves from an over-engineered microkernel to a **Modular Monolith with Clean Boundaries**.
 
-### B. The Command-Path Risk Mandate
-Risk checks are never "Eventually Consistent." The Risk Engine sits in the **Synchronous Command Path** of the decision engine. No order can be signed without a real-time, strongly consistent risk approval.
-
-### C. The FIX-Native Priority
-Sovereignty is defined by protocol independence. FIX (Financial Information eXchange) is our primary protocol. All broker-specific adapters (MT5, cTrader) are treated as secondary legacy gateways.
-
----
-
-## 🏗️ 3. Architecture: The Hardened Trinity
-
-V9.1.0 utilizes a **Shared-Memory Polyglot Microkernel**.
-
-- **The Firehose (Rust):** High-speed ingress sidecar using **Zero-Copy Shared Memory** (via Apache Arrow/RingBuffer) to hand off validated ticks to the brain.
-- **The Brain (Python/Rust):** A hybrid logic layer. Time-critical risk calculations are migrated to Rust, while strategy logic remains in Python for rapid research iteration.
-- **The Persistence Layer (CQRS+ES):**
-    - **Command Side:** Strongly consistent state for Risk & Positions.
-    - **Read Side:** Eventually consistent state for Analytics, Telemetry, and the FinCon Terminal.
-    - **Audit:** Merkle-Chained Event Sourcing in PostgreSQL.
+### 🧩 System Overview
+- **Sovereign Ingress:** AES-256-GCM Secure Gateway with FIX protocol priority in Phase 2.
+- **Persistence Layer:** PostgreSQL (ACID Governance) + QuestDB (High-frequency telemetry) + Redis Cluster (Hot State).
+- **Event Bus:** Redis Streams with **Protocol Buffers (Protobuf)** for type-safe message passing and schema validation via Buf Registry.
+- **Decision Engine:** Split into **Context Loop** (Slow/Governance) and **Execution Loop** (Fast/Signal).
 
 ---
 
-## 🛡️ 4. The 10-Layer Hardened Stack
+## 🛡️ 4. Institutional Risk & Kill Switches
 
-1. **Layer 0: Data Quality Firewall** (Outlier filtering, gap detection).
-2. **Layer 1: Market Data Layer** (FIX-Native / Rust Shared Memory).
-3. **Layer 2: Liquidity/Toxicity Intelligence** (VPIN / Adverse Selection).
-4. **Layer 3: Strategy Layer** (Probabilistic Bayesian Consensus).
-5. **Layer 4: Portfolio Construction** (Dynamic Allocation & Netting).
-6. **Layer 5: Synchronous Risk Engine** (Strongly Consistent Firewall).
-7. **Layer 5.5: Model Governance** (PSI & Drift Detection).
-8. **Layer 6: Execution Intelligence** (Smart Order Routing & Jitter Monitor).
-9. **Layer 7: Universal Broker Mesh** (FIX Priority with MT5/cTrader fallbacks).
-10. **Layer 8: Guided Recovery** (Auto-SafeMode + Human Resume Auth).
-11. **Layer 9: Audit & Explainability** (Merkle-Chained Provenance).
+### 7-Layer Risk Stack (Explicit Precedence)
+Precedence: **Portfolio > Currency > Symbol > Strategy > Trade > Broker > Infrastructure.**
+Any layer may independently veto. Pre-trade Monte Carlo simulation is mandatory.
+
+### 4-Level Kill Switch Hierarchy
+1.  **Level 1 (Strategy):** Halt specific strategy on volatility/drawdown breach.
+2.  **Level 2 (Symbol):** Freeze symbol on extreme spread or data gap.
+3.  **Level 3 (Global):** Flatten all positions and disable entry.
+4.  **Level 4 (Infrastructure):** Safe-Mode disconnect on heartbeat failure or audit corruption.
 
 ---
 
-## 🔬 5. The Phoenix Gauntlet
+## 👥 5. Team & Operational Growth
 
-Mandatory validation includes **Latency Stress Testing** and **Consistency Audits**.
-- **L99-A:** Unit Coverage & Code Integrity.
-- **L99-B:** HA Replay & Event Consistency.
-- **L99-D:** Deterministic Latency Profiling.
+A 4-person team is insufficient for an institutional build. Phoenix mandates an **8-Person MVP Team**:
+- 1× Lead Architect
+- 2× Backend/Kernel Engineers
+- 1× Quant Developer (XGB/LSTM)
+- 1× DevOps Engineer (K8s/HA/CI)
+- 1× QA/SDET (Chaos/Replay)
+- 1× Risk & Compliance Officer
+- 1× Operations/Terminal Manager
 
 ---
 
-## 🗺️ 6. Roadmap: The Sovereign Ascent (V9.1.0)
+## 🗺️ 6. Roadmap: The Sovereign Ascent (V7.1.0)
 
-### 📍 Phase 1: The Core Hardening (Current)
-- [ ] Implement **Zero-Copy Shared Memory** for Rust-Python communication.
-- [ ] Refactor Risk Engine into the **Synchronous Command Path**.
-- [ ] Implement **FIX-Native Ingress** prototype.
+### 📍 Phase 1: MVP & Logic Proof (Months 0-6)
+- [ ] Implement **Modular Monolith Core** on PostgreSQL/Redis.
+- [ ] Deploy **XGBoost + LSTM** production ensemble.
+- [ ] Prove logic on single-pair/single-broker MT5 implementation.
+- [ ] **Kill Criterion:** If Sharpe < 0.5 after 6 months live, pivot or abandon.
 
-### 🚀 Phase 2: Intelligence & Mesh
-- [ ] Deploy **VPIN Toxicity Engine** (Layer 2).
-- [ ] Implement **Guided Recovery Workflow** (Layer 8).
-- [ ] Standardize **Merkle-Anchored Event Sourcing**.
+### 🚀 Phase 2: FIX & Sovereignty (Months 6-12)
+- [ ] Implement **FIX Gateway** for institutional liquidity.
+- [ ] Deploy **Model Governance Engine** with drift detection.
+- [ ] Multi-broker orchestration and conflict detection.
 
-### 🌐 Phase 3: The FinCon Terminal
-- [ ] Launch **Unified Telemetry Dashboard**.
-- [ ] Finalize **Universal Broker Mesh** (MT5/cTrader fallbacks).
+### 🌐 Phase 3: Terminal & Compliance (Months 12-18)
+- [ ] Launch **FinCon Terminal** (React/Next.js dashboard).
+- [ ] Full MiFID III/Basel audit compliance certification.
+
+### 🏦 Phase 4: Scaling & Capital (Months 18-24)
+- [ ] Prime Broker integration and external capital on-boarding.
+- [ ] Full regulatory licensing.
+
+---
+*The platform is designed to be explainable, auditable, measurable, and falsifiable at every level.*
