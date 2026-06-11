@@ -1,76 +1,48 @@
-# 🛠️ Project Phoenix: Engineering TODO (V8.0.0 Revamp)
+# 🛠️ Project Phoenix: The "Gods Engineer" Revamp Checklist (V8.1.0)
 
-> **Status:** Critical Path Engineering
-> **Focus:** Resilient Architecture & 10-Layer Institutional Stack
+> **Status:** Total Architectural Revamp
+> **Objective:** 100% Deterministic Execution & Sovereign Capital Protection
 
-## Epic 1 — Architectural Foundations
-- [ ] **Data Persistence & HA:**
-    - [ ] Replace SQLite governance store with PostgreSQL.
-    - [ ] Design and implement event schema versioning.
-    - [ ] Implement snapshot and replay architecture.
-    - [ ] Implement event compaction for the sovereign ledger.
-- [ ] **Decentralized Bus:**
-    - [ ] Remove centralized bus bottlenecks (`src/shared/utils/bus.py`).
-    - [ ] Introduce Domain Buses (Market, Risk, Execution, Research, Infrastructure).
+## 🏗️ EPIC 1: THE HYBRID KERNEL (THE FOUNDATION)
+- [ ] **Rust-Core Ingress (Layer 1):**
+    - [ ] Implement lock-free SPMC Ring Buffer for internal event passing.
+    - [ ] Migrate Ingress from Python to Rust (Tokio-based TCP Server).
+    - [ ] Upgrade encryption to **AES-256-GCM** in the Rust layer.
+- [ ] **Data Quality Firewall (Layer 0):**
+    - [ ] Implement Z-Score outlier detection for every tick.
+    - [ ] Build gap-detection and timestamp-drift validation.
+- [ ] **Python-Rust Bridge (PyO3):**
+    - [ ] Create shared-memory bindings for zero-copy feature delivery to Python.
 
-## Epic 2 — Data Integrity (Layer 0)
-- [ ] **Data Quality Firewall:**
-    - [ ] Implement Tick Validation (Z-Score Outlier Detection).
-    - [ ] Implement Duplicate detection & Timestamp verification.
-    - [ ] Build Spread Anomaly detection & Quote-stuffing filters.
-    - [ ] Track Data Lineage and generate Data Quality Scores.
+## 🛡️ EPIC 2: INSTITUTIONAL RISK & PORTFOLIO (THE FIREWALL)
+- [ ] **Exposure Graph Engine (Layer 4):**
+    - [ ] Implement vectorized currency risk enforcement (Vectorized Covariance).
+- [ ] **7-Layer Risk Stack (Layer 5):**
+    - [ ] Build Layer 4 (Currency), Layer 5 (Portfolio), and Layer 6 (Broker) risk supervisors.
+- [ ] **The "Gravity" Dead-Man Switch:**
+    - [ ] Implement heartbeat watchdog with autonomous Safe-Mode liquidation.
 
-## Epic 3 — Portfolio Intelligence (Layer 4)
-- [ ] **Allocation Engine:**
-    - [ ] Build the Correlation & Factor Exposure engine.
-    - [ ] Implement the Portfolio Optimizer & Capital Allocator.
-    - [ ] Integrate Risk Budgeting & Dynamic Rebalancing logic.
+## 🧠 EPIC 3: INTELLIGENCE & GOVERNANCE (THE BRAIN)
+- [ ] **Pre-Computed Decision Engine:**
+    - [ ] Refactor Decision Engine into "Slow Loop" (Context) and "Fast Loop" (Execution).
+- [ ] **Order Flow Toxicity Engine (Layer 2):**
+    - [ ] Implement VPIN (Volume-Synchronized Probability of Informed Trading).
+- [ ] **Meta-Governance Layer (Layer 5.6):**
+    - [ ] Build supervisor to monitor drift and calibration of Layer 5.5 (Model Gov).
 
-## Epic 4 — Governance (Layer 5.5 & 5.6)
-- [ ] **Meta-Governance Engine:**
-    - [ ] Implement Drift detection for governors.
-    - [ ] Build Governance Calibration & Confidence calibration modules.
-    - [ ] Create a Governance Audit framework to verify the supervisors.
+## 🚀 EPIC 4: EXECUTION & MESH (THE SOVEREIGNTY)
+- [ ] **Universal Broker Mesh (Layer 7):**
+    - [ ] Create generic Rust traits for `BrokerAdapter`.
+    - [ ] Implement MT5, FIX, and cTrader adapters.
+- [ ] **Execution Intelligence (Layer 6):**
+    - [ ] Implement real-time slippage modeling and broker health scoring.
 
-## Epic 5 — AI Validation (Edge Attribution)
-- [ ] **Alpha Attribution Engine:**
-    - [ ] Implement Incremental Sharpe & MAR analysis for models.
-    - [ ] Build Model Contribution scoring and Retirement engine.
-    - [ ] Finalize Shadow Validation framework for promotion/demotion.
+## 📊 EPIC 5: TELEMETRY & CERTIFICATION
+- [ ] **FinCon Terminal:**
+    - [ ] Develop Bloomberg-class React dashboard with WebSocket telemetry.
+- [ ] **The Phoenix Gauntlet (L99 Automation):**
+    - [ ] Script automatic DSR, PBO, and Monte Carlo verification on every commit.
 
-## Epic 6 — Execution Intelligence (Layer 6 & 7)
-- [ ] **Broker Mesh & Failover:**
-    - [ ] Implement Execution Simulator with slippage and fill probability modeling.
-    - [ ] Build the Broker Quality Engine (Slippage Tiers/Latency).
-    - [ ] Implement Broker Mesh automatic failover (Primary/Secondary/Tertiary).
-
-## Epic 7 — Resilience (Layer 8)
-- [ ] **Autonomous Recovery Engine:**
-    - [ ] Implement Failure Detection & Root Cause Analysis service.
-    - [ ] Script Self-healing workflows and recovery verification.
-    - [ ] Automate Chaos Engineering (Latency spikes, Data corruption, Process death).
-
-## Epic 8 — Research & Verification
-- [ ] **The Gauntlet:**
-    - [ ] Automate Walk-Forward, Monte Carlo (1M Runs), and White Reality Check.
-    - [ ] Implement PBO (Probability of Backtest Overfitting) engine.
-    - [ ] Conduct Capacity Analysis (Market Impact/Volume limits).
-
-## Epic 9 — Explainability (Layer 9)
-- [ ] **Provenance Explorer:**
-    - [ ] Build Decision Graph & Risk Attribution engine.
-    - [ ] Implement Model & Execution Attribution visualizations.
-    - [ ] Create the Audit Explorer for the Merkle-Audit Ledger.
-
-## Epic 10 — Production Readiness (Certification)
-- [ ] **L99-Standard V2 Certification:**
-    - [ ] Complete L99-A (Code), L99-B (Infra), L99-C (Risk).
-    - [ ] Complete L99-D (Execution), L99-E (Research), L99-F (Resilience).
-    - [ ] Final Platform Production Certification.
-
----
-
-## 📝 Engineering Debt & Cleanup
-- [ ] Refactor legacy Hybrid Kernel code to align with 10-layer stack.
-- [ ] Standardize Rust/Python cross-communication with gRPC/Protobuf.
-- [ ] Complete FOSS Compliance (GNU GPL v3) verification.
+## 🩺 CONTINUOUS TASKS
+- [ ] Maintain 100% FOSS (GNU GPL v3) compliance.
+- [ ] Weekly "Chaos Engineering" simulations (Network split / Data corruption).

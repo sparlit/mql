@@ -1,119 +1,104 @@
-# 🪐 Project Phoenix - AAT V8.0.0 (The Resilient Sovereign)
+# 🪐 Project Phoenix - AAT V8.1.0 (The Divine Sovereign)
 ## *The Institutional Autonomous Multi-Asset Operating System*
 
-### 🏛️ Status: The V8 Global Revamp
-The system is undergoing a comprehensive architectural overhaul. The shift is from **Model Success** to **Operational Survivability under Model Failure**.
+### 🏛️ Status: The Global Revamp (Post-Autopsy)
+The platform is transitioning from a Python-monolith to a **Hybrid Polyglot Kernel**.
 
-✅ **Layer 0-1:** Data Quality Firewall & Market Data Ingress (Active)
+✅ **Layer 0:** Data Quality Firewall (Active)
 ✅ **Layer 9:** Merkle-Chained Audit Ledger (Active)
-🟡 **Layers 2-8:** Migration in progress (Hybrid Rust-Python Kernel)
+🟡 **Layers 1-8:** Migration to Rust-Python Trinity in progress.
 
 ---
 
-## 👁️ 1. The Divine Vision & Mission
+## 👁️ 1. The Vision & Divine Mission
 
-**Vision:** To establish the absolute benchmark for autonomous capital preservation. Project Phoenix is a resilient sovereign agent designed to survive black-swan events and model failure through a **Zero-Trust Institutional Architecture**.
+**Vision:** To establish the absolute benchmark for autonomous capital preservation. Project Phoenix is a resilient sovereign agent designed to survive black-swan events through a **Zero-Trust Institutional Architecture**.
 
-**Mission:** To maximize long-term risk-adjusted expectancy (Sortino > 3.5) by treating every trading signal as a probabilistic hypothesis that must survive a 10-layer gauntlet of validation, risk, and meta-governance.
+**Mission:** To maximize risk-adjusted expectancy (Sortino > 3.5) by treating every trading signal as a probabilistic hypothesis. We prioritize **Order Flow Toxicity Detection** and **Execution Determinism** over market prediction.
 
-### 📊 Performance Mandates (Regime-Adjusted)
+### 📊 Performance Mandates (Deterministic)
 | Metric | Condition | Target |
 | :--- | :--- | :--- |
 | **Sharpe Ratio** | Normal/Low Vol | > 2.5 |
-| **Sharpe Ratio** | Crisis/High Vol | > 1.5 |
 | **Sortino Ratio** | Global | > 3.5 |
-| **Max Drawdown** | Defensive Mode | < 5.0% |
-| **Execution Latency** | Internal (Rust) | < 100µs |
-| **Data Integrity** | Tick-to-Signal | 100.0% |
+| **Internal Latency** | Tick-to-Order (Fast Loop) | < 100µs |
+| **Risk of Ruin** | Annualized | < 0.01% |
+| **Data Integrity** | Tick Validation | 100.0% |
 
 ---
 
-## 📐 2. Core Governance Frameworks
+## 📐 2. The Divine Governance Principles
 
-To prevent architectural bloat and "Model Hallucination," all development is governed by two ironclad constraints:
+To prevent architectural bloat and "Model Hallucination," all revamp logic is governed by:
 
 ### A. The Simplicity Budget
-Every subsystem must justify its existence. If the **(Expected Alpha + Risk Reduction) < (Operational Cost + Failure Surface)**, the subsystem is rejected or removed. We prioritize survivability over complexity.
+Every subsystem must justify its existence. If **(Alpha Contribution + Risk Reduction) < (Operational Cost + Failure Surface)**, the subsystem is removed. Survivability > Complexity.
 
-### B. The Edge Attribution Framework
-No signal is deployed without proof of incremental value. Every model must demonstrate:
-`Signal → Decision Change → Trade Outcome Change → Portfolio Alpha/Risk Improvement.`
-
----
-
-## 🏗️ 3. The 10-Layer Institutional Stack
-
-Project Phoenix V8.0.0 is organized into a deterministic hierarchy where higher layers can never bypass the constraints of lower layers.
-
-### **Layer 0: Data Quality Firewall**
-The ultimate defense against model poisoning. Before reaching any model, data must pass:
-- **Tick Validation:** Z-Score outlier detection and gap identification.
-- **Timestamp Integrity:** Synchronization check between broker, server, and local clock.
-- **Spread Sanity:** Automated filtering of quote-stuffing and artificial spread expansion.
-
-### **Layer 1: Market Data Layer**
-High-performance Rust-based ingress handling AES-256-GCM encrypted binary streams (MsgPack) with zero-copy protocol parsing.
-
-### **Layer 2: Liquidity Intelligence**
-Focuses on **Order Flow Toxicity (VPIN)** and **Microstructure Imbalance** rather than retail "Liquidity Prediction." It detects adverse selection and toxic flow to pause trading during high-risk microstructure shifts.
-
-### **Layer 3: Strategy Layer**
-Hybrid Rust-Python execution. Multi-model consensus (XGBoost, Bayesian Priors, and HMM Regime States) generating raw signals.
-
-### **Layer 4: Portfolio Construction**
-Responsible for **Capital Allocation** and **Strategy Weighting**. It uses a dynamic covariance engine to rebalance risk based on strategy correlations and market impact analysis.
-
-### **Layer 5: Risk Engine**
-7-Layer Risk Stack (Trade, Strategy, Symbol, Currency, Portfolio, Broker, Infrastructure). Includes the **Exposure Graph** for global factor/currency enforcement.
-
-### **Layer 5.5: Model Governance**
-Monitors Population Stability Index (PSI) and prediction drift. Models exceeding thresholds are automatically relegated to **Shadow Mode**.
-
-### **Layer 5.6: Meta-Governance**
-**The "Governor of Governors."** Monitors the accuracy and calibration of the Governance Layer itself (e.g., Is the Drift Detector drifting? Is the Confidence Engine calibrated?).
-
-### **Layer 6: Execution Intelligence**
-Smart Order Routing (SOR) and Slippage Modeling. Uses a **Broker Mesh** (Primary/Secondary/Tertiary) for automatic failover and execution optimization.
-
-### **Layer 7: Broker Mesh**
-Abstraction layer for Broker-Agnostic "Sovereignty." Supports MT5, cTrader, and FIX APIs with automated migration if the primary broker's health score decays.
-
-### **Layer 8: Autonomous Recovery Engine**
-Self-healing workflows for system failure. Detects crashes, performs root-cause analysis, and executes safe-mode recovery (Liquidate, Reduce, Freeze, or Hedge).
-
-### **Layer 9: Audit & Explainability**
-Merkle-Chained Audit Ledger providing a decision graph and feature attribution for every nanosecond of activity. Falsifiable and auditable provenance.
+### B. The Edge Attribution Engine
+No signal is deployed without proof. Every model must demonstrate:
+`Signal → Decision Change → Trade Outcome Change → Portfolio Alpha Improvement.`
 
 ---
 
-## 🛡️ 4. Resilience & Reliability
+## 🏗️ 3. Architecture: The Sovereign Trinity
 
-### Probabilistic Regime State Machine
-We reject binary "Trend/Range" classifications. The system operates on a continuous probability distribution (e.g., 70% Trend, 20% Range, 10% Crisis), scaling risk and allocation dynamically as probabilities shift.
+The V8.1.0 revamp moves to a **Polyglot Hybrid Kernel** (Rust + Python).
 
-### Gravity Dead-Man Switch
-If the orchestrator loses heartbeat with the MT5 terminal or the "Glass Cockpit" UI, it enters **Safe Mode** instantaneously—protecting capital when the "human in the loop" is absent.
+### A. The Firehose (Layer 0-1: Rust)
+- **Rust-Sidecar:** High-performance binary ingress handling AES-256-GCM decryption and **Data Quality Firewalling** (Z-Score outlier filtering). Bypasses Python's GIL for sub-100µs jitter.
 
-### Chaos Engineering (L99-F)
-Automated "Game Days" in paper trading to simulate:
-- Broker Outages & Rejections.
-- Data Corruption (Negative prices/Extreme spikes).
-- Network Splits & Latency Drifts.
+### B. The Brain (Layer 2-5: Python)
+- **Pre-Computed Authorization (Slow Loop):** Stages 1-6 (Regime, Macro, Portfolio) run on a 1-second interval. They generate "Pre-Auth Trading Tickets."
+- **Toxicity Engine (Layer 2):** Detects adverse selection (VPIN) and halts trading if flow becomes toxic.
+
+### C. The Executor (Layer 6-8: Rust)
+- **Fast-Loop Execution:** When a signal hits, the Executor only checks the "Pre-Auth Ticket" and "Toxicity Score."
+- **Broker Mesh:** Universal Adapter Layer for MT5, cTrader, and FIX APIs.
 
 ---
 
-## 🗺️ 5. The V8 Roadmap
+## 🛡️ 4. The 10-Layer Institutional Stack
 
-### Phase 1: Architectural Integrity
-- [ ] Implement Layer 0 (Data Quality Firewall) & Layer 8 (Recovery Engine).
-- [ ] Migrate Audit Ledger to PostgreSQL with Merkle-Anchoring.
-- [ ] Establish the Portfolio Construction Layer (Layer 4).
+1. **Layer 0: Data Quality Firewall** (Outlier/Gap detection).
+2. **Layer 1: Market Data Layer** (Rust Ingress).
+3. **Layer 2: Liquidity/Toxicity Intelligence** (VPIN/Order Flow).
+4. **Layer 3: Strategy Layer** (Hybrid Consensus).
+5. **Layer 4: Portfolio Construction** (Dynamic Allocation).
+6. **Layer 5: Risk Engine** (7-Layer Stack + Exposure Graph).
+7. **Layer 5.5: Model Governance** (Drift/PSI Supervision).
+8. **Layer 5.6: Meta-Governance** (Governing the Governors).
+9. **Layer 6: Execution Intelligence** (Slippage/Broker Quality).
+10. **Layer 7: Broker Mesh** (Universal Broker Abstraction).
+11. **Layer 8: Autonomous Recovery** (Self-healing Safe Mode).
+12. **Layer 9: Audit & Explainability** (Merkle-Chained Ledger).
 
-### Phase 2: Meta-Governance & Mesh
-- [ ] Deploy Layer 5.6 (Meta-Governance) and Layer 7 (Broker Mesh).
-- [ ] Implement Probabilistic Regime State Machine.
-- [ ] Automate Alpha Attribution (Edge Attribution Framework).
+---
 
-### Phase 3: Total Sovereignty
-- [ ] Finalize "FinCon Terminal" with 10-Layer telemetry.
-- [ ] Complete L99-Standard V2 Full Certification.
+## 🔬 5. The Phoenix Gauntlet (Validation)
+
+Mandatory validation pipeline for the revamp:
+Research → Backtest → **Chaos Engineering** (injecting latency/gaps) → Walk Forward → Shadow Trading → Production.
+
+### Required Metrics
+- **PBO (Probability of Backtest Overfitting):** Prove the edge isn't a fluke.
+- **DSR (Deflated Sharpe Ratio):** Correct for selection bias.
+- **Monte Carlo:** 1,000,000+ Runs for Stress analysis.
+
+---
+
+## 🗺️ 6. Roadmap: The Sovereign Ascent (V8.1.0)
+
+### 📍 Phase 1: The Foundation of Iron (Current)
+- [ ] Port **Event Bus and Ingress to Rust** (AES-256-GCM).
+- [ ] Implement **Data Quality Firewall** (Layer 0).
+- [ ] Finalize **Exposure Graph Engine** (Layer 4 Vectorized Risk).
+
+### 🚀 Phase 2: The Divine Intelligence
+- [ ] Implement **Pre-Computed Decision Engine** (Slow/Fast Loop split).
+- [ ] Deploy **VPIN Toxicity Engine** (Layer 2).
+- [ ] Launch **Meta-Governance Layer** (Layer 5.6).
+
+### 🌐 Phase 3: The Universal Citadel
+- [ ] Launch **FinCon Terminal** (Next.js Dashboard).
+- [ ] Implement **Broker Mesh** (FIX/cTrader Support).
+- [ ] Automate **Autonomous Recovery Engine** (Layer 8).
