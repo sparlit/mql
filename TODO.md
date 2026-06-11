@@ -1,46 +1,36 @@
-# 🛠️ Project Phoenix: The "Gods Engineer" Revamp Checklist (V9.0.0)
+# 🛠️ Project Phoenix: The "Gods Engineer" Hardening Checklist (V9.1.0)
 
-> **Status:** Critical Path Engineering
-> **Mantra:** Deliver working core before perfection.
+> **Status:** Critical Path Hardening
+> **Focus:** Zero-Copy Communication & Strongly Consistent Risk
 
-## 🏗️ EPIC 1: ARCHITECTURAL DEBT & PERFORMANCE
-- [ ] **Dependency Audit:**
-    - [ ] Audit all Python imports for circular dependencies; refactor to explicit contracts.
-    - [ ] Profile `MQL5-Python` bridge latency; identify jitter bottlenecks.
-- [ ] **Hybrid Kernel Init:**
-    - [ ] Set up Rust crate for AES-256-GCM Ingress (Layer 1).
-    - [ ] Implement lock-free RingBuffer for the "Fast Loop" internal bus.
+## 🏗️ EPIC 1: MICROKERNEL PERFORMANCE
+- [ ] **Shared Memory Bridge:**
+    - [ ] Implement Apache Arrow or a shared-memory ring buffer for Rust-to-Python tick delivery.
+    - [ ] Benchmark and verify P99 jitter < 50µs on the bridge.
+- [ ] **Fast-Path Logic:**
+    - [ ] Migrate critical Layer 5 (Risk) and Layer 6 (SOR) logic to Rust.
 
-## 💾 EPIC 2: EVENT SOURCING & PERSISTENCE
-- [ ] **DataHub HA Implementation:**
-    - [ ] Implement persistent Event Journal for all incoming ticks/signals.
-    - [ ] Build Snapshotting mechanism for fast state recovery.
-    - [ ] Implement the Replay Engine for historical state reconstruction.
-- [ ] **DB Migration:**
-    - [ ] Migrate Audit Ledger to PostgreSQL for high-concurrency governance.
-    - [ ] Optimize QuestDB for high-frequency telemetry.
+## 💾 EPIC 2: CONSISTENCY & PERSISTENCE
+- [ ] **Strongly Consistent Risk Path:**
+    - [ ] Refactor Command-Side logic to include synchronous Risk checks before order signing.
+- [ ] **Event Sourcing Upgrade:**
+    - [ ] Implement Merkle-Chaining for the Event Journal in PostgreSQL.
+    - [ ] Build the snapshotting service for the Position state.
 
-## 🛡️ EPIC 3: INSTITUTIONAL RISK & DATA QUALITY
-- [ ] **Data Quality Firewall (Layer 0):**
-    - [ ] Implement Z-Score outlier filtering and gap detection in the Rust ingress.
-- [ ] **Exposure Graph (Layer 4):**
-    - [ ] Build vectorized currency risk enforcement (Portfolio-wide netting).
-- [ ] **Risk Stack V2 (Layer 5):**
-    - [ ] Implement "Drawdown Velocity" halts and "Gravity" Dead-Man switch.
+## 🛡️ EPIC 3: SOVEREIGN CONNECTIVITY
+- [ ] **FIX-Native Ingress:**
+    - [ ] Develop high-performance FIX protocol engine in Rust.
+    - [ ] Create FIX-to-SharedMemory mapping.
+- [ ] **Broker Mesh:**
+    - [ ] Implement MT5 and cTrader adapters as legacy fallbacks.
 
-## 🧠 EPIC 4: GOVERNANCE & TOXICITY
-- [ ] **Order Flow Toxicity (Layer 2):**
-    - [ ] Implement VPIN (Volume-Synchronized Probability of Informed Trading).
-- [ ] **Model Governance (Layer 5.5):**
-    - [ ] Build PSI (Population Stability Index) drift detector.
-    - [ ] Implement "Shadow Mode" promotion path for Champion-Challenger logic.
+## 🧠 EPIC 4: GOVERNANCE & SAFETY
+- [ ] **Guided Recovery:**
+    - [ ] Implement automatic "Flatten & Freeze" on heartbeat failure.
+    - [ ] Create the "Human-in-the-loop" resume authorization gate.
+- [ ] **Toxicity Monitor:**
+    - [ ] Integrate VPIN calculations into the synchronous fast-path.
 
-## 📊 EPIC 5: TELEMETRY & OPERATIONS
-- [ ] **Monitoring Baseline:**
-    - [ ] Export system health to Prometheus/Grafana (Core dashboard).
-- [ ] **L99 Certification:**
-    - [ ] Automate DSR (Deflated Sharpe Ratio) and PBO (Probability of Overfitting) gates.
-
-## 🩺 CONTINUOUS MAINTENANCE
-- [ ] Post-trade review rituals (Weekly performance audit).
-- [ ] Chaos Engineering "Game Days" (Injecting latency/disconnects).
+## 🩺 CONTINUOUS TASKS
+- [ ] Run "Latency Regression" tests on every commit.
+- [ ] Verify Merkle integrity of the Audit Ledger weekly.

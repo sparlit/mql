@@ -1,107 +1,95 @@
-# ♾️ Project Phoenix - AAT V9.0.0 (The Eternal Sovereign)
-## *The Resilient Institutional Trading Microkernel*
+# ♾️ Project Phoenix - AAT V9.1.0 (The Hardened Sovereign)
+## *The Institutional Autonomous Microkernel & Persistence Layer*
 
-### 🏛️ Status: The Pragmatic Revamp
-The system is transitioning to a **Hybrid Polyglot Kernel** with a focus on **Operational Survivability**. We are stripping away architectural vanity to prioritize a "Rock-Solid Core."
+### 🏛️ Status: The Hardened Revamp
+We have moved beyond "Pragmatic Revamp" into **Hardened Sovereignty**. The architecture now enforces deterministic communication and consistent state management.
 
 ✅ **Layer 0:** Data Quality Firewall (Active)
 ✅ **Layer 9:** Merkle-Chained Audit Ledger (Active)
-🟡 **Core Migration:** Phased integration of Event Sourcing & CQRS (V9.0.0 Path)
+🟡 **Core Migration:** Zero-Copy Shared Memory & FIX-Native Ingress (V9.1.0 Path)
 
 ---
 
 ## 👁️ 1. Vision & Mission
 
-**Vision:** To democratize institutional-grade algorithmic trading by providing a transparent, auditable, and resilient platform that prioritizes **Capital Preservation** and **Operational Survivability** above all else.
+**Vision:** To establish the definitive sovereign platform for institutional-grade capital deployment. Project Phoenix prioritizes **Deterministic Execution**, **Strong Consistency**, and **Operational Survivability**.
 
-**Mission:** To maximize long-term risk-adjusted expectancy through deterministic execution and statistical rigor. We do not chase fixed returns; we harvest Alpha through discipline and the avoidance of **Order Flow Toxicity**.
+**Mission:** To maximize risk-adjusted expectancy through a **FIX-Native Architecture**. We treat every signal as a probabilistic hypothesis that must pass a zero-copy, low-latency risk gauntlet.
 
-### 📊 Performance Mandates (Tiered Milestones)
-| Metric | Phase 1 (Reality) | Phase 2 (Stretch) | Verification |
+### 📊 Performance Mandates (Hardened)
+| Metric | Reality Target | Hard Limit | Verification |
 | :--- | :--- | :--- | :--- |
 | **Sharpe Ratio** | > 1.0 | > 2.5 | 12m Walk-Forward |
-| **Sortino Ratio** | > 1.5 | > 3.5 | Downside Analysis |
-| **Max Drawdown** | < 15.0% | < 5.0% | Hard Equity Firewall |
-| **Internal Latency** | < 1ms | < 100µs | P99 Tick-to-Order |
-| **Risk of Ruin** | < 1.0% | < 0.1% | 1M Monte Carlo |
+| **Jitter (P99)** | < 50µs | < 200µs | Shared Memory Profile |
+| **Max Drawdown** | < 10.0% | < 5.0% | Hard Equity Firewall |
+| **Internal Latency** | < 100µs | < 500µs | Tick-to-Auth |
+| **Consistency** | Strong | Absolute | Command-Path Risk |
 
 ---
 
-## 📐 2. The Divine Governance Principles
-
-To combat the **"Conspiracy of Complexity"** and false certainty, V9.0.0 enforces:
+## 📐 2. The Hardened Governance Principles
 
 ### A. The Simplicity Budget
-Every subsystem must justify its operational burden. If **(Alpha + Risk Reduction) < (Maintenance Cost + Failure Surface)**, it is removed. We prioritize a "Working Core" over "Comprehensive Features."
+Subsystems that increase latency or failure surface without measurable alpha/risk benefit are rejected.
 
-### B. The Edge Attribution Framework
-Every signal must prove its incremental value:
-`Signal → Decision Change → Trade Outcome Change → Portfolio Alpha Improvement.`
+### B. The Command-Path Risk Mandate
+Risk checks are never "Eventually Consistent." The Risk Engine sits in the **Synchronous Command Path** of the decision engine. No order can be signed without a real-time, strongly consistent risk approval.
 
-### C. The Stability Paradox Resolution
-Status checkmarks (`✅`) are strictly reserved for code that has passed L99-Standard verification. Aspirational goals stay in the roadmap.
-
----
-
-## 🏗️ 3. Architecture: The Sovereign Trinity
-
-V9.0.0 utilizes a **Rust-Python Hybrid Kernel** to solve the "Python Latency Fallacy."
-
-- **The Firehose (Rust):** Low-level ingress handling AES-256-GCM and **Layer 0 Data Quality Firewalling**. Sub-100µs jitter target.
-- **The Brain (Python):** Asyncio-driven decision engine using **Event Sourcing + CQRS**. Separates "Slow Context" from "Fast Execution."
-- **The Persistence Layer:**
-    - **Hot Cache:** Redis for real-time state.
-    - **Immutable Store:** PostgreSQL for Audit Ledger + QuestDB for Telemetry.
-    - **Event Journal:** Persistent replay queue for disaster recovery.
+### C. The FIX-Native Priority
+Sovereignty is defined by protocol independence. FIX (Financial Information eXchange) is our primary protocol. All broker-specific adapters (MT5, cTrader) are treated as secondary legacy gateways.
 
 ---
 
-## 🛡️ 4. The 10-Layer Institutional Stack
+## 🏗️ 3. Architecture: The Hardened Trinity
 
-1. **Layer 0: Data Quality Firewall** (Z-Score validation, gap detection).
-2. **Layer 1: Market Data Layer** (Rust Ingress Sidecar).
-3. **Layer 2: Liquidity Intelligence** (VPIN / Order Flow Toxicity).
-4. **Layer 3: Strategy Layer** (Bayesian Priors + HMM Regimes).
-5. **Layer 4: Portfolio Construction** (Dynamic Allocation & Rebalancing).
-6. **Layer 5: Risk Engine** (7-Layer Stack + Exposure Graph).
-7. **Layer 5.5: Model Governance** (PSI Monitoring & Shadow Mode).
-8. **Layer 5.6: Meta-Governance** (Calibration of the Governors).
-9. **Layer 6: Execution Intelligence** (Slippage Modeling & Broker Mesh).
-10. **Layer 7: Broker Mesh** (Universal Abstraction for FIX/MT5/cTrader).
-11. **Layer 8: Autonomous Recovery** (Self-healing & Dead-Man Switch).
-12. **Layer 9: Audit & Explainability** (Merkle-Chained Provenance).
+V9.1.0 utilizes a **Shared-Memory Polyglot Microkernel**.
+
+- **The Firehose (Rust):** High-speed ingress sidecar using **Zero-Copy Shared Memory** (via Apache Arrow/RingBuffer) to hand off validated ticks to the brain.
+- **The Brain (Python/Rust):** A hybrid logic layer. Time-critical risk calculations are migrated to Rust, while strategy logic remains in Python for rapid research iteration.
+- **The Persistence Layer (CQRS+ES):**
+    - **Command Side:** Strongly consistent state for Risk & Positions.
+    - **Read Side:** Eventually consistent state for Analytics, Telemetry, and the FinCon Terminal.
+    - **Audit:** Merkle-Chained Event Sourcing in PostgreSQL.
 
 ---
 
-## 🔬 5. The Gauntlet (Research & Verification)
+## 🛡️ 4. The 10-Layer Hardened Stack
 
-No strategy bypasses the mandatory pipeline:
-**Research → Backtest → Chaos Stress → Walk Forward → Shadow Trading → Production.**
-
-### L99-Standard V2
-- **L99-A:** Code Integrity & Unit Coverage.
-- **L99-B:** Infrastructure Reliability & HA Replay.
-- **L99-C:** Risk Management & Drawdown Velocity.
+1. **Layer 0: Data Quality Firewall** (Outlier filtering, gap detection).
+2. **Layer 1: Market Data Layer** (FIX-Native / Rust Shared Memory).
+3. **Layer 2: Liquidity/Toxicity Intelligence** (VPIN / Adverse Selection).
+4. **Layer 3: Strategy Layer** (Probabilistic Bayesian Consensus).
+5. **Layer 4: Portfolio Construction** (Dynamic Allocation & Netting).
+6. **Layer 5: Synchronous Risk Engine** (Strongly Consistent Firewall).
+7. **Layer 5.5: Model Governance** (PSI & Drift Detection).
+8. **Layer 6: Execution Intelligence** (Smart Order Routing & Jitter Monitor).
+9. **Layer 7: Universal Broker Mesh** (FIX Priority with MT5/cTrader fallbacks).
+10. **Layer 8: Guided Recovery** (Auto-SafeMode + Human Resume Auth).
+11. **Layer 9: Audit & Explainability** (Merkle-Chained Provenance).
 
 ---
 
-## 🗺️ 6. Roadmap: The Sovereign Ascent (V9.0.0)
+## 🔬 5. The Phoenix Gauntlet
 
-### 📍 Phase 1: Rock-Solid Foundation (Current)
-- [ ] **Core Refactor:** Resolve circular dependencies and implement explicit contracts.
-- [ ] **DataHub HA:** Implement Event Journaling, Replay Queues, and Snapshots.
-- [ ] **Layer 0 Firewall:** Finalize Rust-based tick validation.
-- [ ] **Exposure Graph:** Implement vectorized currency correlation risk.
+Mandatory validation includes **Latency Stress Testing** and **Consistency Audits**.
+- **L99-A:** Unit Coverage & Code Integrity.
+- **L99-B:** HA Replay & Event Consistency.
+- **L99-D:** Deterministic Latency Profiling.
 
-### 🚀 Phase 2: Intelligence & Toxicity
-- [ ] **VPIN Engine:** Implement Order Flow Toxicity detection.
-- [ ] **Model Governance:** Automate PSI drift detection and confidence decay.
-- [ ] **Macro Mesh:** Multi-source event consensus (CPI/FOMC).
+---
+
+## 🗺️ 6. Roadmap: The Sovereign Ascent (V9.1.0)
+
+### 📍 Phase 1: The Core Hardening (Current)
+- [ ] Implement **Zero-Copy Shared Memory** for Rust-Python communication.
+- [ ] Refactor Risk Engine into the **Synchronous Command Path**.
+- [ ] Implement **FIX-Native Ingress** prototype.
+
+### 🚀 Phase 2: Intelligence & Mesh
+- [ ] Deploy **VPIN Toxicity Engine** (Layer 2).
+- [ ] Implement **Guided Recovery Workflow** (Layer 8).
+- [ ] Standardize **Merkle-Anchored Event Sourcing**.
 
 ### 🌐 Phase 3: The FinCon Terminal
-- [ ] **Monitoring Portal:** React/Next.js "Glass Cockpit" (Starting with Grafana).
-- [ ] **Broker Mesh:** Finalize FIX/cTrader universal adapters.
-- [ ] **L99 Automation:** Full end-to-end certification suite.
-
----
-*Capital preservation is the primary objective; profit is a secondary outcome of discipline.*
+- [ ] Launch **Unified Telemetry Dashboard**.
+- [ ] Finalize **Universal Broker Mesh** (MT5/cTrader fallbacks).
